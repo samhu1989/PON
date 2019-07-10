@@ -3,7 +3,7 @@ Part Based Occupancy Network
 
 ## File Structure
 /net    ---network structure  
-/config ---configuration files
+/config ---configuration files  
 /util   ---utility files  
 /data   ---path or link for data  
 /doc    ---draft for paper  
