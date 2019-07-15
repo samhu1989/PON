@@ -27,5 +27,9 @@ doc/**/*.ind
 doc/**/*.ilg
 doc/**/*.out
 doc/**/*.log
+#############
+# data and log #
+data/**/*
+log/**/*
 
 
