@@ -45,16 +45,35 @@ The main references: (click the links to paper)
 The main principles behind this design:
 
 - We should avoid assigning fixed number of points for generation of each part.
-
 - The part annotation should be used to guide attention (feature selection) for shape generation, so that the network can make sharper prediction (less averaged/less fuzzy) on part shapes. It should not be used to interfere with the decoder for shape regression. Extra constraint on shape regression is less likely to lead to a lower error in training.
-
 - We should utilize multi-level part annotation
 
+The network structure is as follows:
+
 ![PON](./img/pon.png "")
+
+The part loss function:
+$$
+L_{part}=L_{pull} + L_{push}
+$$
+
+$$
+L_{pull} = \frac{1}{C_{part}}\sum\frac{1}{P_c}\sum max(||\mu_c - x_p||-\delta_v,0)
+$$
+
+$$
+L_{push} = \frac{1}{C_{part}}\frac{1}{C_{part}}\sum\sum max(\delta_d - ||\mu_{cA} - \mu_{cB}||,0)
+$$
+
+
+
+In order to utilized multi-level part annotation we split part feature into several group (divide channel into several group) and apply part loss on each group
+
+
 
 [1]:https://arxiv.org/pdf/1812.03828.pdf "Occupancy Networks: Learning 3D Reconstruction in Function Space"
 
 [2]:https://arxiv.org/pdf/1904.03375.pdf "Modeling Point Clouds with Self-Attention and Gumbel Subset Sampling"
 
-[3]:https://arxiv.org/pdf/1902.09777.pdf "Single-Image Piece-wise Planar 3D Reconstruction via Associative Embedding" 
+[3]:https://arxiv.org/pdf/1902.09777.pdf "Single-Image Piece-wise Planar 3D Reconstruction via Associative Embedding"
 
