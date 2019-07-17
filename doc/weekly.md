@@ -4,35 +4,57 @@
 
 2. The network should:
     - be designed for cross category objects
-    - acheive lower error than holistic baseline
+    - acheive lower error (CD) than holistic baseline
 
-#### preliminary report 20190715
+#### preliminary report 20190719
 ##### <font color=#55ff55>Previous Attempts </font>
 
 Under point cloud representation, Kaichun have tried 4 different approaches for the task ( including structurenet )
-- s
-- s
-- Structurenet have been accepted by SIGGRAPH Aisa. Basing our structure prediction mechanisim on an adapted/extended version of structurenet may make it easier for us to justify our new design.  
+- When the generation of different part was assigned and trained by hungarian matching,  branches/tree nodes would compete to predict same part (generate duplicate parts), especailly if the point number for each part are fixed. The network reprensentation power maybe wasted in such case. This may even lead to the missing of other parts.
 
-##### <font color=#0099ff>Problem / Issue </font>
-- In previous part, 
+- In structurenet, the position shift of predicted parts may cause a large error in quantitative evaluation
 
-- By adopting part based representation, the challenge is shifted from shape prediction to structure prediction. It may not necessarily be a easier approach.
+##### <font color=#0099ff>Problem / Issue </font>  
+- By adopting part based representation, the challenge is shifted from shape prediction to structure prediction. It may not necessarily be a easier approach. Holistic approaches are allowed to learn arbitrary structure inside the space of the structures that they can implicitly represent as long as the loss is minimized. We attempt to learn semantic meaningful structure based on the PartNet annotation. Therefore, our part based approach may be more difficult to reach lower prediction error due to the extra constraint.
 
-- The success of our structure prediction would rely on the part annotation data from PartNet.  
-=> It makes more sense to utilize multi-level part annotation as in structurenet instead of only certain level part annotation. (only Siyu's opinion for the moment)  
+- To predict semantic meaningful structure, we would rely on the part annotation data from PartNet.  
+=> It makes more sense to utilize **multi-level part annotation** as in structurenet instead of only certain level part annotation.   
 => However, how to utilize **multi-level part annotation** to train network for **cross category objects** remains a challenge for us.
 
 
 ##### <font color=#ff0099>To Do </font> 
-- design a new network as our new starting point. It should:
+- to decide a new design of network as our new starting point. It should:
 
-  - have structure prediction mechanisim that can be trained with multi-level part annotation and for cross category objects.
+  - have structure prediction mechanism that can be trained with multi-level part annotation and for cross category objects.
   
-  - the sub-network for shape prediction of each part should be the same ( share memory ).
-  
-  - use occupancy representation for the output. In such representation, a point inside any part is considered to be inside the objects. The max over part-based occanpancy will be the occanpancy output for the whole object. 
 
 <font color=#007fff>if</font> adopt occupancy representation:
 - prepare data from PartNet for the training of Occupancy Network.
-- re-implement and retrain Occupancy Network as holistic baseline.
+- port code and retrain Occupancy Network on our data as holistic baseline.
+
+##### Report
+A **proposal** by siyu is as follows:
+
+The main references: (click the links to paper)
+- The backbone network comes from [Occupancy Networks][1]
+
+- The Gumbel Subset Sampling module is learned from [PAT][2]
+
+- The part loss is inspired by [Single-Image Piece-wise Planar 3D Reconstruction via Associative Embedding][3]
+
+The main principles behind this design:
+
+- We should avoid assigning fixed number of points for generation of each part.
+
+- The part annotation should be used to guide attention (feature selection) for shape generation, so that the network can make sharper prediction (less averaged/less fuzzy) on part shapes. It should not be used to interfere with the decoder for shape regression. Extra constraint on shape regression is less likely to lead to a lower error in training.
+
+- We should utilize multi-level part annotation
+
+![PON](./img/pon.png "")
+
+[1]:https://arxiv.org/pdf/1812.03828.pdf "Occupancy Networks: Learning 3D Reconstruction in Function Space"
+
+[2]:https://arxiv.org/pdf/1904.03375.pdf "Modeling Point Clouds with Self-Attention and Gumbel Subset Sampling"
+
+[3]:https://arxiv.org/pdf/1902.09777.pdf "Single-Image Piece-wise Planar 3D Reconstruction via Associative Embedding" 
+
