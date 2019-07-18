@@ -45,14 +45,14 @@ The main references: (click the links to paper)
 The main principles behind this design:
 
 - We should avoid assigning fixed number of points for generation of each part.
-- The part annotation should be used to guide attention (feature selection) for shape generation, so that the network can make sharper prediction (less averaged/less fuzzy) on part shapes. It should not be used to interfere with the decoder for shape regression. Extra constraint on shape regression is less likely to lead to a lower error in training.
+- The part annotation should be used to guide attention (feature selection) for shape generation, so that the network can make sharper prediction (less averaged/less fuzzy) on part shapes. It should not be used to directly interfere with the decoder for shape regression. Extra constraint competing with the  shape regression  loss is less likely to lead to a lower error in training.
 - We should utilize multi-level part annotation
 
 The network structure is as follows:
 
 ![PON](./img/pon.png "")
 
-The part loss function:
+The part loss function:  
 $$
 L_{part}=L_{pull} + L_{push}
 $$
@@ -67,7 +67,11 @@ $$
 
 
 
-In order to utilized multi-level part annotation we split part feature into several group (divide channel into several group) and apply part loss on each group
+The part loss aims at making the part feature similar to the mean feature for the points inside same part and making the mean part feature between different parts distinguishable from each other. The points outside the shape will be discarded.
+
+In order to utilized multi-level part annotation we split part feature into several group (divide channel into several group) and apply part loss on each group.
+
+If two points are in the same part in all level of part annotations, the part feature should be all similar. If two points are only in the same part in top level part annotation, then only a fraction of the its part feature is similar.
 
 
 
