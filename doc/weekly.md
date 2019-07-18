@@ -69,9 +69,7 @@ $$
 
 The part loss aims at making the part feature similar to the mean feature for the points inside same part and making the mean part feature between different parts distinguishable from each other. The points outside the shape will be discarded.
 
-In order to utilized multi-level part annotation we split part feature into several group (divide channel into several group) and apply part loss on each group.
-
-If two points are in the same part in all level of part annotations, the part feature should be all similar. If two points are only in the same part in top level part annotation, then only a fraction of the its part feature is similar.
+In order to utilize multi-level part annotation, we split part feature into several group (divide channel into several group) and apply part loss on each group. If two points are in the same part across all level of part annotations, the entire part features should be close. If two points are only in the same part in top level part annotation, then only a fraction of their part features are close.
 
 
 
