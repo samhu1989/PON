@@ -40,31 +40,30 @@ The main references: (click the links to paper)
 - The Gumbel Subset Sampling module is learned from [PAT][2]
 - The part loss is inspired by [Single-Image Piece-wise Planar 3D Reconstruction via Associative Embedding][3]
 
-A hypothesis regarding issues and the importance of prior knowledge of object part in holistic approaches :
+A hypothesis behind the design regarding the key issue and the role of prior knowledge on object part:
 
 <font color=#4169E1> What is the key issue in previous holistic approaches ? </font>
 
 unreasonable and inconsistent correlation / association / co-dependency is implicitly established inside neural networks.
 
-For example, the shape variation of part is significantly smaller that shape variation of object, however, the networks can't automatically exploit such characteristic, because unnecessarily strong association may be established between different object part. 
+For example, the shape variation of part is significantly smaller that shape variation of object, however, the networks can't automatically exploit such characteristic, because unnecessarily strong association may be established between different object part.  This will lead to unnecessary averaging effect.
 
 <font color=#4169E1>What are the possible causes of this issue ?</font> (we should avoid)
 
 - network design:
 
-  - the shape generation of each part depends on single global shape descriptor
+  - the shape generation of each part depends only on single global shape descriptor
 
   - the assumption of  spherical homeomorphism
 
 - training method & loss function:
 
   - using Hungarian matching to assign network branches for each part
-  - chamfer distance loss (correspondence based on closest )
-  -  
+  - Chamfer distance loss (correspondence based on nearest neighbor)
 
-<font color=#4169E1>Why prior knowledge of object part is the cure for this issue ?</font>
+<font color=#4169E1>Why prior knowledge of object part is the cure for this issue ?</font> (we should utilize)
 
-
+- it can be used as GT to guide the network to learn an internal hierarchical part-by-part associations with proper and consistent strength
 
 The network structure is as follows:
 
@@ -88,6 +87,10 @@ $$
 The part loss aims at making the part feature similar to the mean feature for the points inside same part and making the mean part feature between different parts distinguishable from each other. The points outside the shape will be discarded.
 
 In order to utilize multi-level part annotation, we split part feature into several group (divide channel into several group) and apply part loss on each group. If two points are in the same part across all level of part annotations, the entire part features should be close. If two points are only in the same part in top level part annotation, then only a fraction of their part features are close.
+
+An illustration for expected effect of multi-level part loss is shown as follows:
+
+![partloss](./img/expected_part_loss.png "")
 
 
 
