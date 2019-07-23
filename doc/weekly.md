@@ -37,16 +37,34 @@ A **proposal** by siyu is as follows:
 
 The main references: (click the links to paper)
 - The backbone network comes from [Occupancy Networks][1]
-
 - The Gumbel Subset Sampling module is learned from [PAT][2]
-
 - The part loss is inspired by [Single-Image Piece-wise Planar 3D Reconstruction via Associative Embedding][3]
 
-The main principles behind this design:
+A hypothesis regarding issues and the importance of prior knowledge of object part in holistic approaches :
 
-- We should avoid assigning fixed number of points for generation of each part.
-- The part annotation should be used to guide attention (feature selection) for shape generation, so that the network can make sharper prediction (less averaged/less fuzzy) on part shapes. It should not be used to directly interfere with the decoder for shape regression. Extra constraint competing with the  shape regression  loss is less likely to lead to a lower error in training.
-- We should utilize multi-level part annotation
+<font color=#4169E1> What is the key issue in previous holistic approaches ? </font>
+
+unreasonable and inconsistent correlation / association / co-dependency is implicitly established inside neural networks.
+
+For example, the shape variation of part is significantly smaller that shape variation of object, however, the networks can't automatically exploit such characteristic, because unnecessarily strong association may be established between different object part. 
+
+<font color=#4169E1>What are the possible causes of this issue ?</font> (we should avoid)
+
+- network design:
+
+  - the shape generation of each part depends on single global shape descriptor
+
+  - the assumption of  spherical homeomorphism
+
+- training method & loss function:
+
+  - using Hungarian matching to assign network branches for each part
+  - chamfer distance loss (correspondence based on closest )
+  -  
+
+<font color=#4169E1>Why prior knowledge of object part is the cure for this issue ?</font>
+
+
 
 The network structure is as follows:
 
