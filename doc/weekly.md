@@ -4,7 +4,19 @@
 
 2. The network should:
     - be designed for cross category objects
+    
     - acheive lower error (CD) than holistic baseline
+    
+
+preliminary report 20190719
+
+#### meeting 20190802
+
+What do we want to do ?
+
+- [ ] reconstruct 3D shape from single image   (using part prior to assist it)
+- [ ] recover object parts from single image for other applications like robot interaction planning (using reconstruction loss as regularization to assist it) 
+- [x] few shot learning
 
 #### preliminary report 20190719
 ##### <font color=#55ff55>Previous Attempts </font>
