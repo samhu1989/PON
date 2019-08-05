@@ -1,14 +1,19 @@
 ### Part Based Single View Shape Reconstruction
 ##### Project Goal
-1. Verify the superiority of part based representation in single view shape reconstruction by proposing a novel neural network for the task.
+1. Verify the superiority of part based representation in shape reconstruction by proposing a novel neural network for the task.
 
 2. The network should:
-    - be designed for cross category objects
+    - do reconstruction in few shot setting 
     
-    - acheive lower error (CD) than holistic baseline
-    
+#### preliminary report 20190810
 
-preliminary report 20190719
+A **proposal** as holistic baseline for few shot shape completion
+
+The main references: (click the links to paper)
+The few shot learning loss come from [Prototypical Networks for Few-shot Learning][4]
+
+![holisticfewshot](./img/holistic_few_shot.png "")
+
 
 #### meeting 20190802
 
@@ -111,4 +116,6 @@ An illustration for expected effect of multi-level part loss is shown as follows
 [2]:https://arxiv.org/pdf/1904.03375.pdf "Modeling Point Clouds with Self-Attention and Gumbel Subset Sampling"
 
 [3]:https://arxiv.org/pdf/1902.09777.pdf "Single-Image Piece-wise Planar 3D Reconstruction via Associative Embedding"
+
+[4]:https://arxiv.org/pdf/1703.05175.pdf "Prototypical Networks for Few-shot Learning"
 
