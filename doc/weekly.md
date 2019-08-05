@@ -12,6 +12,8 @@ A **proposal** as holistic baseline for few shot shape completion
 The main references: (click the links to paper)
 The few shot learning loss come from [Prototypical Networks for Few-shot Learning][4]
 
+
+
 ![holisticfewshot](./img/holistic_few_shot.png "")
 
 
