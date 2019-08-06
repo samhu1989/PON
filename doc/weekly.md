@@ -4,20 +4,26 @@
 
 2. The network should:
     - do reconstruction in few shot setting 
+
     
-#### preliminary report 20190810
+#### meeting 20190806 ( siyu & kaichun ) 
+
+an important zero shot holistic baseline:  [Learning to Reconstruct Shapes from Unseen Classes][5]
+
+tips for the few shot settings:
+learn assembly from prototype    
+learn part generation / possible part relation from known category   
+    
+#### preliminary report 20190805
 
 A **proposal** as holistic baseline for few shot shape completion
 
 The main references: (click the links to paper)
 The few shot learning loss come from [Prototypical Networks for Few-shot Learning][4]
 
-
-
 ![holisticfewshot](./img/holistic_few_shot.png "")
 
-
-#### meeting 20190802
+#### meeting 20190802 ( all )
 
 What do we want to do ?
 
@@ -102,7 +108,6 @@ L_{push} = \frac{1}{C_{part}}\frac{1}{C_{part}}\sum\sum max(\delta_d - ||\mu_{cA
 $$
 
 
-
 The part loss aims at making the part feature similar to the mean feature for the points inside same part and making the mean part feature between different parts distinguishable from each other. The points outside the shape will be discarded.
 
 In order to utilize multi-level part annotation, we split part feature into several group (divide channel into several group) and apply part loss on each group. If two points are in the same part across all level of part annotations, the entire part features should be close. If two points are only in the same part in top level part annotation, then only a fraction of their part features are close.
@@ -121,3 +126,4 @@ An illustration for expected effect of multi-level part loss is shown as follows
 
 [4]:https://arxiv.org/pdf/1703.05175.pdf "Prototypical Networks for Few-shot Learning"
 
+[5]:http://genre.csail.mit.edu/papers/genre_nips.pdf "Learning to Reconstruct Shapes from Unseen Classes"
