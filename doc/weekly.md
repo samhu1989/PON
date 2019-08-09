@@ -5,14 +5,24 @@
 2. The network should:
     - do reconstruction in few shot setting 
 
-    
+#### preliminary report 20190809
+##### <font color=#55ff55>Done </font>
+run the test code of  [Learning to Reconstruct Shapes from Unseen Classes][5]
+
+##### Report 
+
+![holisticfewshot](./img/genre_our_res.png "")
+
+
+
+
 #### meeting 20190806 ( siyu & kaichun ) 
 
 an important zero shot holistic baseline:  [Learning to Reconstruct Shapes from Unseen Classes][5]
 
 tips for the few shot settings:
-learn assembly from prototype    
-learn part generation / possible part relation from known category   
+learn assembly from prototype
+learn part generation / possible part relation from known category
     
 #### preliminary report 20190805
 
