@@ -7,7 +7,7 @@
 
 #### preliminary report 20190809
 ##### <font color=#55ff55>Done </font>
-run the test code of  [Learning to Reconstruct Shapes from Unseen Classes][5]
+correctly run the test code of  [Learning to Reconstruct Shapes from Unseen Classes][5]
 
 ##### Report 
 
