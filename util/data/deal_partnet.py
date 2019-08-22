@@ -4,9 +4,11 @@ from __future__ import division
 import os;
 import shutil;
 import json;
+import random;
 #
 seen_cat = ['Chair','StorageFurniture'];
 unseen_cat = ['Table'];
+cat_size = 512;
 
 def select_from_partnet(cpath,ctpath,dpath):
     shutil.copytree(cpath,ctpath);
@@ -38,10 +40,38 @@ def select_cat(spath,tpath):
         if not os.path.exists(ctpath):
             os.mkdir(ctpath);
         select_from_partnet(cpath,dpath,ctpath);
+
+def select_sample(spath,num):
+    path = spath+os.sep+'pon_3_'+str(num);
+    if not os.path.exists(path):
+        os.mkdir(path);
+        for cat in seen_cat + unseen_cat:
+            os.mkdir(path+os.sep+cat);
+        os.mkdir(path+os.sep+'augment');
+    random.seed(100);
+    for cat in seen_cat + unseen_cat:
+        cat_source = spath+os.sep+'seen'+os.sep+cat;
+        cat_target = path+os.sep+cat;
+        flst = os.listdir(spath+os.sep+'seen'+os.sep+cat);
+        random.shuffle(flst);
+        cnt = num;
+        for f in flst:
+            if os.path.isdir(cat_source+os.sep+f):
+                print(cat,cnt);
+                try:
+                    shutil.copytree(cat_source+os.sep+f,cat_target+os.sep+f);
+                except Exception as e:
+                    print(e);
+            else：
+                continue;
+            cnt -= 1;
+            if cnt <= 0:
+                break;
         
 def run(**kwargs):
     data_root = kwargs['data_path'];
     if not os.path.exists(data_root+os.sep+'pon'):
         os.mkdir(data_root+os.sep+'pon');
-        select_cat(data_root+os.sep+'partnet',data_root+os.sep+'pon')
+        select_cat(data_root+os.sep+'partnet',data_root+os.sep+'pon');
+    select_sample(data_root+os.sep+'pon',cat_size)
     return ;

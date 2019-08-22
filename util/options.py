@@ -1,7 +1,7 @@
 import argparse;
 parser = argparse.ArgumentParser();
 
-def get_option():
+def get_opt():
     global parser;
     #string flags
     parser.add_argument('--execute','-X',type=str,default='None',help='action module name');
