@@ -7,8 +7,7 @@ import shutil;
 import json;
 import random;
 #
-#seen_cat = ['Chair','StorageFurniture'];
-seen_cat=[];
+seen_cat = ['Chair','StorageFurniture'];
 unseen_cat = ['Table'];
 cat_size = 128;
 
