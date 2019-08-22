@@ -1,3 +1,4 @@
+#coding:utf-8
 from __future__ import print_function
 from __future__ import division
 #python import
@@ -6,9 +7,10 @@ import shutil;
 import json;
 import random;
 #
-seen_cat = ['Chair','StorageFurniture'];
+#seen_cat = ['Chair','StorageFurniture'];
+seen_cat=[];
 unseen_cat = ['Table'];
-cat_size = 512;
+cat_size = 128;
 
 def select_from_partnet(cpath,ctpath,dpath):
     shutil.copytree(cpath,ctpath);
@@ -49,20 +51,28 @@ def select_sample(spath,num):
             os.mkdir(path+os.sep+cat);
         os.mkdir(path+os.sep+'augment');
     random.seed(100);
-    for cat in seen_cat + unseen_cat:
-        cat_source = spath+os.sep+'seen'+os.sep+cat;
-        cat_target = path+os.sep+cat;
-        flst = os.listdir(spath+os.sep+'seen'+os.sep+cat);
+    for idx , cat in enumerate(seen_cat + unseen_cat):
+        if idx < len(seen_cat):
+            cat_source = spath+os.sep+'seen'+os.sep+cat;
+            cat_target = path+os.sep+cat;
+        else:
+            cat_source = spath+os.sep+'unseen'+os.sep+cat;
+            cat_target = path+os.sep+cat;
+        flst = os.listdir(cat_source);
         random.shuffle(flst);
         cnt = num;
         for f in flst:
             if os.path.isdir(cat_source+os.sep+f):
                 print(cat,cnt);
                 try:
-                    shutil.copytree(cat_source+os.sep+f,cat_target+os.sep+f);
+                    os.mkdir(cat_target+os.sep+f)
+                    shutil.copytree(cat_source+os.sep+f+os.sep+'objs',cat_target+os.sep+f+os.sep+'objs');
+                    shutil.copyfile(cat_source+os.sep+f+os.sep+'result_after_merging.json',cat_target+os.sep+f+os.sep+'result_after_merging.json')
+                    shutil.copyfile(cat_source+os.sep+f+os.sep+'point_sample'+os.sep+'sample-points-all-pts-label-10000.ply',cat_target+os.sep+f+os.sep+'sample-points-all-pts-label-10000.ply')
+                    shutil.copyfile(cat_source+os.sep+f+os.sep+'point_sample'+os.sep+'sample-points-all-pts-nor-rgba-10000.ply',cat_target+os.sep+f+os.sep+'sample-points-all-pts-nor-rgba-10000.ply')
                 except Exception as e:
                     print(e);
-            else：
+            else:
                 continue;
             cnt -= 1;
             if cnt <= 0:
