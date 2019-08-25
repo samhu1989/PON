@@ -2,6 +2,7 @@ import torch;
 import traceback
 import importlib
 from torch.utils.data import DataLoader;
+from .tools import *;
 
 def run(**kwargs):
     #get configuration
@@ -29,22 +30,35 @@ def run(**kwargs):
     except Exception as e:
         print(e);
         traceback.print_exc();
-    #
-    net.eval();
-    #validation
-    for data in val_load:
-        out = net(data);
-        acc = config.accuracy(out,data);
-        cat
+    #run the code
+    for iepoch in range(opt['nepoch']):
+        net.eval();
+        #validation
+        val_meters = {};
+        for i, data in enumerate(val_load,0):
+            out = net(data);
+            acc = config.accuracy(data,out);
+            for k,v in acc:
+                if k in val_meters.keys():
+                    val_meters[k].update(v,data[-1]);
+                else:
+                    val_eters[k] = AvgMeterGroup(k);
+                    val_meters[k].update(v,data[-1]);
+            config.writelog(data,out,val_meters,opt,iepoch,opt['nepoch'],i,len(val_data),False);
         
+        net.train();
+        #train
+        train_meters = {};
+        for i, data in enumerate(train_load,0):
+            out = net(data);
+            loss = config.loss(data,out);
+            for k,v in loss:
+                if k == 'overall':
+                    continue;
+                if k in train_meters.keys():
+                    train_meters[k].update(v,data[-1]);
+                else:
+                    train_meters[k] = AvgMeterGroup(k);
+                    train_meters[k].update(v,data[-1]);
         
-        
-    net.train();
-    #train
-    for data in train_data:
-        out = net(data);
-        loss = config.loss(out,data);
-        
-        
-    
-    
+            config.writelog(data,out,train_meter,opt,iepoch,opt['nepoch'],i,len(train_data),True);
