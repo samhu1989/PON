@@ -31,12 +31,14 @@ def run(**kwargs):
         print(e);
         traceback.print_exc();
     #run the code
+    optimizer = eval('optim.'+opt['optim'])(net.parameters(),lr=opt['lr'],weight_decay=opt['weight_decay']);
     for iepoch in range(opt['nepoch']):
         net.eval();
         #validation
         val_meters = {};
         for i, data in enumerate(val_load,0):
-            out = net(data);
+            with torch.no_grad():
+                out = net(data);
             acc = config.accuracy(data,out);
             for k,v in acc:
                 if k in val_meters.keys():
@@ -50,6 +52,7 @@ def run(**kwargs):
         #train
         train_meters = {};
         for i, data in enumerate(train_load,0):
+            optimizer.zero_grad();
             out = net(data);
             loss = config.loss(data,out);
             for k,v in loss:
@@ -60,5 +63,6 @@ def run(**kwargs):
                 else:
                     train_meters[k] = AvgMeterGroup(k);
                     train_meters[k].update(v,data[-1]);
-        
+            loss['overall'].backward();
+            optimizer.step();
             config.writelog(data,out,train_meter,opt,iepoch,opt['nepoch'],i,len(train_data),True);
