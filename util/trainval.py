@@ -14,23 +14,37 @@ def run(**kwargs):
         traceback.print_exc();
     #get network
     try:
-        m = importlib.import_module(opt['net']);
-        net = m.Net(**kwargs);
+        m = importlib.import_module('net.'+opt['net']);
+        net = m.Net(**opt);
     except Exception as e:
         print(e);
         traceback.print_exc();
     #get dataset
     try:
-        m = importlib.import_module('util.dataset.'+kwargs['dataset']);
-        train_data = m.Data(kwargs,True);
-        val_data = m.Data(kwargs,False);
-        train_load = DataLoader(train_data,batch_size=kwargs['batch_size'],shuffle=True,num_workers=kwargs['workers']);
-        val_load = DataLoader(val_data,batch_size=kwargs['batch_size'],shuffle=False,num_workers=kwargs['workers']);
+        m = importlib.import_module('util.dataset.'+opt['dataset']);
+        train_data = m.Data(opt,True);
+        val_data = m.Data(opt,False);
+        train_load = DataLoader(train_data,batch_size=opt['batch_size'],shuffle=True,num_workers=opt['workers']);
+        val_load = DataLoader(val_data,batch_size=opt['batch_size'],shuffle=False,num_workers=opt['workers']);
     except Exception as e:
         print(e);
         traceback.print_exc();
+    #
     net.eval();
     #validation
-    for data in val
+    for data in val_load:
+        out = net(data);
+        acc = config.accuracy(out,data);
+        cat
+        
+        
+        
+    net.train();
+    #train
+    for data in train_data:
+        out = net(data);
+        loss = config.loss(out,data);
+        
+        
     
     
