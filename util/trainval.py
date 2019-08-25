@@ -31,7 +31,7 @@ def run(**kwargs):
         print(e);
         traceback.print_exc();
     #run the code
-    optimizer = eval('optim.'+opt['optim'])(net.parameters(),lr=opt['lr'],weight_decay=opt['weight_decay']);
+    optimizer = eval('optim.'+opt['optim'])(config.parameters(net),lr=opt['lr'],weight_decay=opt['weight_decay']);
     for iepoch in range(opt['nepoch']):
         net.eval();
         #validation
@@ -44,7 +44,7 @@ def run(**kwargs):
                 if k in val_meters.keys():
                     val_meters[k].update(v,data[-1]);
                 else:
-                    val_eters[k] = AvgMeterGroup(k);
+                    val_meters[k] = AvgMeterGroup(k);
                     val_meters[k].update(v,data[-1]);
             config.writelog(data,out,val_meters,opt,iepoch,opt['nepoch'],i,len(val_data),False);
         
