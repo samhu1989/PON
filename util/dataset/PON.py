@@ -13,8 +13,8 @@ from ..data.ply import read_ply;
 #
 class Data(data.Dataset):
     def __init__(self, opt, train=True):
-        self.SVR = opt['SVR'];
-        self.pts_num = opt['pts_num'];
+        self.SVR = (opt['mode']=='SVR');
+        self.pts_num = opt['pts_num_gt'];
         self.root = opt['data_path'];
         self.train = train
         self.datapath = [];
@@ -47,7 +47,7 @@ class Data(data.Dataset):
         data = {}
         ply_data = read_ply(fn+'_pts.ply');
         points = ply_data['points'];
-        pts = points[:,:3];
+        pts = np.array(points)[:,:3];
         row_rand_array = np.arange(pts.shape[0])
         np.random.shuffle(row_rand_array)
         row_rand_pts = pts[row_rand_array[0:self.pts_num]];
@@ -72,7 +72,7 @@ class Data(data.Dataset):
             im = im[:3,:,:]
         else:
             im = 0;
-        return pts,im,cat;
+        return im,pts,cat;
 
     def __len__(self):
         return len(self.datapath)

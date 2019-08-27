@@ -2,6 +2,7 @@ import torch;
 import traceback
 import importlib
 from torch.utils.data import DataLoader;
+from torch import optim;
 from .tools import *;
 
 def run(**kwargs):
@@ -13,6 +14,7 @@ def run(**kwargs):
     except Exception as e:
         print(e);
         traceback.print_exc();
+        exit();
     #get network
     try:
         m = importlib.import_module('net.'+opt['net']);
@@ -20,6 +22,7 @@ def run(**kwargs):
     except Exception as e:
         print(e);
         traceback.print_exc();
+        exit();
     #get dataset
     try:
         m = importlib.import_module('util.dataset.'+opt['dataset']);
@@ -30,6 +33,7 @@ def run(**kwargs):
     except Exception as e:
         print(e);
         traceback.print_exc();
+        exit();
     #run the code
     optimizer = eval('optim.'+opt['optim'])(config.parameters(net),lr=opt['lr'],weight_decay=opt['weight_decay']);
     for iepoch in range(opt['nepoch']):
@@ -46,7 +50,7 @@ def run(**kwargs):
                 else:
                     val_meters[k] = AvgMeterGroup(k);
                     val_meters[k].update(v,data[-1]);
-            config.writelog(data,out,val_meters,opt,iepoch,opt['nepoch'],i,len(val_data),False);
+            config.writelog(data=data,out=out,meter=val_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(val_data),istraining=False);
         
         net.train();
         #train
@@ -65,4 +69,4 @@ def run(**kwargs):
                     train_meters[k].update(v,data[-1]);
             loss['overall'].backward();
             optimizer.step();
-            config.writelog(data,out,train_meter,opt,iepoch,opt['nepoch'],i,len(train_data),True);
+            config.writelog(data=data,out=out,meter=train_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(train_data),istraining=True);
