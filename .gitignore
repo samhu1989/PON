@@ -36,3 +36,4 @@ log/**/*
 *.err
 *.txt
 *.lnk
+*.pyd
