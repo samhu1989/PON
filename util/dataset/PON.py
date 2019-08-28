@@ -62,7 +62,8 @@ class Data(data.Dataset):
             for f in v:
                 if not f.endswith('.png0001.png'):
                     v_lst.append(f);
-            random.shuffle(v_lst)
+            if self.train:
+                random.shuffle(v_lst)
             im = Image.open(os.path.join(v_path,v_lst[0]));
             if self.train:
                 im = self.randcrop(im) #random crop

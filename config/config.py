@@ -97,32 +97,32 @@ def writelog(**kwargs):
             with open(opt['log_tmp']+os.sep+'best.json','w') as f:
                 json.dump(bestdict,f);
 
-        if opt['ply']:
-            ply_path = opt['log_tmp']+os.sep+'ply';
-            if not os.path.exists(ply_path):
-                os.mkdir(ply_path);
-            x = out['grid_x'];
-            x = x.data.cpu().numpy();
-            y = out['y'];
-            y = y.data.cpu().numpy();
-            ygt = data[1];
-            ygt = ygt.data.cpu().numpy();
-            cat = data[-1];
-            im = data[0];
-            im = im.data.cpu().numpy();
-            for i in range(y.shape[0]):
-                fidx = genface(x[i,...],opt['grid_num']);
-                T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
-                face = np.zeros(shape=[fidx.shape[0]],dtype=T);
-                for fi in range(fidx.shape[0]):
-                    face[fi] = (3,fidx[fi,0],fidx[fi,1],fidx[fi,2]);
-                write_ply(ply_path+os.sep+'_%04d_%03d_%s_gt.ply'%(ib,i,cat[i]),points = pd.DataFrame(ygt[i,...]));
-                write_ply(ply_path+os.sep+'_%04d_%03d_%s_y.ply'%(ib,i,cat[i]),points = pd.DataFrame(y[i,...]),faces=pd.DataFrame(face));
-                write_pts2sphere(ply_path+os.sep+'_%04d_%03d_%s_ypt.ply'%(ib,i,cat[i]),points = y[i,...]);
-                img = im[i,...];
-                img = img.transpose((1,2,0));
-                img = Image.fromarray(np.uint8(255.0*img));
-                img.save(ply_path+os.sep+'_%04d_%03d_%s_input.png'%(ib,i,cat[i]));
+    if opt['ply']:
+        ply_path = opt['log_tmp']+os.sep+'ply';
+        if not os.path.exists(ply_path):
+            os.mkdir(ply_path);
+        x = out['grid_x'];
+        x = x.data.cpu().numpy();
+        y = out['y'];
+        y = y.data.cpu().numpy();
+        ygt = data[1];
+        ygt = ygt.data.cpu().numpy();
+        cat = data[-1];
+        im = data[0];
+        im = im.data.cpu().numpy();
+        for i in range(y.shape[0]):
+            fidx = genface(x[i,...],opt['grid_num']);
+            T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
+            face = np.zeros(shape=[fidx.shape[0]],dtype=T);
+            for fi in range(fidx.shape[0]):
+                face[fi] = (3,fidx[fi,0],fidx[fi,1],fidx[fi,2]);
+            write_ply(ply_path+os.sep+'_%04d_%03d_%s_gt.ply'%(ib,i,cat[i]),points = pd.DataFrame(ygt[i,...]));
+            write_ply(ply_path+os.sep+'_%04d_%03d_%s_y.ply'%(ib,i,cat[i]),points = pd.DataFrame(y[i,...]),faces=pd.DataFrame(face));
+            write_pts2sphere(ply_path+os.sep+'_%04d_%03d_%s_ypt.ply'%(ib,i,cat[i]),points = y[i,...]);
+            img = im[i,...];
+            img = img.transpose((1,2,0));
+            img = Image.fromarray(np.uint8(255.0*img));
+            img.save(ply_path+os.sep+'_%04d_%03d_%s_input.png'%(ib,i,cat[i]));
                 
                 
             
