@@ -97,7 +97,7 @@ def writelog(**kwargs):
             with open(opt['log_tmp']+os.sep+'best.json','w') as f:
                 json.dump(bestdict,f);
 
-    if opt['ply']:
+    if opt['ply'] and not kwargs['istraining']:
         ply_path = opt['log_tmp']+os.sep+'ply';
         if not os.path.exists(ply_path):
             os.mkdir(ply_path);

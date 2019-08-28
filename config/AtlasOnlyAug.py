@@ -12,7 +12,7 @@ mode = 'SVR'
 #data
 dataset = 'PON'
 category = ['augment','Table'];
-workers = 2
+workers = 1
 
 from .config import accuracy,loss,parameters,writelog;
         
