@@ -63,7 +63,7 @@ def writelog(**kwargs):
     meter = kwargs['meter'];
     print('['+str(datetime.now())+'][%d/%d,%d/%d]'%(iepoch,nepoch,ib,nb)+'training:'+str(kwargs['istraining']));
     if not 'log_tmp' in opt.keys():
-        opt['log_tmp'] = opt['log']+os.sep+opt['net']+'_'+opt['mode']+'_'+str(datetime.now()).replace(' ','-').replace(':','-');
+        opt['log_tmp'] = opt['log']+os.sep+opt['net']+'_'+opt['config']+'_'+opt['mode']+'_'+str(datetime.now()).replace(' ','-').replace(':','-');
         os.mkdir(opt['log_tmp']);
         with open(opt['log_tmp']+os.sep+'options.json','w') as f:
             json.dump(opt,f,cls=NpEncoder);
