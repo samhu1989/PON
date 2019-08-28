@@ -37,3 +37,8 @@ log/**/*
 *.txt
 *.lnk
 *.pyd
+*.obj
+*.exp
+*.lib
+*.egg
+*.pth
