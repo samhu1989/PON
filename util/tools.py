@@ -1,6 +1,14 @@
 import os
 import random
 import numpy as np
+import torch;
+from .data.ply import write_ply;
+import scipy;
+from scipy.sparse import dok_matrix;
+from scipy.sparse import csr_matrix;
+from scipy.spatial import ConvexHull;
+from scipy.spatial import Delaunay
+import pandas as pd;
 
 class AverageValueMeter(object):
     """Computes and stores the average and current value"""
@@ -33,18 +41,103 @@ class AvgMeterGroup(object):
             
     def update(self,val,cat):
         if isinstance(val,torch.Tensor):
-            val = val.cpu().numpy();
+            val = val.data.cpu().numpy();
         for i,c in enumerate(cat):
             self.overall_meter.update(val[i]);
-            if c in self.catgory_meters.keys():
+            if c in self.category_meters.keys():
                 self.category_meters[c].update(val[i]);
             else:
                 self.category_meters[c] = AverageValueMeter();
                 self.category_meters[c].update(val[i]);
                 
     def __str__(self):
-        ret = self.name;
-        ret += ',mean:%10.6f'%self.overall_meter.avg;
+        ret = 'mean:%10.6f'%self.overall_meter.avg;
         for k,v in self.category_meters.items():
             ret += ','+k+':%10.6f'%v.avg;
         return ret;
+        
+def triangulate(pts):
+    hull_list = [];
+    for i in range(pts.shape[0]):
+        pt = pts[i,...];
+        hull = Delaunay(pt);
+        for j in range(hull.simplices.shape[0]):
+            simplex = hull.simplices[j,:];
+            triangle = pt[simplex,:];
+            m = np.array([0,0,0],dtype=np.float32);
+            m[0:2] = triangle[0,:];
+            p0p1 = np.array([0,0,0],dtype=np.float32);
+            p1p2 = np.array([0,0,0],dtype=np.float32);
+            p0p1[0:2] = triangle[1,:] -  triangle[0,:];
+            p1p2[0:2] = triangle[2,:] -  triangle[1,:];
+            k = np.cross(p0p1,p1p2);
+            if np.dot(m,k) < 0:
+                tmp = hull.simplices[j,1];
+                hull.simplices[j,1] = hull.simplices[j,2];
+                hull.simplices[j,2] = tmp;
+        hull_list.append(hull);
+    return hull_list;
+    
+def repeat_face(simp,n,num):
+    newsimp = np.zeros([simp.shape[0]*n,3],dtype=simp.dtype)
+    for i in range(n):
+        newsimp[i*simp.shape[0]:(i+1)*simp.shape[0],:] = simp + i*num;
+    return newsimp;
+    
+def genface(pts,num):
+    pts_num = pts.shape[0];
+    patch_pts_num = pts_num // num;
+    p = pts[:patch_pts_num,:];
+    fidx = triangulate(p.reshape(1,p.shape[0],p.shape[-1]));
+    simp = repeat_face(fidx[0].simplices,num,patch_pts_num);
+    return simp.copy();
+
+pts = np.array([
+[0,0.8506508,0.5257311], 
+[0,0.8506508,-0.5257311], 
+[0,-0.8506508,0.5257311], 
+[0,-0.8506508,-0.5257311], 
+[0.8506508,0.5257311,0  ], 
+[0.8506508,-0.5257311,0 ], 
+[-0.8506508,0.5257311,0 ],
+[-0.8506508,-0.5257311,0],
+[0.5257311,0,0.8506508  ], 
+[-0.5257311,0,0.8506508 ], 
+[0.5257311,0,-0.8506508 ],
+[-0.5257311,0,-0.8506508]],dtype=np.float32);
+
+f = np.array([
+[1,0,4], 
+[0,1,6], 
+[2,3,5], 
+[3,2,7], 
+[4,5,10], 
+[5,4,8],
+[6,7,9], 
+[7,6,11], 
+[8,9,2 ],
+[9,8,0 ],
+[10,11,1 ],
+[11,10,3], 
+[0,8,4 ],
+[0,6,9 ],
+[1,4,10 ],
+[1,11,6 ],
+[2,5,8 ],
+[2,9,7 ],
+[3,10,5 ],
+[3,7,11] 
+],dtype=np.int32
+)
+    
+def write_pts2sphere(path,points):
+    n = points.shape[0];
+    m = pts.shape[0]
+    fidx = repeat_face(f,n,m);
+    T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
+    face = np.zeros(shape=[fidx.shape[0]],dtype=T);
+    for i in range(fidx.shape[0]):
+        face[i] = (3,fidx[i,0],fidx[i,1],fidx[i,2]);
+    y = 0.005*pts.reshape((1,pts.shape[0],pts.shape[-1])) + points.reshape((points.shape[0],1,points.shape[-1]));
+    write_ply(path,points = pd.DataFrame(y.reshape((-1,points.shape[-1]))),faces=pd.DataFrame(face));
+    return;

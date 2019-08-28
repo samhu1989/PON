@@ -14,28 +14,5 @@ dataset = 'PON'
 category = ['augment','Chair','StorageFurniture','Table'];
 workers = 4
 
-
-def loss(data,out):
-    loss = {};
-    return 
-
-def accuracy(data,out):
-    acc = {}
-    return acc;
-
-def parameters(net):
-    return net.parameters(); # train all parameters
-
-from datetime import datetime;
-from ..util.data.ply import write_ply
-def writelog(**kwargs):
-    opt = kwargs['opt'];
-    iepoch = kwargs['iepoch'];
-    nepoch = opt['nepoch'];
-    ib = kwargs['idata'] // opt['batch_size'];
-    nb = kwargs['ndata'] // opt['batch_size'];
-    print('['+str(datetime.now())+'][%d/%d,%d/%d]'%(iepoch,nepoch,ib,nb));
-    if not
-        
-    else:
+from .config import accuracy,loss,parameters,writelog;
         

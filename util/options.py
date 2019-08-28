@@ -9,6 +9,7 @@ def get_opt():
     parser.add_argument('--dataset','-ds',type=str,default='PON',help='dataset loader');
     parser.add_argument('--net','-net',type=str,default='AtlasNet',help='network');
     parser.add_argument('--config','-config',type=str,default='AtlasConfig',help='network configuration');
+    parser.add_argument('--log','-log',type=str,default='./log',help='log path');
     #binary flags:
     parser.add_argument('--ply',action='store_true');
     #int flags

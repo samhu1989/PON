@@ -53,7 +53,7 @@ class Data(data.Dataset):
         row_rand_pts = pts[row_rand_array[0:self.pts_num]];
         pts = torch.from_numpy(row_rand_pts).contiguous();
         cat = os.path.basename(fn).split('.')[0];
-        cat = fn.split('_')[0];
+        cat = cat.split('_')[0];
         # load image
         if self.SVR:
             v_path = fn+'_view';
