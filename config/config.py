@@ -42,15 +42,25 @@ class NpEncoder(json.JSONEncoder):
             return obj.tolist()
         else:
             return str(obj);
+            
+from PIL import Image;
+
+bestcnt = 3;
+best = np.array([10000]*bestcnt,dtype=np.float32);
+bestn = [""]*bestcnt;
 
 def writelog(**kwargs):
+    global best;
+    global bestn;
     opt = kwargs['opt'];
     iepoch = kwargs['iepoch'];
     nepoch = opt['nepoch'];
     ib = kwargs['idata'];
     nb = kwargs['ndata'] // opt['batch_size'];
     out = kwargs['out'];
+    net = kwargs['net'];
     data = kwargs['data'];
+    meter = kwargs['meter'];
     print('['+str(datetime.now())+'][%d/%d,%d/%d]'%(iepoch,nepoch,ib,nb)+'training:'+str(kwargs['istraining']));
     if not 'log_tmp' in opt.keys():
         opt['log_tmp'] = opt['log']+os.sep+opt['net']+'_'+opt['mode']+'_'+str(datetime.now()).replace(' ','-').replace(':','-');
@@ -66,9 +76,27 @@ def writelog(**kwargs):
         
     with open(opt['log_tmp']+os.sep+'log.txt','a') as logtxt:
         print('['+str(datetime.now())+'][%d/%d,%d/%d]'%(iepoch,nepoch,ib,nb)+'training:'+str(kwargs['istraining']),file=logtxt);
-        print(json.dumps(kwargs['meter'],cls=NpEncoder),file=logtxt);
+        print(json.dumps(meter,cls=NpEncoder),file=logtxt);
         
-    if not kwargs['istraining']:
+    if not kwargs['istraining'] and ib >= nb-1:
+        if meter['cd'].overall_meter.avg < best[-1]:
+            fn = bestn[-1];
+            if fn:
+                os.remove(opt['log_tmp']+os.sep+fn);
+            fn = 'net_'+str(datetime.now()).replace(' ','-').replace(':','-')+'.pth';
+            best[-1] = meter['cd'].overall_meter.avg;
+            bestn[-1] = fn;
+            torch.save(net.state_dict(),opt['log_tmp']+os.sep+fn);
+            idx = np.argsort(best);
+            best = best[idx];
+            bestn = [bestn[x] for x in idx.tolist()];
+            bestdict = dict(zip(bestn, best.tolist()));
+            print(best);
+            print(bestn);
+            print(bestdict);
+            with open(opt['log_tmp']+os.sep+'best.json','w') as f:
+                json.dump(bestdict,f);
+
         if opt['ply']:
             ply_path = opt['log_tmp']+os.sep+'ply';
             if not os.path.exists(ply_path):
@@ -80,6 +108,8 @@ def writelog(**kwargs):
             ygt = data[1];
             ygt = ygt.data.cpu().numpy();
             cat = data[-1];
+            im = data[0];
+            im = im.data.cpu().numpy();
             for i in range(y.shape[0]):
                 fidx = genface(x[i,...],opt['grid_num']);
                 T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
@@ -89,4 +119,10 @@ def writelog(**kwargs):
                 write_ply(ply_path+os.sep+'_%04d_%03d_%s_gt.ply'%(ib,i,cat[i]),points = pd.DataFrame(ygt[i,...]));
                 write_ply(ply_path+os.sep+'_%04d_%03d_%s_y.ply'%(ib,i,cat[i]),points = pd.DataFrame(y[i,...]),faces=pd.DataFrame(face));
                 write_pts2sphere(ply_path+os.sep+'_%04d_%03d_%s_ypt.ply'%(ib,i,cat[i]),points = y[i,...]);
+                img = im[i,...];
+                img = img.transpose((1,2,0));
+                img = Image.fromarray(np.uint8(255.0*img));
+                img.save(ply_path+os.sep+'_%04d_%03d_%s_input.png'%(ib,i,cat[i]));
+                
+                
             

@@ -2,7 +2,7 @@
 lr = 1e-5;
 optim = 'Adam'
 weight_decay = 0.0
-nepoch = 1
+nepoch = 4
 #net
 pts_num = 2500
 pts_num_gt = 10000
