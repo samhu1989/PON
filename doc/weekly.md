@@ -3,9 +3,66 @@
 1. Verify the superiority of part based representation in shape reconstruction by proposing a novel neural network for the task.
 
 2. The network should:
+    
     - do reconstruction in few shot setting 
+    
+      
+
+#### preliminary report 20190826
+
+##### <font color=#55ff55>Done </font>
+
+preliminary experiment on part-based shape augmentation:
+
+##### Report
+
+The experiment is conducted as follows :
+
+I picked  Chair, Storage Furniture, Table from PartNet 
+
+I choose 1024 shapes from each category
+
+I used parts from Chair and  Storage Furniture to randomly assemble 2048 shapes as a new category "Augment":
+
+( more samples can be view at http://171.67.77.236:8082/_pon_aug )![holisticfewshot](./img/augment.png "")
+
+I trained three different AtlasNet to do single view reconstruction:
+
+
+
+NoAug:  trained with data from Chair and  Storage Furniture.
+
+OnlyAug: trained with data from "Augment".
+
+All: train with data from "Augment", Chair, Storage Furniture
+
+
+
+These models are all validated with data from Table
+
+Chamfer Distance  after 1024 epochs:
+
+| CD    | NoAug        | OnlyAug  | All          |
+| ----- | ------------ | -------- | ------------ |
+| train | **0.005520** | 0.008278 | 0.005855     |
+| val   | 0.035083     | 0.027681 | **0.020118** |
+
+visual result: (go to the link for more visual results)
+
+NoAug:  http://171.67.77.236:8082/_pon_atlas_noaug
+
+![holisticfewshot](./img/atlas_noaug.png "")
+
+OnlyAug:  http://171.67.77.236:8082/_pon_atlas_onlyaug
+
+![holisticfewshot](./img/atlas_onlyaug.png "")
+
+All:  http://171.67.77.236:8082/_pon_atlas_all
+
+![holisticfewshot](./img/atlas_all.png "")
 
 #### preliminary report 20190809
+
 ##### <font color=#55ff55>Done </font>
 correctly run the test code of  [Learning to Reconstruct Shapes from Unseen Classes][5]
 
