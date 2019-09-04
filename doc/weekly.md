@@ -3,7 +3,7 @@
 1. Verify the superiority of part based representation in shape reconstruction by proposing a novel neural network for the task.
 
 2. The network should:
-    
+   
     - do reconstruction in few shot setting 
     
       
@@ -13,6 +13,26 @@
 ##### <font color=#55ff55>Done </font>
 
 preliminary experiment on part-based shape augmentation:
+
+
+
+##### <font color=#ff0099>To Do </font>
+
+merge-net part-seg
+
+open-context
+
+shape - > super-pixel  -> predict merge score  
+
+image -> part shape (limited visible area)
+
+image -> merge-net -> part  seg -> part shape -> part arrangement -> shape completion
+
+arrangement and shape completion 
+
+shape refine-net by re-projection and compare to input image.
+
+
 
 ##### Report
 
@@ -60,6 +80,8 @@ OnlyAug:  http://171.67.77.236:8082/_pon_atlas_onlyaug
 All:  http://171.67.77.236:8082/_pon_atlas_all
 
 ![holisticfewshot](./img/atlas_all.png "")
+
+
 
 #### preliminary report 20190809
 
