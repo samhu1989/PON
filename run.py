@@ -9,11 +9,9 @@ import os;
 sys.path.append('./');
 from util.options import get_opt
 from util.options import usage;
-import torch;
 
 if __name__ == "__main__":
     #get options from command line inputs
-    torch.backends.cudnn.enabled = False;
     opt = get_opt();
     try:
         m = importlib.import_module(opt.execute)
