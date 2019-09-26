@@ -18,6 +18,16 @@ preliminary experiment on part-based shape augmentation:
 
 ##### <font color=#ff0099>To Do </font>
 
+Hao's proposal
+
+
+
+
+
+
+
+
+
 merge-net part-seg
 
 open-context

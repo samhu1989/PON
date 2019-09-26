@@ -10,6 +10,7 @@ from scipy.spatial import ConvexHull;
 from scipy.spatial import Delaunay
 import pandas as pd;
 
+
 class AverageValueMeter(object):
     """Computes and stores the average and current value"""
     def __init__(self):
@@ -133,6 +134,50 @@ f = np.array([
 def write_pts2sphere(path,points):
     n = points.shape[0];
     m = pts.shape[0]
+    fidx = repeat_face(f,n,m);
+    T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
+    face = np.zeros(shape=[fidx.shape[0]],dtype=T);
+    for i in range(fidx.shape[0]):
+        face[i] = (3,fidx[i,0],fidx[i,1],fidx[i,2]);
+    y = 0.005*pts.reshape((1,pts.shape[0],pts.shape[-1])) + points.reshape((points.shape[0],1,points.shape[-1]));
+    write_ply(path,points = pd.DataFrame(y.reshape((-1,points.shape[-1]))),faces=pd.DataFrame(face));
+    return;
+    
+def randsphere2(m=100):
+    pts = np.zeros([m,3],np.float32);
+    n = np.linspace(1,m,m);
+    n += np.random.normal();
+    tmp = 0.5*(np.sqrt(5)-1)*n;
+    theta = 2.0*np.pi*(tmp - np.floor(tmp));
+    pts[:,0] = np.cos(theta);
+    pts[:,1] = np.sin(theta);
+    pts[:,2] = 2.0*(n - n.min()) / (n.max()-n.min()) - 1.0;
+    scale = np.sqrt(1 - np.square(pts[2,:]));
+    pts[:,0] *= scale;
+    pts[:,1] *= scale;
+    return pts;
+
+    
+def triangulate(pts):
+    hull = ConvexHull(pts);
+    for j in range(hull.simplices.shape[0]):
+        simplex = hull.simplices[j,:];
+        triangle = pt[:,simplex];
+        m = triangle[:,0];
+        p0p1 = triangle[:,1] -  triangle[:,0];
+        p1p2 = triangle[:,2] -  triangle[:,1];
+        k = np.cross(p0p1,p1p2);
+        if np.dot(m,k) < 0:
+            tmp = hull.simplices[j,1];
+            hull.simplices[j,1] = hull.simplices[j,2];
+            hull.simplices[j,2] = tmp;
+    return hull.simplices.copy();
+    
+    
+def write_pts2sphere_m(path,points,m=64):
+    n = points.shape[0];
+    pts = randsphere2(m);
+    f = triangulate(pts);
     fidx = repeat_face(f,n,m);
     T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
     face = np.zeros(shape=[fidx.shape[0]],dtype=T);
