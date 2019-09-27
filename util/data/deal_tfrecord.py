@@ -6,6 +6,7 @@ import json;
 from PIL import Image
 from .ply import write_ply
 import pandas as pd;
+import h5py;
 
 max_num_part_per_sem = 10
 IMAGE_SIZE = 224
@@ -23,7 +24,7 @@ def parse_record(serialized_example,num_sem,ori_num_ins_per_sem,num_ins_per_sem,
         'render_id': tf.FixedLenFeature([1], dtype=tf.int64),
         'model_id': tf.FixedLenFeature([1], dtype=tf.string),
         'anno_id': tf.FixedLenFeature([1], dtype=tf.string),
-        'img': tf.FixedLenFeature([224, 224, 3], dtype=tf.int64)
+        'img': tf.FixedLenFeature([IMAGE_SIZE, IMAGE_SIZE, 3], dtype=tf.int64)
         }
     for j in range(1, num_sem+1):
         feature_map['sem-%03d-pc'%j] = tf.FixedLenFeature([ori_num_ins_per_sem[j], 1000, 3], dtype=tf.float32)
@@ -48,31 +49,21 @@ def parse_record(serialized_example,num_sem,ori_num_ins_per_sem,num_ins_per_sem,
     features['img'] = tf.cast(features['img'], dtype=tf.float32) / 255
     return features;
 
-def write(data_root,num_sem,mid,rid,aid,img,ins_msk_lst,ins_pc_lst,gname):
+def write(h5f,pts_ds,img_ds,msk_ds,cnt_ds,mid,img,ins_msk_lst,ins_pc_lst,path):
     mid = mid.flatten()[0].decode();
-    aid = aid.flatten()[0].decode();
-    rid = rid[0,0,...]
-    print(mid,aid,rid);
-    path = os.path.join(data_root,'partgen');
-    if not os.path.exists(path):
-        os.mkdir(path);
-    path = os.path.join(path,gname);
-    if not os.path.exists(path):
-        os.mkdir(path);
-    path = os.path.join(path,aid+'_'+str(rid));
-    if not os.path.exists(path):
-        os.mkdir(path);
-    with open(os.path.join(path,'info.txt'), 'w') as f:
+    with open(path, 'w') as f:
         print(mid,file=f);
-    img_path = os.path.join(path,'img.png');
     img = img[0,...];
-    img = Image.fromarray(np.uint8(img*255.0));
-    img.save(img_path);
+    print('img',img.shape);
+    
+    #img = Image.fromarray(np.uint8(img*255.0));
     for i in range(len(ins_msk_lst)):
         msk = ins_msk_lst[i];
         pc = ins_pc_lst[i];
         msk = msk[0,...];
         pc = pc[0,...];
+        print('pc',pc.shape);
+        print('msk',msk.shape);
         for j in range(msk.shape[0]):
             msk_path = os.path.join(path,'msk_%d_%d.png'%(i,j));
             pc_path = os.path.join(path,'pc_%d_%d.ply'%(i,j));
@@ -146,17 +137,32 @@ def run(**kwargs):
     dataset_handle = sess.run(dataset_iterator.string_handle())
     trans_table.init.run(session=sess)
     sess.run(dataset_iterator.initializer)
-    
+    ops = [model_id,render_id,anno_id,input_img];
+    for i in range(1, num_sem+1):
+        ops.append(gt_ins_mask_per_sem['sem-%03d'%i])
+        ops.append(gt_part_pc_per_sem['sem-%03d'%i])
+        
+    path = os.path.join(data_root,'partgenh5');
+    if not os.path.exists(path):
+        os.mkdir(path);
+    cnt = 0;
+    fcnt = 0;
+    new_fname = None;
     while True:
+        if fcnt == 0 or (float(os.path.getsize(new_fname))/1024.0*1024.0>256.0):
+            new_fname = path+os.sep+"pg_%04d.h5"%fcnt;
+            h5f = h5py.File(new_fname,'w');
+            pts_dataset = h5f.create_dataset("pts",(1,1000,3),maxshape=(None,1000,3));
+            img_dataset = h5f.create_dataset("img",(1,3,224,224),maxshape=(None,3,224,224));
+            msk_dataset = h5f.create_dataset("msk",(1,224,224),maxshape=(None,224,224));
+            cnt_dataset = h5f.create_dataset("cnt",(1,1),maxshape=(None,1));
         try:
-            ops = [model_id,render_id,anno_id,input_img];
-            for i in range(1, num_sem+1):
-                ops.append(gt_ins_mask_per_sem['sem-%03d'%i])
-                ops.append(gt_part_pc_per_sem['sem-%03d'%i])
+            cnt = cnt + 1;
             out = sess.run(ops,feed_dict={handle_pl:dataset_handle});
-            winfo = [data_root,num_sem];
+            winfo = [h5f,pts_dataset,img_dataset,msk_dataset,cnt_dataset];
             out = list(out);
-            winfo.extend(out[:4]);
+            winfo.append(out[0]);
+            winfo.append(out[3]);
             ins_msk_lst = [];
             ins_pc_lst = [];
             for i in range(4,len(out),2):
@@ -164,8 +170,9 @@ def run(**kwargs):
                 ins_pc_lst.append(out[i+1]);
             winfo.append(ins_msk_lst);
             winfo.append(ins_pc_lst);
-            winfo.append(gname);
+            winfo.append(new_fname.replace('.h5','.txt'));
             write(*winfo);
         except tf.errors.OutOfRangeError:
             break;
+        h5f.flush();
     

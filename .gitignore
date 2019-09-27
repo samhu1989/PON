@@ -42,3 +42,4 @@ log/**/*
 *.lib
 *.egg
 *.pth
+*.h5
