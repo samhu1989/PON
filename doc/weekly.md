@@ -20,11 +20,7 @@ preliminary experiment on part-based shape augmentation:
 
 Hao's proposal
 
-
-
-
-
-
+![zeroshot](./img/zeroshot.png "")
 
 
 
