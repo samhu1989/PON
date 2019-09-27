@@ -5,16 +5,24 @@
 2. The network should:
    
     - do reconstruction in few shot setting 
-    
-      
 
-#### preliminary report 20190826
+#### meeting 20190927 ( kaichun, tiange & siyu  ) 
+
+##### <font color=#ff0099>To Do </font>
+
+complete first version of step 2 and step 3.
+
+part construction.
+
+place shape according to mask ray.
+
+
+
+#### meeting 20190826 ( hao, kaichun & siyu ) 
 
 ##### <font color=#55ff55>Done </font>
 
 preliminary experiment on part-based shape augmentation:
-
-
 
 ##### <font color=#ff0099>To Do </font>
 

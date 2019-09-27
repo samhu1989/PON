@@ -16,7 +16,6 @@ def valid_pc(pc):
     else:
         return False;
 
-
 def parse_record(serialized_example,num_sem,ori_num_ins_per_sem,num_ins_per_sem,trans_table):
     feature_map = {
         'pts': tf.FixedLenFeature([10000, 3], dtype=tf.float32),
@@ -49,12 +48,15 @@ def parse_record(serialized_example,num_sem,ori_num_ins_per_sem,num_ins_per_sem,
     features['img'] = tf.cast(features['img'], dtype=tf.float32) / 255
     return features;
 
-def write(data_root,num_sem,mid,rid,aid,img,ins_msk_lst,ins_pc_lst):
+def write(data_root,num_sem,mid,rid,aid,img,ins_msk_lst,ins_pc_lst,gname):
     mid = mid.flatten()[0].decode();
     aid = aid.flatten()[0].decode();
     rid = rid[0,0,...]
     print(mid,aid,rid);
-    path = os.path.join(data_root,'learn2merge');
+    path = os.path.join(data_root,'partgen');
+    if not os.path.exists(path):
+        os.mkdir(path);
+    path = os.path.join(path,gname);
     if not os.path.exists(path):
         os.mkdir(path);
     path = os.path.join(path,aid+'_'+str(rid));
@@ -106,12 +108,13 @@ def run(**kwargs):
         
     trans_table = tf.contrib.lookup.HashTable(tf.contrib.lookup.KeyValueTensorInitializer(list(trans_dict.keys()), list(trans_dict.values())), '')
     
+    gname = 'train'
     records = [];
     for root, dirs, files in os.walk(data_root):
-        for name in files:
-            if name.endswith('.tfrecords'):
-                records.append(os.path.join(root, name));
-    dataset = tf.data.TFRecordDataset(records, compression_type='GZIP', buffer_size=32, num_parallel_reads=4)
+        for record_name in files:
+            if record_name.endswith('.tfrecords') and ( gname in record_name ):
+                records.append(os.path.join(root, record_name));
+    dataset = tf.data.TFRecordDataset(records,compression_type='GZIP',buffer_size=32,num_parallel_reads=4)
     map = partial(parse_record,num_sem=num_sem,ori_num_ins_per_sem=ori_num_ins_per_sem,num_ins_per_sem=num_ins_per_sem,trans_table=trans_table);
     dataset = dataset.map(map,10)
     dataset = dataset.prefetch(32)
@@ -151,7 +154,7 @@ def run(**kwargs):
                 ops.append(gt_ins_mask_per_sem['sem-%03d'%i])
                 ops.append(gt_part_pc_per_sem['sem-%03d'%i])
             out = sess.run(ops,feed_dict={handle_pl:dataset_handle});
-            winfo = [data_root,num_sem]
+            winfo = [data_root,num_sem];
             out = list(out);
             winfo.extend(out[:4]);
             ins_msk_lst = [];
@@ -161,6 +164,7 @@ def run(**kwargs):
                 ins_pc_lst.append(out[i+1]);
             winfo.append(ins_msk_lst);
             winfo.append(ins_pc_lst);
+            winfo.append(gname);
             write(*winfo);
         except tf.errors.OutOfRangeError:
             break;
