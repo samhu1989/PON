@@ -51,30 +51,31 @@ def parse_record(serialized_example,num_sem,ori_num_ins_per_sem,num_ins_per_sem,
 
 def write(h5f,pts_ds,img_ds,msk_ds,cnt_ds,mid,img,ins_msk_lst,ins_pc_lst,path):
     mid = mid.flatten()[0].decode();
-    with open(path, 'w') as f:
+    with open(path, 'a') as f:
         print(mid,file=f);
     img = img[0,...];
-    print('img',img.shape);
-    
-    #img = Image.fromarray(np.uint8(img*255.0));
+    img_ds.resize((img_ds.shape[0] + 1), axis=0);
+    img_ds[-1,...] = img;
+    cnt_ds.resize((cnt_ds.shape[0] + 1), axis=0);
+    cnt_ds[-1,0] = 0;
     for i in range(len(ins_msk_lst)):
         msk = ins_msk_lst[i];
         pc = ins_pc_lst[i];
         msk = msk[0,...];
         pc = pc[0,...];
-        print('pc',pc.shape);
-        print('msk',msk.shape);
         for j in range(msk.shape[0]):
-            msk_path = os.path.join(path,'msk_%d_%d.png'%(i,j));
-            pc_path = os.path.join(path,'pc_%d_%d.ply'%(i,j));
-            mskimg = Image.fromarray(np.uint8(msk[j,...]*255.0),'L');
             if valid_pc(pc[j,...]):
-                mskimg.save(msk_path);
-                write_ply(pc_path,points = pd.DataFrame(pc[j,...]));
+                msk_ds.resize((msk_ds.shape[0] + 1), axis=0);
+                msk_ds[-1,...] = msk[j,...];
+                pts_ds.resize((pts_ds.shape[0] + 1), axis=0);
+                pts_ds[-1,...] = pc[j,...];
+                cnt_ds[-1,0] += 1;
+    h5f.flush();
     return;
 
 def run(**kwargs):
     data_root = kwargs['data_path'];
+    gname = kwargs['user_key'];
     stat_fn = os.path.join(data_root,'./stats/part_count_stats-new/%s-%d-input.txt' % ('Chair', 3));
     num_sem = 0; ori_num_ins_per_sem = [0]; num_ins_per_sem = [0]; sem_name = ['other'];
     with open(stat_fn, 'r') as fin:
@@ -99,12 +100,12 @@ def run(**kwargs):
         
     trans_table = tf.contrib.lookup.HashTable(tf.contrib.lookup.KeyValueTensorInitializer(list(trans_dict.keys()), list(trans_dict.values())), '')
     
-    gname = 'train'
     records = [];
     for root, dirs, files in os.walk(data_root):
         for record_name in files:
             if record_name.endswith('.tfrecords') and ( gname in record_name ):
                 records.append(os.path.join(root, record_name));
+    records.sort();
     dataset = tf.data.TFRecordDataset(records,compression_type='GZIP',buffer_size=32,num_parallel_reads=4)
     map = partial(parse_record,num_sem=num_sem,ori_num_ins_per_sem=ori_num_ins_per_sem,num_ins_per_sem=num_ins_per_sem,trans_table=trans_table);
     dataset = dataset.map(map,10)
@@ -130,34 +131,36 @@ def run(**kwargs):
         gt_part_pc_per_sem['sem-%03d'%i] = next_element['sem-%03d-pc'%i]
         
     config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    config.allow_soft_placement = True
-    config.log_device_placement = False
+    config.gpu_options.allow_growth = True;
+    config.allow_soft_placement = True;
+    config.log_device_placement = False;
     sess = tf.Session(config=config)
-    dataset_handle = sess.run(dataset_iterator.string_handle())
-    trans_table.init.run(session=sess)
-    sess.run(dataset_iterator.initializer)
+    dataset_handle = sess.run(dataset_iterator.string_handle());
+    trans_table.init.run(session=sess);
+    sess.run(dataset_iterator.initializer);
     ops = [model_id,render_id,anno_id,input_img];
     for i in range(1, num_sem+1):
         ops.append(gt_ins_mask_per_sem['sem-%03d'%i])
         ops.append(gt_part_pc_per_sem['sem-%03d'%i])
-        
-    path = os.path.join(data_root,'partgenh5');
+    
+    path = os.path.join(data_root,'partgen-h5');
     if not os.path.exists(path):
         os.mkdir(path);
-    cnt = 0;
     fcnt = 0;
     new_fname = None;
+    h5f = None;
     while True:
-        if fcnt == 0 or (float(os.path.getsize(new_fname))/1024.0*1024.0>256.0):
-            new_fname = path+os.sep+"pg_%04d.h5"%fcnt;
+        if fcnt == 0 or (float(os.path.getsize(new_fname))/(1024.0*1024.0)>512.0):
+            if not h5f is None:
+                h5f.close();
+            new_fname = path+os.sep+gname+"_pg_%04d.h5"%fcnt;
             h5f = h5py.File(new_fname,'w');
-            pts_dataset = h5f.create_dataset("pts",(1,1000,3),maxshape=(None,1000,3));
-            img_dataset = h5f.create_dataset("img",(1,3,224,224),maxshape=(None,3,224,224));
-            msk_dataset = h5f.create_dataset("msk",(1,224,224),maxshape=(None,224,224));
-            cnt_dataset = h5f.create_dataset("cnt",(1,1),maxshape=(None,1));
+            pts_dataset = h5f.create_dataset("pts",(1,1000,3),maxshape=(None,1000,3),chunks=(1,1000,3),compression="gzip", compression_opts=9);
+            img_dataset = h5f.create_dataset("img",(1,224,224,3),maxshape=(None,224,224,3),chunks=(1,224,224,3),compression="gzip", compression_opts=9);
+            msk_dataset = h5f.create_dataset("msk",(1,224,224),maxshape=(None,224,224),chunks=(1,224,224),compression="gzip", compression_opts=9);
+            cnt_dataset = h5f.create_dataset("cnt",(1,1),maxshape=(None,1),chunks=(1,1),compression="gzip", compression_opts=9);
+            fcnt = fcnt + 1;
         try:
-            cnt = cnt + 1;
             out = sess.run(ops,feed_dict={handle_pl:dataset_handle});
             winfo = [h5f,pts_dataset,img_dataset,msk_dataset,cnt_dataset];
             out = list(out);
@@ -172,7 +175,12 @@ def run(**kwargs):
             winfo.append(ins_pc_lst);
             winfo.append(new_fname.replace('.h5','.txt'));
             write(*winfo);
+            print('img_dataset:',img_dataset.shape);
+            print('file_size:',float(os.path.getsize(new_fname))/(1024.0*1024.0));
+            print('cnt data:',cnt_dataset.shape);
+            print('cnt:',cnt_dataset[-1,:]);
         except tf.errors.OutOfRangeError:
             break;
-        h5f.flush();
+    if not h5f is None:
+        h5f.close();
     
