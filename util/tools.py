@@ -61,16 +61,24 @@ def triangulate(pts):
     hull_list = [];
     for i in range(pts.shape[0]):
         pt = pts[i,...];
-        hull = Delaunay(pt);
+        if pt.shape[-1] == 2:
+            hull = Delaunay(pt);
+        if pt.shape[-1] == 3:
+            hull = ConvexHull(pt);
         for j in range(hull.simplices.shape[0]):
             simplex = hull.simplices[j,:];
             triangle = pt[simplex,:];
             m = np.array([0,0,0],dtype=np.float32);
-            m[0:2] = triangle[0,:];
             p0p1 = np.array([0,0,0],dtype=np.float32);
             p1p2 = np.array([0,0,0],dtype=np.float32);
-            p0p1[0:2] = triangle[1,:] -  triangle[0,:];
-            p1p2[0:2] = triangle[2,:] -  triangle[1,:];
+            if pt.shape[-1] == 2:
+                m[0:2] = triangle[0,:];
+                p0p1[0:2] = triangle[1,:] -  triangle[0,:];
+                p1p2[0:2] = triangle[2,:] -  triangle[1,:];
+            if pt.shape[-1] == 3:
+                m = triangle[0,:];
+                p0p1 = triangle[1,:] -  triangle[0,:];
+                p1p2 = triangle[2,:] -  triangle[1,:];
             k = np.cross(p0p1,p1p2);
             if np.dot(m,k) < 0:
                 tmp = hull.simplices[j,1];
@@ -157,7 +165,7 @@ def randsphere2(m=100):
     pts[:,1] *= scale;
     return pts;
 
-    
+'''    
 def triangulate(pts):
     hull = ConvexHull(pts);
     for j in range(hull.simplices.shape[0]):
@@ -172,7 +180,7 @@ def triangulate(pts):
             hull.simplices[j,1] = hull.simplices[j,2];
             hull.simplices[j,2] = tmp;
     return hull.simplices.copy();
-    
+''' 
     
 def write_pts2sphere_m(path,points,m=64):
     n = points.shape[0];
