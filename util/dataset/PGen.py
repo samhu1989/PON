@@ -71,7 +71,7 @@ class Data(data.Dataset):
         except Exception as e:
             print(e);
             traceback.print_exc();
-            exit();
+            #exit();
         if not partimg is None:
             im = partimg.copy();
             im = im.transpose(2,0,1)
