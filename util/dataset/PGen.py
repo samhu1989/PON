@@ -9,7 +9,6 @@ from scipy import ndimage;
 #torch import
 import torch;
 import torch.utils.data as data;
-import torchvision.transforms as transforms;
 from ..data.ply import write_ply;
 import pandas as pd;
 import traceback;
