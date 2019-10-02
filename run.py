@@ -7,8 +7,8 @@ import importlib
 import os;
 #project import
 sys.path.append('./');
-sys.path.append('./ext/cd/install/python/Lib/site-packages');
-sys.path.append('./ext/cd/install/python/lib/python%s/site-packages'%(sys.version[:3]));
+sys.path.append('./ext/cd/install/Lib/site-packages');
+sys.path.append('./ext/cd/install/lib/python%s/site-packages'%(sys.version[:3]));
 print(sys.path)
 from util.options import get_opt
 from util.options import usage;
