@@ -25,7 +25,7 @@ class Data(data.Dataset):
         self.smap = [];
         self.pmap = [];
         self.cat = [];
-        self.load_length = 3;
+        self.load_length = 2;
         self.load_dict = {};
         for root, dirs, files in os.walk(self.root, topdown=True):
             for fname in files:
