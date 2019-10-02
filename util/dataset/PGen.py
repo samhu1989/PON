@@ -24,8 +24,6 @@ class Data(data.Dataset):
         self.smap = [];
         self.pmap = [];
         self.cat = [];
-        self.load_length = 1;
-        self.load_dict = {};
         for root, dirs, files in os.walk(self.root, topdown=True):
             for fname in files:
                 if fname.endswith('.h5'):
@@ -62,21 +60,12 @@ class Data(data.Dataset):
     def load(self,index):
         try:
             findex = self.fmap[index];
-            if findex in self.load_dict.keys():
-                h5file = self.load_dict[findex];
-            else:
-                h5file = h5py.File(self.datapath[findex],'r');
-                self.load_dict[findex] = {};
-                for k in h5file.keys():
-                    self.load_dict[findex][k] = np.array(h5file[k]).copy();
-                h5file.close();
-                h5file = self.load_dict[findex];
+            h5file = h5py.File(self.datapath[findex],'r');            
             img = h5file['img'][self.smap[index],...];
             msk = h5file['msk'][self.pmap[index],...];
             pts = h5file['pts'][self.pmap[index],...];
             partimg = self.getpartimg(img,msk);
-            if len(self.load_dict) > self.load_length:
-                self.load_dict.pop(self.load_dict.keys()[0]);
+            h5file.close();
         except Exception as e:
             print(e);
             traceback.print_exc();
