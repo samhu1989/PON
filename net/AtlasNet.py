@@ -11,8 +11,6 @@ import torch.backends.cudnn as cudnn
 import torch.optim as optim;
 from torch.nn.parameter import Parameter
 import torch.utils.data
-import torchvision.transforms as transforms
-import torchvision.utils as vutils
 from torch.autograd import Variable
 from PIL import Image
 import numpy as np

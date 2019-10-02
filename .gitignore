@@ -43,3 +43,6 @@ log/**/*
 *.egg
 *.pth
 *.h5
+ext/cd/install/Lib/site-packages/site.py
+ext/cd/chamfer.egg-info/PKG-INFO
+*.ps1
