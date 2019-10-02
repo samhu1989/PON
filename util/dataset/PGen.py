@@ -37,6 +37,7 @@ class Data(data.Dataset):
                     self.cat.append(os.path.basename(root));
         self.datapath.sort();
         for idx,p in enumerate(self.datapath):
+            print(p);
             f = h5py.File(p,'r');
             cnt = f['cnt'];
             snum = cnt.shape[0];
