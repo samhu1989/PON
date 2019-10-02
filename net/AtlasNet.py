@@ -14,7 +14,6 @@ import torch.utils.data
 from torch.autograd import Variable
 from PIL import Image
 import numpy as np
-import matplotlib.pyplot as plt
 import pdb
 import torch.nn.functional as F;
 import resnet;
