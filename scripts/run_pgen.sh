@@ -1,0 +1,1 @@
+python run.py -X util.trainval -net AtlasNet -config InvAtlasPGen -dp ./data/partpc/partgen-h5 -ds PGen --ply
