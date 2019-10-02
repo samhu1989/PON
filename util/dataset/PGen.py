@@ -80,6 +80,7 @@ class Data(data.Dataset):
             return self.load(index+1);
 
     def __len__(self):
+        assert len(self.fmap)==len(self.pmap),'%d!=%d'%(len(self.fmap),len(pelf.smap));
         assert len(self.pmap)==len(self.smap),'%d!=%d'%(len(self.pmap),len(self.smap));
         return len(self.pmap);
         
