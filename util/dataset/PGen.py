@@ -38,12 +38,13 @@ class Data(data.Dataset):
             cnt = f['cnt'];
             snum = cnt.shape[0];
             pnum = int(np.sum(cnt));
+            #print(pnum,f['msk'].shape[0]);
             poff = 0;
             for si in range(snum):
                 p_per_s = int(cnt[si,0]);
                 self.fmap.extend([idx]*p_per_s);
                 self.smap.extend([si]*p_per_s);
-            self.pmap.extend([x for x in range(1,pnum)]);
+            self.pmap.extend([x for x in range(1,pnum+1)]);
             f.close();
         
                 
@@ -58,6 +59,7 @@ class Data(data.Dataset):
             return img*msk.reshape(msk.shape[0],msk.shape[1],1);
         
     def load(self,index):
+        partimg = None;
         try:
             findex = self.fmap[index];
             h5file = h5py.File(self.datapath[findex],'r');            
@@ -78,6 +80,7 @@ class Data(data.Dataset):
             return self.load(index+1);
 
     def __len__(self):
+        assert len(self.pmap)==len(self.smap),'%d!=%d'%(len(self.pmap),len(self.smap));
         return len(self.pmap);
         
 #debuging the dataset      
