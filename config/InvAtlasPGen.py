@@ -1,10 +1,10 @@
 
 
 #optim
-lr = 1e-5;
+lr = 1e-3;
 optim = 'Adam'
 weight_decay = 0.0
-nepoch = 1
+nepoch = 5
 #net
 pts_num = 1000
 pts_num_gt = 1000
