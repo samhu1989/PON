@@ -13,7 +13,7 @@ grid_dim = 3
 mode = 'InvSVR'
 #data
 dataset = 'PGen'
-workers = 0;
+workers = 2;
 from .config import accuracy,parameters,writelog;
 
 import sys;

@@ -20,12 +20,11 @@ class Data(data.Dataset):
         self.train = train
         self.datapath = [];
         self.datadict = [];
-        self.cnt = 0;
         self.fmap = [];
         self.smap = [];
         self.pmap = [];
         self.cat = [];
-        self.load_length = 2;
+        self.load_length = 1;
         self.load_dict = {};
         for root, dirs, files in os.walk(self.root, topdown=True):
             for fname in files:
@@ -37,12 +36,10 @@ class Data(data.Dataset):
                     self.cat.append(os.path.basename(root));
         self.datapath.sort();
         for idx,p in enumerate(self.datapath):
-            print(p);
             f = h5py.File(p,'r');
             cnt = f['cnt'];
             snum = cnt.shape[0];
             pnum = int(np.sum(cnt));
-            self.cnt += pnum;
             poff = 0;
             for si in range(snum):
                 p_per_s = int(cnt[si,0]);
@@ -92,7 +89,7 @@ class Data(data.Dataset):
             return self.load(index+1);
 
     def __len__(self):
-        return self.cnt;
+        return len(self.pmap);
         
 #debuging the dataset      
 def run(**kwargs):
