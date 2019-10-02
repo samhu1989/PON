@@ -46,6 +46,9 @@ class Data(data.Dataset):
                 self.smap.extend([si]*p_per_s);
             self.pmap.extend([x for x in range(1,pnum+1)]);
             f.close();
+        assert max(self.fmap) < len(self.datapath),'max(self.fmap) > len(self.datapath)';
+        assert len(self.fmap)==len(self.pmap),'%d!=%d'%(len(self.fmap),len(pelf.smap));
+        assert len(self.pmap)==len(self.smap),'%d!=%d'%(len(self.pmap),len(self.smap));
         
                 
     def __getitem__(self, index):
@@ -58,9 +61,10 @@ class Data(data.Dataset):
         else:
             return img*msk.reshape(msk.shape[0],msk.shape[1],1);
         
-    def load(self,index):
+    def load(self,idx):
         partimg = None;
         try:
+            index = idx%self.__len__();
             findex = self.fmap[index];
             h5file = h5py.File(self.datapath[findex],'r');            
             img = h5file['img'][self.smap[index],...];
@@ -71,7 +75,7 @@ class Data(data.Dataset):
         except Exception as e:
             print(e);
             traceback.print_exc();
-            #exit();
+            exit();
         if not partimg is None:
             im = partimg.copy();
             im = im.transpose(2,0,1)
@@ -80,8 +84,6 @@ class Data(data.Dataset):
             return self.load(index+1);
 
     def __len__(self):
-        assert len(self.fmap)==len(self.pmap),'%d!=%d'%(len(self.fmap),len(pelf.smap));
-        assert len(self.pmap)==len(self.smap),'%d!=%d'%(len(self.pmap),len(self.smap));
         return len(self.pmap);
         
 #debuging the dataset      
@@ -94,13 +96,17 @@ def run(**kwargs):
     val_load = data.DataLoader(val_data,batch_size=1,shuffle=False,num_workers=opt['workers']);
     if not os.path.exists('./log/debug_dataset/'):
         os.mkdir('./log/debug_dataset/');
+    print('go over')
     for i, d in enumerate(train_load,0):
         partimg = d[0].cpu().numpy();
         partpts = d[1].cpu().numpy();
+        print(i,'/',len(train_data) // opt['batch_size']);
+        '''
         for j in range(partimg.shape[0]):
             im = Image.fromarray((partimg[j,...]*255.0).astype(np.uint8),'RGB');
             im.save('./log/debug_dataset/%s_im_%03d_%03d.png'%(d[-1][j],i,j));
             write_ply('./log/debug_dataset/%s_pt_%03d_%03d.ply'%(d[-1][j],i,j),points=pd.DataFrame(partpts[j,...]));
         if i > 1:
             break;
+        '''
         
