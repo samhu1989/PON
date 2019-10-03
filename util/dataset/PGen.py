@@ -55,8 +55,11 @@ class Data(data.Dataset):
         return self.load(index);
 
     def getpartimg(self,img,msk):
-        msk = ndimage.grey_dilation(msk,size=(10,10))
-        if np.sum(msk) < 200.0:
+        msk = ndimage.grey_dilation(msk,size=(10,10));
+        th = 200.0;
+        if not self.train:
+            th = 100.0
+        if np.sum(msk) < th:
             return None;
         else:
             return img*msk.reshape(msk.shape[0],msk.shape[1],1);

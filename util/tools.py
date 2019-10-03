@@ -10,6 +10,23 @@ from scipy.spatial import ConvexHull;
 from scipy.spatial import Delaunay
 import pandas as pd;
 
+def partial_restore(net,path,keymap={}):
+    olddict = torch.load(path);
+    #print(olddict.keys());
+    mdict = net.state_dict();
+    #print(olddict.keys());
+    #print(mdict.keys());
+    newdict = {};
+    for k,v in mdict.items():
+        if ( k in olddict ) and ( v.size() == olddict[k].size() ):
+            newdict[k] = olddict[k];
+        elif k in keymap and keymap[k] in olddict:
+            newdict[k] = olddict[keymap[k]];
+        else:
+            print(k,'in model is not assigned');
+    mdict.update(newdict);
+    net.load_state_dict(mdict);
+
 
 class AverageValueMeter(object):
     """Computes and stores the average and current value"""

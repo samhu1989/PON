@@ -4,6 +4,7 @@ import importlib
 from torch.utils.data import DataLoader;
 from torch import optim;
 from .tools import *;
+#torch.backends.cudnn.enabled = False;
 
 def data2cuda(data):
     for i in range(len(data)):
@@ -41,8 +42,14 @@ def run(**kwargs):
         print(e);
         traceback.print_exc();
         exit();
+    
     #run the code
     optimizer = eval('optim.'+opt['optim'])(config.parameters(net),lr=opt['lr'],weight_decay=opt['weight_decay']);
+    #load pre-trained
+    if opt['model']!='':
+        partial_restore(net,opt['model']);
+        print("Previous weights loaded");
+    
     for iepoch in range(opt['nepoch']):
         net.eval();
         #validation
@@ -59,7 +66,6 @@ def run(**kwargs):
                     val_meters[k] = AvgMeterGroup(k);
                     val_meters[k].update(v,data[-1]);
             config.writelog(net=net,data=data,out=out,meter=val_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(val_data),istraining=False);
-        
         net.train();
         #train
         train_meters = {};
