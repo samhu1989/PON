@@ -5,6 +5,32 @@
 2. The network should:
    
     - do reconstruction in few shot setting 
+    
+      
+
+### report 20191004
+
+##### <font color=#55ff55>Done  </font>
+
+some ugly results
+
+http://171.67.77.236:8082/bv/data~res~_pgen~_000_as
+
+current cd 0.011
+
+should reach somewhere about 0.006 ( or even smaller considering we are doing only the parts? ) 
+
+![CycleAtlasNet](./img/net.png "")
+
+##### <font color=#ff0099>To Do </font>
+
+how to make our method iteration  faster ( smaller dataset doesn't work )
+
+data preparation
+
+1. the view - gt alignment issue
+
+   
 
 #### meeting 20190927 ( kaichun, tiange & siyu  ) 
 

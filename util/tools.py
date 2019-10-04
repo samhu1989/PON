@@ -9,6 +9,7 @@ from scipy.sparse import csr_matrix;
 from scipy.spatial import ConvexHull;
 from scipy.spatial import Delaunay
 import pandas as pd;
+from .cmap import color;
 
 def partial_restore(net,path,keymap={}):
     olddict = torch.load(path);
@@ -180,24 +181,7 @@ def randsphere2(m=100):
     scale = np.sqrt(1 - np.square(pts[2,:]));
     pts[:,0] *= scale;
     pts[:,1] *= scale;
-    return pts;
-
-'''    
-def triangulate(pts):
-    hull = ConvexHull(pts);
-    for j in range(hull.simplices.shape[0]):
-        simplex = hull.simplices[j,:];
-        triangle = pt[:,simplex];
-        m = triangle[:,0];
-        p0p1 = triangle[:,1] -  triangle[:,0];
-        p1p2 = triangle[:,2] -  triangle[:,1];
-        k = np.cross(p0p1,p1p2);
-        if np.dot(m,k) < 0:
-            tmp = hull.simplices[j,1];
-            hull.simplices[j,1] = hull.simplices[j,2];
-            hull.simplices[j,2] = tmp;
-    return hull.simplices.copy();
-''' 
+    return pts; 
     
 def write_pts2sphere_m(path,points,m=64):
     n = points.shape[0];
@@ -211,3 +195,36 @@ def write_pts2sphere_m(path,points,m=64):
     y = 0.005*pts.reshape((1,pts.shape[0],pts.shape[-1])) + points.reshape((points.shape[0],1,points.shape[-1]));
     write_ply(path,points = pd.DataFrame(y.reshape((-1,points.shape[-1]))),faces=pd.DataFrame(face));
     return;
+    
+def merge_mesh(path,dlst,with_face=False):
+    points = None;
+    colors = None;
+    fidx = None;
+    num = 0;
+    for idxf,d in enumerate(dlst):
+        if idxf == 0:
+            points = d['points'].to_numpy();
+            colors = np.tile(color[idxf,:],points.shape[0]).reshape(points.shape[0],3);
+            if with_face:
+                fidx = d['mesh'].to_numpy();
+        else:
+            pts = d['points'].to_numpy();
+            points = np.concatenate([points,pts]);
+            c = np.tile(color[idxf,:],pts.shape[0]).reshape(pts.shape[0],3)
+            colors = np.concatenate([colors,c]);
+            if with_face:
+                pt_num = dlst[idxf-1]['points'].to_numpy().shape[0];
+                num += pt_num;
+                f = d['mesh'].to_numpy();
+                fidx = np.concatenate([fidx,f+num]);
+    pointsc = pd.concat([pd.DataFrame(points),pd.DataFrame(colors)],axis=1,ignore_index=True);
+    if with_face:
+        T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
+        face = np.zeros(shape=[fidx.shape[0]],dtype=T);
+        for i in range(fidx.shape[0]):
+            face[i] = (3,fidx[i,0],fidx[i,1],fidx[i,2]);
+        write_ply(path,points = pointsc,faces=pd.DataFrame(face),color=True);
+    else:
+        write_ply(path,points = pointsc,color=True);
+    
+    
