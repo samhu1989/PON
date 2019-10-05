@@ -1,10 +1,6 @@
-import math
 from torch import nn
 from torch.autograd import Function
 import torch
-import sys
-from numbers import Number
-from collections import Set, Mapping, deque
 import chamfer
 
 
@@ -29,10 +25,10 @@ class chamferFunction(Function):
 
         chamfer.forward(xyz1, xyz2, dist1, dist2, idx1, idx2)
         ctx.save_for_backward(xyz1, xyz2, idx1, idx2)
-        return dist1, dist2
+        return dist1, dist2, idx1, idx2
 
     @staticmethod
-    def backward(ctx, graddist1, graddist2):
+    def backward(ctx, graddist1, graddist2, gradidx1, gradidx2):
         xyz1, xyz2, idx1, idx2 = ctx.saved_tensors
         graddist1 = graddist1.contiguous()
         graddist2 = graddist2.contiguous()
@@ -42,8 +38,11 @@ class chamferFunction(Function):
 
         gradxyz1 = gradxyz1.cuda()
         gradxyz2 = gradxyz2.cuda()
-        chamfer.backward(xyz1, xyz2, gradxyz1, gradxyz2, graddist1, graddist2, idx1, idx2)
+        chamfer.backward(
+            xyz1, xyz2, gradxyz1, gradxyz2, graddist1, graddist2, idx1, idx2
+        )
         return gradxyz1, gradxyz2
+
 
 class chamferDist(nn.Module):
     def __init__(self):
@@ -51,4 +50,3 @@ class chamferDist(nn.Module):
 
     def forward(self, input1, input2):
         return chamferFunction.apply(input1, input2)
-

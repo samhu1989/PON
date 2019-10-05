@@ -39,7 +39,7 @@ class Data(data.Dataset):
             snum = cnt.shape[0];
             pnum = int(np.sum(cnt));
             #print(pnum,f['msk'].shape[0]);
-            poff = 0;
+            #poff = 0;
             for si in range(snum):
                 p_per_s = int(cnt[si,0]);
                 self.fmap.extend([idx]*p_per_s);
@@ -56,7 +56,7 @@ class Data(data.Dataset):
 
     def getpartimg(self,img,msk):
         msk = ndimage.grey_dilation(msk,size=(10,10));
-        th = 200.0;
+        th = 150.0;
         if not self.train:
             th = 100.0
         if np.sum(msk) < th:
@@ -82,7 +82,9 @@ class Data(data.Dataset):
         if not partimg is None:
             im = partimg.copy();
             im = im.transpose(2,0,1)
-            return torch.from_numpy(im),torch.from_numpy(pts.copy()),self.cat[self.fmap[index]];
+            pts = pts.copy();
+            #pts = pts - np.mean(pts,axis=0,keepdims=True);
+            return torch.from_numpy(im),torch.from_numpy(pts),self.cat[self.fmap[index]];
         else:
             return self.load(index+1);
 
@@ -104,12 +106,4 @@ def run(**kwargs):
         partimg = d[0].cpu().numpy();
         partpts = d[1].cpu().numpy();
         print(i,'/',len(train_data) // opt['batch_size']);
-        '''
-        for j in range(partimg.shape[0]):
-            im = Image.fromarray((partimg[j,...]*255.0).astype(np.uint8),'RGB');
-            im.save('./log/debug_dataset/%s_im_%03d_%03d.png'%(d[-1][j],i,j));
-            write_ply('./log/debug_dataset/%s_pt_%03d_%03d.ply'%(d[-1][j],i,j),points=pd.DataFrame(partpts[j,...]));
-        if i > 1:
-            break;
-        '''
         

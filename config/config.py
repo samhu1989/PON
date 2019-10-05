@@ -6,6 +6,7 @@ import cd.dist_chamfer as ext;
 distChamfer =  ext.chamferDist();
 from util.tools import genface,write_pts2sphere;
 import pandas as pd;
+as_text = False;
 
 def loss(data,out):
     loss = {};
@@ -117,7 +118,7 @@ def writelog(**kwargs):
             for fi in range(fidx.shape[0]):
                 face[fi] = (3,fidx[fi,0],fidx[fi,1],fidx[fi,2]);
             write_ply(ply_path+os.sep+'_%04d_%03d_%s_gt.ply'%(ib,i,cat[i]),points = pd.DataFrame(ygt[i,...]));
-            write_ply(ply_path+os.sep+'_%04d_%03d_%s_y.ply'%(ib,i,cat[i]),points = pd.DataFrame(y[i,...]),faces=pd.DataFrame(face));
+            write_ply(ply_path+os.sep+'_%04d_%03d_%s_y.ply'%(ib,i,cat[i]),points = pd.DataFrame(y[i,...]),faces=pd.DataFrame(face),as_text=opt['as_text']);
             write_pts2sphere(ply_path+os.sep+'_%04d_%03d_%s_ypt.ply'%(ib,i,cat[i]),points = y[i,...]);
             img = im[i,...];
             img = img.transpose((1,2,0));

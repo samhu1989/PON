@@ -4,19 +4,22 @@ import importlib
 from torch.utils.data import DataLoader;
 from torch import optim;
 from .tools import *;
-#torch.backends.cudnn.enabled = False;
+torch.backends.cudnn.enabled = False;
 
 def data2cuda(data):
     for i in range(len(data)):
         if torch.cuda.is_available() and isinstance(data[i],torch.Tensor):
             data[i] = data[i].cuda();
+            data[i].requires_grad = True;
 
 def run(**kwargs):
     #get configuration
     try:
         config = importlib.import_module('config.'+kwargs['config']);
         opt = config.__dict__;
-        opt.update(kwargs);
+        for k in kwargs.keys():
+            if not kwargs[k] is None:
+                opt[k] = kwargs[k];
     except Exception as e:
         print(e);
         traceback.print_exc();
@@ -51,21 +54,22 @@ def run(**kwargs):
         print("Previous weights loaded");
     
     for iepoch in range(opt['nepoch']):
-        net.eval();
-        #validation
-        val_meters = {};
-        for i, data in enumerate(val_load,0):
-            with torch.no_grad():
-                data2cuda(data);
-                out = net(data);
-                acc = config.accuracy(data,out);
-            for k,v in acc.items():
-                if k in val_meters.keys():
-                    val_meters[k].update(v,data[-1]);
-                else:
-                    val_meters[k] = AvgMeterGroup(k);
-                    val_meters[k].update(v,data[-1]);
-            config.writelog(net=net,data=data,out=out,meter=val_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(val_data),istraining=False);
+        if iepoch % opt['print_epoch'] == 0:
+            net.eval();
+            #validation
+            val_meters = {};
+            for i, data in enumerate(val_load,0):
+                with torch.no_grad():
+                    data2cuda(data);
+                    out = net(data);
+                    acc = config.accuracy(data,out);
+                for k,v in acc.items():
+                    if k in val_meters.keys():
+                        val_meters[k].update(v,data[-1]);
+                    else:
+                        val_meters[k] = AvgMeterGroup(k);
+                        val_meters[k].update(v,data[-1]);
+                config.writelog(net=net,data=data,out=out,meter=val_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(val_data),istraining=False);
         net.train();
         #train
         train_meters = {};

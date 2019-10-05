@@ -18,7 +18,7 @@ def get_opt():
     parser.add_argument('--ply',action='store_true');
     #int flags
     parser.add_argument('--batch_size','-bs',type=int,default=32,help='batch size');
-    parser.add_argument('--nepoch','-nepoch',type=int,default=32,help='epoch number');
+    parser.add_argument('--nepoch','-nepoch',type=int,help='epoch number');
     return parser.parse_args();
 
 def usage():

@@ -7,7 +7,6 @@ import importlib
 import os;
 #project import
 sys.path.append('./');
-print(sys.path)
 from util.options import get_opt
 from util.options import usage;
 

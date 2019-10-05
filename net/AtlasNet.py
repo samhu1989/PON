@@ -157,18 +157,6 @@ class OptEncoder(nn.Module):
         
     def forward(self,x):
         return self.f;
-    
-class OptDecoder(nn.Module):
-    def __init__(self,bottleneck_size=1024):
-        self.bottleneck_size = bottleneck_size;
-        super(OptDecoder,self).__init__();
-        self.conv1 = torch.nn.Conv1d(self.bottleneck_size,self.bottleneck_size//2,1);
-        self.conv2 = torch.nn.Conv1d(self.bottleneck_size,3,1);
-        self.bn1 = torch.nn.BatchNorm1d(self.bottleneck_size//2);
-        self.th = nn.Tanh();
-    def forward(self,x):
-        x = F.relu(self.bn1(self.conv1(x)));
-        return self.th(self.conv2(x));
         
 class Net(nn.Module):
     def __init__(self,**kwargs):
@@ -181,16 +169,16 @@ class Net(nn.Module):
         self.mode = kwargs['mode']
         self.bn = True
         self.inv_y = None;
-        if self.mode == 'SVR' or 'InvSVR':
+        if ( self.mode == 'SVR' ) or ( self.mode =='InvSVR' ):
             self.encoder = resnet.resnet18(pretrained=self.pretrained_encoder,num_classes=1024);
-        elif self.mode == 'AE' or 'InvAE':
+        elif ( self.mode == 'AE' ) or ( self.mode =='InvAE' ):
             self.encoder = nn.Sequential(
                 PointNetfeat(self.pts_num, global_feat=True, trans = False),
                 nn.Linear(1024, self.bottleneck_size),
                 nn.BatchNorm1d(self.bottleneck_size),
                 nn.ReLU()
                 );
-        elif self.mode == 'OPT' or 'InvOPT':
+        elif ( self.mode == 'OPT' ) or ( self.mode =='InvOPT'):
             self.bn = False;
             self.encoder = OptEncoder(self.bottleneck_size);
         else:
@@ -212,8 +200,8 @@ class Net(nn.Module):
             y = torch.cat((grid,expf),1).contiguous();
             y = self.decoder[i](y);
             outs.append(y);
-        y = torch.cat(outs,2).contiguous()
-        yout = y.transpose(2,1).contiguous();
+        yout = torch.cat(outs,2).contiguous();
+        yout = yout.transpose(2,1).contiguous();
         if grid.size(2) != y.size(2):
             expf = f.unsqueeze(2).expand(f.size(0),f.size(1),y.size(2)).contiguous();
         out = {}
@@ -221,12 +209,13 @@ class Net(nn.Module):
         if self.mode.startswith('Inv'):
             inv_y = torch.cat((y,expf),1).contiguous();
             inv_y = self.inv_decoder[0](inv_y);
-            inv_y = inv_y.transpose(2,1).contiguous()
-            out['inv_x'] = inv_y
+            inv_y = inv_y.transpose(2,1).contiguous();
+            out['inv_x'] = inv_y;
         if self.grid_num > 1:
             out['grid_x'] = torch.cat([grid  for i in range(0,self.grid_num)],2).contiguous().transpose(2,1).contiguous(); 
         else:
             out['grid_x'] = grid.transpose(2,1).contiguous();
+        #print(out['grid_x'].shape);
         return out;
     
     def rand_grid(self,x):

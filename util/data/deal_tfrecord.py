@@ -46,7 +46,7 @@ def parse_record(serialized_example,num_sem,ori_num_ins_per_sem,num_ins_per_sem,
     bg_mask = tf.logical_not(tf.reduce_any(tf.concat(values=sem_mask_list, axis=0), axis=0))
     sem_mask = tf.transpose(tf.concat(values=[tf.expand_dims(bg_mask, axis=0)] + sem_mask_list, axis=0), [1, 2, 0])
     features['sem_mask'] = tf.cast(sem_mask, dtype=tf.float32)
-    features['img'] = tf.cast(features['img'], dtype=tf.float32) / 255
+    features['img'] = tf.cast(features['img'], dtype=tf.float32) / 255;
     return features;
 
 def write(h5f,pts_ds,img_ds,msk_ds,cnt_ds,mid,img,ins_msk_lst,ins_pc_lst,path):
