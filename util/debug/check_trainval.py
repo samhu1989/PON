@@ -14,20 +14,22 @@ from ..data.ply import read_ply;
 torch.backends.cudnn.enabled = False;
 distChamfer = ext.chamferDist();
 
-data = read_ply('./log/gt.ply');
-pts = np.array(data['points']);
+data = read_ply('./data/optimize/bunny.ply');
+pts = np.array(data['points'])
+pts = pts[np.random.choice(pts.shape[0],2500),:];
 pts = torch.from_numpy(pts.transpose(1,0).reshape(1,3,-1));
 pts = pts.cuda();
 pts.requires_grad = True;
-var = torch.randn((1,1024,1),requires_grad=True);
+var = torch.randn((1,2500,1),requires_grad=True);
 optimizer = optim.Adam([var],lr=1e-3,weight_decay=0);
 fig = plt.figure();
 ax = p3.Axes3D(fig);
 
 g = pts.data.cpu().numpy().astype(np.float32);
 v = var.data.cpu().numpy().astype(np.float32);
-pg, = ax.plot(g[0,0,...],g[0,1,...],g[0,2,...],c='r', marker='o');
-pv, = ax.plot([],[],[],c='b', marker='^');
+pg = ax.scatter(g[0,0,...],g[0,1,...],g[0,2,...],c='r', marker='o');
+pv = ax.scatter([],[],[],c='b', marker='*');
+pv.set_offset_position('screen');
 
 def init():
     return [pv];
@@ -56,8 +58,7 @@ def animate(i,net,optimizer):
     with torch.no_grad():
         out = net([varcuda]);
     v = out['y'].data.cpu().numpy().astype(np.float32);
-    pv.set_data(v[0,...,0],v[0,...,1])
-    pv.set_3d_properties(v[0,...,2])
+    pv._offsets3d = (v[0,...,0],v[0,...,1],v[0,...,2]);
     return [pv]
 
 def run(**kwargs):
@@ -67,6 +68,8 @@ def run(**kwargs):
         for k in kwargs.keys():
             if not kwargs[k] is None:
                 opt[k] = kwargs[k];
+        opt['pts_num'] = 2500;
+        opt['pts_num_gt'] = 2500;
     except Exception as e:
         print(e);
         traceback.print_exc();
@@ -88,5 +91,5 @@ def run(**kwargs):
     print(net.parameters())
     optimizer = eval('optim.'+opt['optim'])(param,lr=opt['lr'],weight_decay=opt['weight_decay']);
     animfunc = partial(animate,net=net,optimizer=optimizer);
-    anim = animation.FuncAnimation(fig, animfunc, init_func=init,frames=200, interval=20, blit=True)
+    anim = animation.FuncAnimation(fig, animfunc, init_func=init,frames=200, interval=20, blit=False)
     plt.show();
