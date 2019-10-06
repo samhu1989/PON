@@ -6,7 +6,52 @@
    
     - do reconstruction in few shot setting 
     
-      
+
+
+
+
+
+### meeting notes 20191004:
+
+**motivation and priority** 
+
+We believe that to accomplish open-set single view reconstruction, the shape regression neural networks, no matter with what kind of shape representation, are all dead ends. 
+
+A more promising approach is to mimic human behavior to construct objects in three steps: 
+
+a) parse the object into parts from visual input. (part segmentation)
+
+b) forge the primitive material into object parts, one by one. (part generation)
+
+c) conditioned on the visual input, assemble the parts into reasonable configuration. (assemble)
+
+
+
+<font color=#e26f46>Now, our priority is focused on step c):</font>
+
+
+
+For step c),  we employ the framework of generative adversarial network and propose an
+
+Assembler-VAE-GAN.
+
+For Assembler - VAE - GAN, 
+
+We first train a VAE to encode part assembling image into vector z.
+
+Then we train GAN for assembling
+
+The **generator** is conditioned on two self centered parts (as two point sets), it output two 3D transformations, which are used to transform the parts to be attached. 
+
+random input vector z is sampled based on input image or randomly draw from distribution.
+
+one **discriminator** takes two transformed parts as input and output whether they are  in reasonable configuration.
+
+another  **discriminator**  takes the image of part assembling and the merged point cloud as input to tell whether they are matched.
+
+The <font color=#55ff55>**advantage**</font> of such design is that inference can function with or without the visual input, hence have the  potential to complete the invisible part based purely on the distribution of reasonable configuration.
+
+
 
 ### report 20191004
 
