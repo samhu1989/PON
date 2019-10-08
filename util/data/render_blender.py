@@ -60,7 +60,7 @@ else:
   map.offset = [-0.7]
   map.size = [args.depth_scale]
   map.use_min = True
-  map.min = [0]
+  map.min = [-1]
   links.new(render_layers.outputs['Depth'], map.inputs[0])
 
   links.new(map.outputs[0], depth_file_output.inputs[0])
@@ -89,8 +89,18 @@ links.new(render_layers.outputs['Color'], albedo_file_output.inputs[0])
 bpy.data.objects['Cube'].select = True
 bpy.ops.object.delete()
 
-
-bpy.ops.import_scene.obj(filepath=args.obj)
+if args.obj.endswith('.obj'):
+    bpy.ops.import_scene.obj(filepath=args.obj);
+elif args.obj.endswith('.ply'):
+    bpy.ops.import_mesh.ply(filepath=args.obj);
+#==========================================
+name = os.path.basename(args.obj).split('.ply')[0];
+obj = bpy.data.objects[name];
+if bpy.context.object.data.vertex_colors.active is not None:
+    mat = bpy.data.materials.new('material_1');
+    obj.active_material = mat
+    mat.use_vertex_color_paint = True;
+#===========================================
 for object in bpy.context.scene.objects:
     if object.name in ['Camera', 'Lamp']:
         continue
@@ -142,7 +152,7 @@ scene.render.resolution_y = 224
 scene.render.resolution_percentage = 100
 scene.render.alpha_mode = 'TRANSPARENT'
 cam = scene.objects['Camera']
-cam.location = (0, 2, 1.2)
+cam.location = (0, 2.0, 1.5)
 cam_constraint = cam.constraints.new(type='TRACK_TO')
 cam_constraint.track_axis = 'TRACK_NEGATIVE_Z'
 cam_constraint.up_axis = 'UP_Y'

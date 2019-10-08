@@ -34,7 +34,7 @@ def run(**kwargs):
                     pobj = np.concatenate([pobj,pc[start+ic,...].copy()],axis=0);
             imgf = Image.fromarray(np.uint8(255.0*img[i,...].copy()));
             imgf.save('./log/input%d.png'%num);
-            write_ply('./log/output%d.ply'%num,points=pd.DataFrame(pobj),as_text=True);
+            write_ply('./log/output%d.ply'%num,points=pd.DataFrame(pobj),as_text=opt['as_text']);
             num -= 1;
             if num <= 0:
                 exit();
