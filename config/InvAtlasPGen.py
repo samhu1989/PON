@@ -33,5 +33,5 @@ def loss(data,out):
     dif = out['inv_x'] - out['grid_x'];
     ax = [x for x in range(1,dif.dim())]
     loss['inv'] = torch.mean(dif**2,dim=ax);
-    loss['overall'] = torch.mean(loss['cd']) + 0.01*torch.mean(loss['inv']);
+    loss['overall'] = torch.mean(loss['cd']) + 0.25*torch.mean(loss['inv']);
     return loss;
