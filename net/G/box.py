@@ -27,8 +27,8 @@ def randw(n):
 class Box(nn.Module):
     def __init__(self,**kwargs):
         super(Box,self).__init__();
-        pts_num = kwargs['pts_num'];
-        grid_num = kwargs['grid_num'];
+        self.pts_num = kwargs['pts_num'];
+        self.grid_num = kwargs['grid_num'];
         self.box_vert = torch.from_numpy(bv).view(1,8,3);
 
     def forward(self,s,r,t):
