@@ -9,6 +9,46 @@
 
 
 
+### report 20191009：
+
+##### <font color=#55ff55>Done  </font>
+
+on open set arrangement learning
+
+I implemented a rule based box placement to generate toy data for exp
+
+![CycleAtlasNet](./img/toy.png "")
+
+ the underline rules:
+
+1. there are five different kind of boxes in the world.
+
+2. box with smaller base must place on top of one with larger base
+
+3. otherwise place box on the ground without interaction
+
+4. the cube never appears in the training data
+
+   
+
+   currently only two boxes are chosen
+
+   
+
+On Part generation 
+
+I fixed some bugs and understand more of the data from Kai Chun.
+
+there will be new results on part generation tomorrow on our project meeting.
+
+
+
+<font color=#ff0099>To Do </font>
+
+Implementing a conditional GAN to generate scale and arrangement to place the boxes. 
+
+to find out what kind of knowledge are easily generalized and what are not.
+
 
 
 ### meeting notes 20191004:

@@ -17,49 +17,37 @@ import traceback;
 class Data(data.Dataset):
     def __init__(self,opt,train=True):
         self.root = opt['data_path'];
-        self.train = train
+        self.train = train;
         self.datapath = [];
-        
+        if self.train:
+            dataroot = os.path.join(self.root,'train');
+        else:
+            dataroot = os.path.join(self.root,'test');
+        fs = os.listdir(dataroot);
+        for f in fs:
+            if (not 'msk' in f) and f.endswith('.ply'):
+                self.datapath.append(os.path.join(dataroot,f));
                 
     def __getitem__(self, index):
-        return self.load(index);
-
-    def getpartimg(self,img,msk):
-        msk = ndimage.grey_dilation(msk,size=(10,10));
-        th = 150.0;
-        if not self.train:
-            th = 100.0
-        if np.sum(msk) < th:
-            return None;
-        else:
-            return img*msk.reshape(msk.shape[0],msk.shape[1],1);
-        
-    def load(self,idx):
-        partimg = None;
         try:
-            index = idx%self.__len__();
-            findex = self.fmap[index];
-            h5file = h5py.File(self.datapath[findex],'r');            
-            img = h5file['img'][self.smap[index],...];
-            msk = h5file['msk'][self.pmap[index],...];
-            pts = h5file['pts'][self.pmap[index],...];
-            partimg = self.getpartimg(img,msk);
-            h5file.close();
+            return self.load(index);
         except Exception as e:
             print(e);
             traceback.print_exc();
             exit();
-        if not partimg is None:
-            im = partimg.copy();
-            im = im.transpose(2,0,1)
-            pts = pts.copy();
-            pts = pts - np.mean(pts,axis=0,keepdims=True);
-            return torch.from_numpy(im),torch.from_numpy(pts),self.cat[self.fmap[index]];
-        else:
-            return self.load(index+1);
+        
+    def load(self,idx):
+        index = idx%self.__len__();
+        plyname = self.datapath[index];
+        imgname = plyname.replace('.ply','.ply_r_000.png');
+        data = read_ply(plyname);
+        pts = np.array(data['points']);
+        img = np.array(Image.open(imgname)).astype(np.float32);
+        img /= 255.0;
+        return torch.from_numpy(img.copy()),torch.from_numpy(pts.copy());
 
     def __len__(self):
-        return len(self.pmap);
+        return len(self.datapath);
         
 #debuging the dataset      
 def run(**kwargs):
@@ -72,8 +60,17 @@ def run(**kwargs):
     if not os.path.exists('./log/debug_dataset/'):
         os.mkdir('./log/debug_dataset/');
     print('go over')
+    import matplotlib.pyplot as plt;
+    from mpl_toolkits.mplot3d import Axes3D
+    fig = plt.figure();
     for i, d in enumerate(train_load,0):
-        partimg = d[0].cpu().numpy();
-        partpts = d[1].cpu().numpy();
-        print(i,'/',len(train_data) // opt['batch_size']);
+        img = d[0].cpu().numpy();
+        pts = d[1].cpu().numpy();
+        ax = fig.add_subplot(1,2,1);
+        ax.imshow(img[0,:,:,0:3]);
+        ax = fig.add_subplot(1,2,2,projection='3d');
+        ax.plot(pts[0,:,0],pts[0,:,1],pts[0,:,2],'r',marker='x');
+        break;
+    plt.show();
+    
         
