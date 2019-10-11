@@ -30,12 +30,16 @@ def pack_res(path):
             tgt = packed_path+os.sep+batch+os.sep+f[len(batch):];
             print(src);
             print(tgt);
-            shutil.copyfile(src,tgt);
-            shutil.copyfile(src.replace('input.png','y.ply'),tgt.replace('input.png','y.ply'));
-            shutil.copyfile(src.replace('input.png','ypt.ply'),tgt.replace('input.png','ypt.ply'));
-            ply = read_ply(src.replace('input.png','gt.ply'));
-            pts = np.array(ply['points']);
-            write_pts2sphere(tgt.replace('input.png','gt.ply'),pts);
+            try:
+                shutil.copyfile(src,tgt);
+                shutil.copyfile(src.replace('input.png','y.ply'),tgt.replace('input.png','y.ply'));
+                shutil.copyfile(src.replace('input.png','ypt.ply'),tgt.replace('input.png','ypt.ply'));
+                ply = read_ply(src.replace('input.png','gt.ply'));
+                pts = np.array(ply['points']);
+                write_pts2sphere(tgt.replace('input.png','gt.ply'),pts);
+            except Exception as e:
+                print(e);
+                continue;
 
 def run(**kwargs):
     data_root = kwargs['data_path'];

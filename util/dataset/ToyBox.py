@@ -18,7 +18,7 @@ from ..sample import tri2pts
 class Data(data.Dataset):
     def __init__(self,opt,train=True):
         self.root = opt['data_path'];
-        self.pts_num = opt['pts_num'];
+        self.pts_num = opt['pts_num_gt'];
         self.train = train;
         self.datapath = [];
         if self.train:
@@ -48,7 +48,43 @@ class Data(data.Dataset):
         num = self.pts_num // fidx.shape[0];
         img = np.array(Image.open(imgname)).astype(np.float32);
         img /= 255.0;
-        return torch.from_numpy(img.copy()),tri2pts(torch.from_numpy(pts.copy()),fidx,num);
+        imgtensor = torch.from_numpy(img.copy().transpose(2,0,1)).contiguous();
+        #pick msks for target and source boxes
+        idx = 0;
+        mskname = plyname.replace('.ply','_msk%02d.ply_r_000_albedo.png0001.png'%idx);
+        msks = [];
+        while os.path.exists(mskname):
+            msks.append(mskname);
+            idx += 1;
+            mskname = plyname.replace('.ply','_msk%02d.ply_r_000_albedo.png0001.png'%idx);
+        msknum = len(msks);
+        #
+        pick = np.random.randint(0,msknum);
+        if pick == 0:
+            srcpick = np.random.randint(1,len(msks));
+        else:
+            if len(msks) > 2:
+                alpha = np.random.randint(0,2)
+                srcpick = alpha*np.random.randint(0,bspick)+(1-alpha)*np.random.randint(bspick+1,msknum);
+            else:
+                srcpick = 0;
+        #
+        boxall = torch.from_numpy(pts.copy());
+        boxpts = tri2pts(boxall,fidx,num).transpose(1,0).contiguous();
+        #
+        msk = np.array(Image.open(msks[pick])).astype(np.float32);
+        msk = msk.copy();
+        msk = msk[:,:,2] / 255.0;
+        tgt_msk = torch.from_numpy(msk).contiguous();
+        tgt_box = boxall[8*pick:8*(pick+1),:].contiguous();
+        #
+        msk = np.array(Image.open(msks[srcpick])).astype(np.float32);
+        msk = msk.copy();
+        msk = msk[:,:,2] / 255.0;
+        src_msk = torch.from_numpy(msk).contiguous();
+        src_box = boxall[8*srcpick:8*(srcpick+1),:].contiguous();
+        all_box = boxall.contiguous();
+        return imgtensor,src_msk,tgt_msk,src_box,tgt_box,all_box,boxpts,'box';
 
     def __len__(self):
         return len(self.datapath);
@@ -57,7 +93,7 @@ class Data(data.Dataset):
 def run(**kwargs):
     opt = kwargs;
     opt['workers'] = 0;
-    opt['pts_num'] = 1200;
+    opt['pts_num_gt'] = 1200;
     train_data = Data(opt,True);
     val_data = Data(opt,False);
     train_load = data.DataLoader(train_data,batch_size=opt['batch_size'],shuffle=False,num_workers=opt['workers']);
@@ -70,11 +106,21 @@ def run(**kwargs):
     fig = plt.figure();
     for i, d in enumerate(train_load,0):
         img = d[0].cpu().numpy();
-        pts = d[1].cpu().numpy();
-        ax = fig.add_subplot(1,2,1);
-        ax.imshow(img[0,:,:,0:3]);
-        ax = fig.add_subplot(1,2,2,projection='3d');
-        ax.scatter(pts[0,:,0],pts[0,:,1],pts[0,:,2],marker='x');
+        src_msk = d[1].cpu().numpy();
+        tgt_msk = d[2].cpu().numpy();
+        src_box = d[3].cpu().numpy();
+        tgt_box = d[4].cpu().numpy();
+        all_box = d[5].cpu().numpy();
+        ax = fig.add_subplot(2,2,1);
+        ax.imshow(img[0,0:3,:,:].transpose(1,2,0));
+        ax = fig.add_subplot(2,2,2);
+        ax.imshow(src_msk[0,:,:],cmap='gray');
+        ax = fig.add_subplot(2,2,3);
+        ax.imshow(tgt_msk[0,:,:],cmap='gray');
+        ax = fig.add_subplot(2,2,4,projection='3d');
+        ax.scatter(src_box[0,0,:],src_box[0,1,:],src_box[0,2,:],marker='x');
+        ax.scatter(tgt_box[0,0,:],tgt_box[0,1,:],tgt_box[0,2,:],marker='o');
+        ax.scatter(all_box[0,0,:],all_box[0,1,:],all_box[0,2,:],marker='^');
         break;
     plt.show();
     

@@ -1,5 +1,6 @@
 import torch;
 from torch import Tensor;
+import torch.nn as nn;
 import traceback
 import importlib
 from torch.utils.data import DataLoader;
@@ -13,16 +14,18 @@ def data2cuda(data):
             data[i] = data[i].cuda();
             data[i].requires_grad = True;
             
-def compute_gradient_penalty(D, real_samples, fake_samples):
+def compute_gradient_penalty(D,img, real_samples, fake_samples):
     """Calculates the gradient penalty loss for WGAN GP"""
     # Random weight term for interpolation between real and fake samples
-    alpha = torch.Tensor(np.random.random((real_samples.size(0), 1, 1, 1)))
+    alpha = torch.Tensor(np.random.random((real_samples.size(0), 1, 1)));
+    alpha = alpha.type(real_samples.type());
     # Get random interpolation between real and fake samples
-    interpolates = (alpha * real_samples + ((1 - alpha) * fake_samples)).requires_grad_(True);
-    d_interpolates = D(interpolates)
-    fake = Tensor(real_samples.shape[0], 1, requires_grad=False)
+    interpolates = (alpha * real_samples + ((1.0 - alpha) * fake_samples)).requires_grad_(True);
+    d_interpolates = D([img,interpolates]);
+    fake = torch.ones([real_samples.shape[0],1],requires_grad=False);
+    fake = fake.type(real_samples.type());
     # Get gradient w.r.t. interpolates
-    gradients = autograd.grad(
+    gradients = torch.autograd.grad(
         outputs=d_interpolates,
         inputs=interpolates,
         grad_outputs=fake,
@@ -53,7 +56,8 @@ def run(**kwargs):
         dname = names[1];
         gm = importlib.import_module('net.g.'+gname);
         dm = importlib.import_module('net.d.'+dname);
-        net = nn.ModuleList([gm.Net(**opt),dm.Net(**opt)]);
+        mlst = [gm.Net(**opt),dm.Net(**opt)];
+        net = nn.ModuleList(mlst);
         if torch.cuda.is_available():
             net = net.cuda();
         gnet = net[0];
@@ -86,36 +90,68 @@ def run(**kwargs):
         print("Previous weights loaded");
     
     for iepoch in range(opt['nepoch']):
+        if iepoch % 10 == 0:
+            sched_g.step();
+            sched_d.step();
         if iepoch % opt['print_epoch'] == 0:
             net.eval();
             for i, data in enumerate(val_load,0):
+                val_meters = {};
                 with torch.no_grad():
                     data2cuda(data);
-                    gout = gnet(data);
-                    dout = dnet(data,gout);
+                    img = data[0];
+                    real_pc = data[2];
+                    z = torch.randn([img.size(0),opt['latent_dim']],requires_grad=True);
+                    z = z.type(img.type());
+                    gout = gnet([img,z]);
+                    fake_validity = dnet([img,gout['pts']]);
+                    real_validity = dnet([img,real_pc]);
+                    dout = [real_validity,fake_validity]
+                    acc = config.accuracy(data,gout,dout);
+                    for k,v in acc.items():
+                        if k in val_meters.keys():
+                            val_meters[k].update(v,data[-1]);
+                        else:
+                            val_meters[k] = AvgMeterGroup(k);
+                            val_meters[k].update(v,data[-1]);
                 config.writelog(net=net,data=data,out=[gout,dout],meter=val_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(val_data),istraining=False);
         net.train();
+        train_meters = {};
         for i, data in enumerate(train_load,0):
             optim_d.zero_grad();
             data2cuda(data);
             img = data[0];
-            real_pc = data[1];
+            real_pc = data[2];
             z = torch.randn([img.size(0),opt['latent_dim']],requires_grad=True);
             z = z.type(img.type());
-            gen_pc = gnet([img,z]);
+            with torch.no_grad():
+                gout = gnet([img,z]);
+                gen_pc = gout['pts'];
             real_validity = dnet([img,real_pc]);
             fake_validity = dnet([img,gen_pc.detach()]);
             #
-            w_loss = torch.mean(real_validity) - torch.mean(fake_validity);
-            gradient_penalty = opt['lambda_gp'] * compute_gradient_penalty(dnet,real_pc.data,gen_pc.data);
+            w_loss = torch.mean(fake_validity) - torch.mean(real_validity);
+            gradient_penalty = opt['lambda_gp'] * compute_gradient_penalty(dnet,img,real_pc.data,gen_pc.data);
             d_loss = gradient_penalty - w_loss;
             d_loss.backward();
-            self.optim_d.step()
-            if i % opt[''] == 0:
-                self.optim_g.zero_grad();
-                gen_pc = gnet([img,z]);
-                fake_validity = self.dnet([img,gen_pc]);
+            optim_d.step()
+            if i % opt['train_g'] == 0:
+                optim_g.zero_grad();
+                z = torch.randn([img.size(0),opt['latent_dim']],requires_grad=True);
+                z = z.type(img.type());
+                gout = gnet([img,z]);
+                fake_validity = dnet([img,gout['pts']]);
                 g_loss = - torch.mean(fake_validity)
                 g_loss.backward()
-                self.optim_g.step()
-            config.writelog(net=net,data=data,out=out,meter=train_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(train_data),istraining=True);
+                optim_g.step();
+            dout = [real_validity,fake_validity];
+            acc = config.accuracy(data,gout,dout);
+            for k,v in acc.items():
+                if k == 'overall':
+                    continue;
+                if k in train_meters.keys():
+                    train_meters[k].update(v,data[-1]);
+                else:
+                    train_meters[k] = AvgMeterGroup(k);
+                    train_meters[k].update(v,data[-1]);
+            config.writelog(net=net,data=data,out=[gout,dout],meter=train_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(train_data),istraining=True);

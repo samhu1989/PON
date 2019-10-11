@@ -6,8 +6,8 @@
    
     - do reconstruction in few shot setting 
     
-
-
+      
+    
 
 ### report 20191009：
 
@@ -41,7 +41,9 @@ I fixed some bugs and understand more of the data from Kai Chun.
 
 there will be new results on part generation tomorrow on our project meeting.
 
+http://171.67.77.236:8082/partgen-mini
 
+how about cage based representation
 
 <font color=#ff0099>To Do </font>
 

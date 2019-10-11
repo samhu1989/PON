@@ -38,10 +38,10 @@ def qrot(q, v):
     q = q.view(-1, 4)
     v = v.view(-1, 3)
     
-    qvec = q[:, 1:]
-    uv = torch.cross(qvec, v, dim=1)
+    qvec = q[:, 1:].contiguous();
+    uv = 2*torch.cross(qvec, v, dim=1)
     uuv = torch.cross(qvec, uv, dim=1)
-    return (v + 2 * (q[:, :1] * uv + uuv)).view(original_shape)
+    return (v + (q[:, :1].contiguous() * uv + uuv)).view(original_shape)
 
 def qeuler(q, order, epsilon=0):
     """
@@ -185,4 +185,32 @@ def euler_to_quaternion(e, order):
         result *= -1
     
     return result.reshape(original_shape)
+    
+def run(**kwargs):
+    from .g.box import bv;
+    from .g.box import box_face;
+    from matplotlib import pyplot as plt
+    from matplotlib import animation
+    from mpl_toolkits.mplot3d import axes3d as p3;
+    from util.data.ply import write_ply;
+    import pandas as pd;
+    fig = plt.figure();
+    ax = fig.add_subplot(111,projection='3d');
+    ax.axis('equal')
+    bv = torch.from_numpy(bv);
+    r = torch.randn([1,4]);
+    r = r.repeat(8,1)
+    r = r / torch.sqrt(torch.sum(r**2,dim=1,keepdim=True));
+    bv = qrot(r,bv);
+    ax.scatter(bv[...,0],bv[...,1],bv[...,2]);
+    plt.show();
+    fidx = box_face;
+    T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
+    face = np.zeros(shape=[fidx.shape[0]],dtype=T);
+    for fi in range(fidx.shape[0]):
+        face[fi] = (3,fidx[fi,0],fidx[fi,1],fidx[fi,2]);
+    write_ply('./a.ply',points = pd.DataFrame(bv.cpu().numpy()),faces=pd.DataFrame(face),as_text=True);
+    plt.show();
+    
+    
     

@@ -4,41 +4,50 @@ grid_num = 2;
 workers = 4;
 optim = 'Adam';
 lr = 2e-4;
-nepoch = 2;
+nepoch = 1;
 print_epoch =1;
 latent_dim = 512;
-mode = 'GAN';
+mode = 'Reg';
 lambda_gp = 10;
 train_g = 5;
+weight_decay = 0.0;
+as_text = True;
 
-from PIL import Image;
-import numpy as np;
-import sys;
+from .config import parameters,NpEncoder;
 import torch;
-sys.path.append('./ext/');
-import cd.dist_chamfer as ext;
-distChamfer =  ext.chamferDist();
 
-def accuracy(data,gout,dout):
+def accuracy(data,out):
     acc = {};
-    dist1, dist2 = distChamfer(data[2].transpose(1,2).contiguous(),gout['pts'].transpose(1,2).contiguous());
-    ax1 = [x for x in range(1,dist1.dim())]
-    ax2 = [x for x in range(1,dist2.dim())]
-    acc['cd'] = torch.mean(dist1,dim=ax1)+torch.mean(dist2,dim=ax2);
-    acc['gap'] = dout[0] - dout[1];
+    L2 = ( data[4] - out['box'] )**2;
+    ax = [x for x in range(1,L2.dim())];
+    acc['cd'] = torch.mean(L2,dim=ax);
+    reg = ( torch.sum((out['rot'])**2,dim=1) - 1.0 )**2;
+    acc['reg'] = reg;
     return acc;
+    
+def loss(data,out):
+    loss = {};
+    L2 = ( data[4] - out['box'] )**2;
+    ax = [x for x in range(1,L2.dim())];
+    loss['cd'] = torch.mean(L2,dim=ax);
+    reg = ( torch.sum((out['rot'])**2,dim=1) - 1.0 )**2;
+    loss['reg'] = reg;
+    loss['overall'] = torch.mean(loss['cd']) + 100.0*torch.mean(loss['reg']);
+    return loss;
     
 from datetime import datetime;
 from util.data.ply import write_ply
 import json;
 import numpy as np;
-from .config import NpEncoder;
 import os;
+from util.tools import repeat_face,write_pts2sphere;
+import pandas as pd;
+from PIL import Image;
 
 bestcnt = 3;
 best = np.array([10000]*bestcnt,dtype=np.float32);
 bestn = [""]*bestcnt;
-
+    
 def writelog(**kwargs):
     global best;
     global bestn;
@@ -60,7 +69,7 @@ def writelog(**kwargs):
         nparam = 0;
         with open(opt['log_tmp']+os.sep+'net.txt','w') as logtxt:
             print(str(kwargs['net']),file=logtxt);
-            for p in kwargs['net'].parameters():
+            for p in parameters(kwargs['net']):
                 nparam += torch.numel(p);
             print('nparam:%d'%nparam,file=logtxt);
         
@@ -94,21 +103,39 @@ def writelog(**kwargs):
         x = out['grid_x'];
         x = x.data.cpu().numpy();
         y = out['y'];
-        y = y.data.cpu().numpy();
-        ygt = data[1];
-        ygt = ygt.data.cpu().numpy();
+        yout = y.data.cpu().numpy();
+        ysrc = data[3];
+        ysrc = ysrc.data.cpu().numpy();
+        ytgt = data[4];
+        ytgt = ytgt.data.cpu().numpy();
+        yall = data[5];
+        yall = yall.data.cpu().numpy();
         cat = data[-1];
         im = data[0];
         im = im.data.cpu().numpy();
+        src = data[1];
+        src = src.data.cpu().numpy();
+        tgt = data[2];
+        tgt = tgt.data.cpu().numpy();
         for i in range(y.shape[0]):
-            fidx = genface(x[i,...],opt['grid_num']);
+            fidx = repeat_face(x[i,...],opt['grid_num'],8);
             T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
             face = np.zeros(shape=[fidx.shape[0]],dtype=T);
             for fi in range(fidx.shape[0]):
                 face[fi] = (3,fidx[fi,0],fidx[fi,1],fidx[fi,2]);
-            write_pts2sphere(ply_path+os.sep+'_%04d_%03d_%s_y.ply'%(ib,i,cat[i]),points = y[i,...]);
-            write_pts2sphere(ply_path+os.sep+'_%04d_%03d_%s_gt.ply'%(ib,i,cat[i]),points = ygt[i,...]);
+            write_ply(ply_path+os.sep+'_%04d_%03d_%s_all.ply'%(ib,i,cat[i]),points = pd.DataFrame(yall[i,...]),faces=pd.DataFrame(face),as_text=opt['as_text']);
+            write_ply(ply_path+os.sep+'_%04d_%03d_%s_src.ply'%(ib,i,cat[i]),points = pd.DataFrame(ysrc[i,...]),faces=pd.DataFrame(face[0:12]),as_text=opt['as_text']);
+            write_ply(ply_path+os.sep+'_%04d_%03d_%s_tgt.ply'%(ib,i,cat[i]),points = pd.DataFrame(ytgt[i,...]),faces=pd.DataFrame(face[0:12]),as_text=opt['as_text']);
+            write_ply(ply_path+os.sep+'_%04d_%03d_%s_out.ply'%(ib,i,cat[i]),points = pd.DataFrame(yout[i,...]),faces=pd.DataFrame(face[0:12]),as_text=opt['as_text']);
+            write_ply(ply_path+os.sep+'_%04d_%03d_%s_oall.ply'%(ib,i,cat[i]),points = pd.DataFrame(np.concatenate([ysrc[i,...],yout[i,...]],axis=0)),faces=pd.DataFrame(face),as_text=opt['as_text']);
             img = im[i,...];
             img = img.transpose((1,2,0));
             img = Image.fromarray(np.uint8(255.0*img));
             img.save(ply_path+os.sep+'_%04d_%03d_%s_input.png'%(ib,i,cat[i]));
+            img = src[i,...];
+            img = Image.fromarray(np.uint8(255.0*img));
+            img.save(ply_path+os.sep+'_%04d_%03d_%s_src.png'%(ib,i,cat[i]));
+            img = tgt[i,...];
+            img = Image.fromarray(np.uint8(255.0*img));
+            img.save(ply_path+os.sep+'_%04d_%03d_%s_tgt.png'%(ib,i,cat[i]));
+
