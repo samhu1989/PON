@@ -30,19 +30,19 @@ class Net(nn.Module):
             *block(512,256),
             *block(256,128),
             nn.Linear(128,3),
-            nn.Hardtanh(min_val=0.1,max_val=10.0,inplace=True);
+            nn.Hardtanh(min_val=0.1,max_val=10.0,inplace=True)
         );
         self.gen_r = nn.Sequential(
             *block(512,256),
             *block(256,128),
             nn.Linear(128,4),
-            nn.Hardtanh(min_val=-1.0,max_val=1.0,inplace=True);
+            nn.Hardtanh(min_val=-1.0,max_val=1.0,inplace=True)
         );
         self.gen_t = nn.Sequential(
             *block(512,256),
             *block(256,128),
             nn.Linear(128,3),
-            nn.Hardtanh(min_val=-2.0,max_val=2.0,inplace=True);
+            nn.Hardtanh(min_val=-2.0,max_val=2.0,inplace=True)
         );
         self._init_layers();
         
