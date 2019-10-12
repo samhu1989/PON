@@ -9,6 +9,10 @@ import os;
 sys.path.append('./');
 from util.options import get_opt
 from util.options import usage;
+import torch;
+import platform;
+if platform.system() == 'Windows':
+    torch.backends.cudnn.enabled = False;
 
 if __name__ == "__main__":
     #get options from command line inputs

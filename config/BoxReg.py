@@ -21,8 +21,6 @@ def accuracy(data,out):
     L2 = ( data[4] - out['box'] )**2;
     ax = [x for x in range(1,L2.dim())];
     acc['cd'] = torch.mean(L2,dim=ax);
-    reg = ( torch.sum((out['rot'])**2,dim=1) - 1.0 )**2;
-    acc['reg'] = reg;
     return acc;
     
 def loss(data,out):
@@ -30,9 +28,7 @@ def loss(data,out):
     L2 = ( data[4] - out['box'] )**2;
     ax = [x for x in range(1,L2.dim())];
     loss['cd'] = torch.mean(L2,dim=ax);
-    reg = ( torch.sum((out['rot'])**2,dim=1) - 1.0 )**2;
-    loss['reg'] = reg;
-    loss['overall'] = torch.mean(loss['cd']) + 100.0*torch.mean(loss['reg']);
+    loss['overall'] = torch.mean(loss['cd']);
     return loss;
     
 from datetime import datetime;

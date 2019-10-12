@@ -4,7 +4,6 @@ import importlib
 from torch.utils.data import DataLoader;
 from torch import optim;
 from .tools import *;
-torch.backends.cudnn.enabled = False;
 
 def data2cuda(data):
     for i in range(len(data)):

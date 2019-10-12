@@ -36,13 +36,13 @@ class Box(nn.Module):
         self.pts_num = kwargs['pts_num'];
         self.grid_num = kwargs['grid_num'];
 
-    def forward(self,s,r,t,bv=bv_th):
-        bv = bv.type(s.type());
-        s = s.view(s.size(0),1,s.size(1));
-        bv = s*bv;
-        bv = bv.expand(s.size(0),8,3).contiguous();
-        r  = r.unsqueeze(1).expand(r.size(0),8,4).contiguous();
-        bv = qrot(r,bv);
+    def forward(self,sr,t,bv=bv_th):
+        bv = bv.type(sr.type());
+        sr = sr.view(sr.size(0),3,3);
+        if bv.size(0) != sr.size(0):
+            bv = bv.expand(sr.size(0),8,3).contiguous();
+        bv = torch.bmm(sr,bv.transpose(2,1).contiguous());
+        bv = bv.transpose(2,1).contiguous();
         t = t.view(t.size(0),1,t.size(1));
         bv = bv + t;
         bpts = tri2pts_batch(bv,box_face,self.pts_num//box_face.shape[0]//self.grid_num);
@@ -60,10 +60,7 @@ def run(**kwargs):
     ax.axis('equal')
     bv = torch.from_numpy(bv).view(1,8,3);
     bv = bv.expand(2,8,3).contiguous();
-    r = torch.randn([2,4]);
-    r = r / torch.sqrt(torch.sum(r**2,dim=1,keepdim=True));
-    r  = r.unsqueeze(1).expand(2,8,4).contiguous();
-    bv = qrot(r,bv);
+    sr = torch.randn([2,9]);
     ax.scatter(bv[0,...,0],bv[0,...,1],bv[0,...,2]);
     fidx = box_face;
     T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);

@@ -9,9 +9,19 @@ from .box import box_face;
 def block(in_feat, out_feat, normalize=True):
     layers = [nn.Linear(in_feat, out_feat)]
     if normalize:
-        layers.append(nn.BatchNorm1d(out_feat, 0.8))
+        layers.append(nn.BatchNorm1d(out_feat))
         layers.append(nn.LeakyReLU(0.2, inplace=True))
     return layers;
+    
+def printbn(self, input, output):
+    print('Inside ' + self.__class__.__name__ + ' forward');
+    mean = input[0].mean(dim=0);
+    var = input[0].var(dim=0);
+    p = self.running_mean.data.cpu().numpy();
+    print("self.istraining",self.training);
+    print("running mean",p[0]);
+    print("input mean",mean.data.cpu().numpy()[0]);
+    
 
 class Net(nn.Module):
     def __init__(self,**kwargs):
@@ -23,20 +33,14 @@ class Net(nn.Module):
             self.im_enc = resnet18(False,input_channel=7,num_classes=1024);
         self.box = Box(**kwargs);
         self.gen_f = nn.Sequential(
-            *block(1024,1024, normalize=False),
+            *block(1024,1024,False),
             *block(1024,512)
         );
-        self.gen_s = nn.Sequential(
+        self.gen_sr = nn.Sequential(
             *block(512,256),
             *block(256,128),
-            nn.Linear(128,3),
-            nn.Hardtanh(min_val=0.1,max_val=10.0,inplace=True)
-        );
-        self.gen_r = nn.Sequential(
-            *block(512,256),
-            *block(256,128),
-            nn.Linear(128,4),
-            nn.Hardtanh(min_val=-1.0,max_val=1.0,inplace=True)
+            nn.Linear(128,9),
+            nn.Hardtanh(min_val=-5.0,max_val=5.0,inplace=True)
         );
         self.gen_t = nn.Sequential(
             *block(512,256),
@@ -45,6 +49,7 @@ class Net(nn.Module):
             nn.Hardtanh(min_val=-2.0,max_val=2.0,inplace=True)
         );
         self._init_layers();
+        #self.print_info();
         
     def forward(self,input):
         img = input[0][:,:3,:,:].contiguous();
@@ -63,16 +68,14 @@ class Net(nn.Module):
         else:
             gen_input = fimg;
         f = self.gen_f(gen_input);
-        s = self.gen_s(f);
-        r = self.gen_r(f);
-        if not self.training:
-           r = r / torch.sqrt(torch.sum(r**2,dim=1,keepdim=True));
+        sr = self.gen_sr(f);
         t = self.gen_t(f);
-        bs,pts = self.box(s,r,t,src_box);
+        bs,pts = self.box(sr,t,src_box);
         out = {};
         out['box'] = bs.contiguous();
         out['pts'] = pts.transpose(2,1).contiguous();
-        out['rot'] = r.contiguous();
+        out['sr'] = sr;
+        out['t'] = t;
         out['grid_x'] = (torch.from_numpy(box_face)).unsqueeze(0).expand(img.size(0),box_face.shape[0],box_face.shape[1]);
         out['y'] = out['box'];
         return out;
@@ -90,4 +93,11 @@ class Net(nn.Module):
             elif isinstance(m,nn.BatchNorm2d):
                 m.weight.data.fill_(1);
                 m.bias.data.zero_();
+                
+    def print_info(self):
+        for m in self.modules():
+            if isinstance(m,nn.BatchNorm1d):
+                m.register_forward_hook(printbn)
+                break;
+        
 
