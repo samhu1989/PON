@@ -209,9 +209,9 @@ def gen(bidx):
     return env;
 
 def run(**kwargs):
-    num = kwargs['batch_size'];
+    num = kwargs['nepoch'];
     data_root = kwargs['data_path'];
-    bnum = 2;
+    bnum = kwargs['batch_size'];
     #select box with possible repeat in fact
     for i in range(num):
         if data_root.endswith('train'):

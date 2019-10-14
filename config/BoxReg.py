@@ -11,7 +11,7 @@ mode = 'Reg';
 lambda_gp = 10;
 train_g = 5;
 weight_decay = 0.0;
-as_text = True;
+as_text = False;
 
 from .config import parameters,NpEncoder;
 import torch;
@@ -39,6 +39,7 @@ import os;
 from util.tools import repeat_face,write_pts2sphere;
 import pandas as pd;
 from PIL import Image;
+
 
 bestcnt = 3;
 best = np.array([10000]*bestcnt,dtype=np.float32);
@@ -119,19 +120,25 @@ def writelog(**kwargs):
             face = np.zeros(shape=[fidx.shape[0]],dtype=T);
             for fi in range(fidx.shape[0]):
                 face[fi] = (3,fidx[fi,0],fidx[fi,1],fidx[fi,2]);
-            write_ply(ply_path+os.sep+'_%04d_%03d_%s_all.ply'%(ib,i,cat[i]),points = pd.DataFrame(yall[i,...]),faces=pd.DataFrame(face),as_text=opt['as_text']);
-            write_ply(ply_path+os.sep+'_%04d_%03d_%s_src.ply'%(ib,i,cat[i]),points = pd.DataFrame(ysrc[i,...]),faces=pd.DataFrame(face[0:12]),as_text=opt['as_text']);
-            write_ply(ply_path+os.sep+'_%04d_%03d_%s_tgt.ply'%(ib,i,cat[i]),points = pd.DataFrame(ytgt[i,...]),faces=pd.DataFrame(face[0:12]),as_text=opt['as_text']);
-            write_ply(ply_path+os.sep+'_%04d_%03d_%s_out.ply'%(ib,i,cat[i]),points = pd.DataFrame(yout[i,...]),faces=pd.DataFrame(face[0:12]),as_text=opt['as_text']);
-            write_ply(ply_path+os.sep+'_%04d_%03d_%s_oall.ply'%(ib,i,cat[i]),points = pd.DataFrame(np.concatenate([ysrc[i,...],yout[i,...]],axis=0)),faces=pd.DataFrame(face),as_text=opt['as_text']);
+            write_ply(ply_path+os.sep+'_%04d_%03d_%s_allgt.ply'%(ib,i,cat[i]),points = pd.DataFrame(rotyup(yall[i,...])),faces=pd.DataFrame(face),as_text=opt['as_text']);
+            write_ply(ply_path+os.sep+'_%04d_%03d_%s_src.ply'%(ib,i,cat[i]),points = pd.DataFrame(rotyup(ysrc[i,...])),faces=pd.DataFrame(face[0:12]),as_text=opt['as_text']);
+            write_ply(ply_path+os.sep+'_%04d_%03d_%s_tgt_gt.ply'%(ib,i,cat[i]),points = pd.DataFrame(rotyup(ytgt[i,...])),faces=pd.DataFrame(face[0:12]),as_text=opt['as_text']);
+            write_ply(ply_path+os.sep+'_%04d_%03d_%s_tgt_out.ply'%(ib,i,cat[i]),points = pd.DataFrame(rotyup(yout[i,...])),faces=pd.DataFrame(face[0:12]),as_text=opt['as_text']);
+            write_ply(ply_path+os.sep+'_%04d_%03d_%s_allout.ply'%(ib,i,cat[i]),points = pd.DataFrame(rotyup(np.concatenate([ysrc[i,...],yout[i,...]],axis=0))),faces=pd.DataFrame(face),as_text=opt['as_text']);
             img = im[i,...];
             img = img.transpose((1,2,0));
             img = Image.fromarray(np.uint8(255.0*img));
             img.save(ply_path+os.sep+'_%04d_%03d_%s_input.png'%(ib,i,cat[i]));
             img = src[i,...];
             img = Image.fromarray(np.uint8(255.0*img));
-            img.save(ply_path+os.sep+'_%04d_%03d_%s_src.png'%(ib,i,cat[i]));
+            img.save(ply_path+os.sep+'_%04d_%03d_%s_src_msk.png'%(ib,i,cat[i]));
             img = tgt[i,...];
             img = Image.fromarray(np.uint8(255.0*img));
-            img.save(ply_path+os.sep+'_%04d_%03d_%s_tgt.png'%(ib,i,cat[i]));
+            img.save(ply_path+os.sep+'_%04d_%03d_%s_tgt_msk.png'%(ib,i,cat[i]));
 
+def rotyup(pts):
+    from scipy.spatial.transform import Rotation as R;
+    r = R.from_rotvec(-np.pi/2 * np.array([1, 0, 0]));
+    return (r.apply(pts)).astype(np.float32);
+    
+    

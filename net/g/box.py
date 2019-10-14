@@ -48,6 +48,25 @@ class Box(nn.Module):
         bpts = tri2pts_batch(bv,box_face,self.pts_num//box_face.shape[0]//self.grid_num);
         return bv,bpts;
         
+class Box6(nn.Module):
+    def __init__(self,**kwargs):
+        super(Box,self).__init__();
+        self.pts_num = kwargs['pts_num'];
+        self.grid_num = kwargs['grid_num'];
+        self.box_vert = torch.from_numpy(bv).view(1,8,3);
+
+    def forward(self,s,r,t):
+        bv = self.box_vert.type(s.type());
+        s = s.view(s.size(0),1,s.size(1));
+        bv = s*bv;
+        bv = bv.expand(s.size(0),8,3);
+        r  = r.expand(r.size(0),8,4);
+        bv = qrot(r,bv);
+        t = t.view(t.size(0),1,t.size(1));
+        bv = bv + t;
+        bpts = tri2pts_batch(bv,box_face,self.pts_num//box_face.shape[0]//self.grid_num);
+        return bv;
+        
 def run(**kwargs):
     from .box import bv;
     from matplotlib import pyplot as plt

@@ -45,6 +45,8 @@ def run(**kwargs):
     data_root = kwargs['data_path'];
     if os.path.basename(data_root)=='ply':
         pack_res(data_root);
-    if os.path.basename(data_root)=='train':
+    elif os.path.basename(data_root)=='train':
         pack_data(data_root,'augment');
+    else:
+        pack_res(data_root);
     return;
