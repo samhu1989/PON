@@ -38,6 +38,7 @@ import pandas as pd;
 from PIL import Image;
 import matplotlib as mpl
 mpl.use('Agg');
+from util.dataset.ToyV import*;
 
 bestcnt = 3;
 best = np.array([10000]*bestcnt,dtype=np.float32);
@@ -53,7 +54,7 @@ def writelog(**kwargs):
     nb = kwargs['ndata'] // opt['batch_size'];
     out = kwargs['out'];
     net = kwargs['net'];
-    data = kwargs['data'];
+    d = kwargs['data'];
     meter = kwargs['meter'];
     print('['+str(datetime.now())+'][%d/%d,%d/%d]'%(iepoch,nepoch,ib,nb)+'training:'+str(kwargs['istraining']));
     if not 'log_tmp' in opt.keys():
@@ -95,48 +96,46 @@ def writelog(**kwargs):
         ply_path = opt['log_tmp']+os.sep+'ply';
         if not os.path.exists(ply_path):
             os.mkdir(ply_path);
-        x = out['grid_x'];
-        x = x.data.cpu().numpy();
-        y = out['y'];
-        yout = y.data.cpu().numpy();
-        ysrc = data[3];
-        ysrc = ysrc.data.cpu().numpy();
-        ytgt = data[4];
-        ytgt = ytgt.data.cpu().numpy();
-        yall = data[5];
-        yall = yall.data.cpu().numpy();
-        cat = data[-1];
-        im = data[0];
-        im = im.data.cpu().numpy();
-        src = data[1];
-        src = src.data.cpu().numpy();
-        tgt = data[2];
-        tgt = tgt.data.cpu().numpy();
-        for i in range(y.shape[0]):
-            fidx = repeat_face(x[i,...],opt['grid_num'],8);
-            T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
-            face = np.zeros(shape=[fidx.shape[0]],dtype=T);
-            for fi in range(fidx.shape[0]):
-                face[fi] = (3,fidx[fi,0],fidx[fi,1],fidx[fi,2]);
-            write_ply(ply_path+os.sep+'_%04d_%03d_%s_allgt.ply'%(ib,i,cat[i]),points = pd.DataFrame(rotyup(yall[i,...])),faces=pd.DataFrame(face),as_text=opt['as_text']);
-            write_ply(ply_path+os.sep+'_%04d_%03d_%s_src.ply'%(ib,i,cat[i]),points = pd.DataFrame(rotyup(ysrc[i,...])),faces=pd.DataFrame(face[0:12]),as_text=opt['as_text']);
-            write_ply(ply_path+os.sep+'_%04d_%03d_%s_tgt_gt.ply'%(ib,i,cat[i]),points = pd.DataFrame(rotyup(ytgt[i,...])),faces=pd.DataFrame(face[0:12]),as_text=opt['as_text']);
-            write_ply(ply_path+os.sep+'_%04d_%03d_%s_tgt_out.ply'%(ib,i,cat[i]),points = pd.DataFrame(rotyup(yout[i,...])),faces=pd.DataFrame(face[0:12]),as_text=opt['as_text']);
-            write_ply(ply_path+os.sep+'_%04d_%03d_%s_allout.ply'%(ib,i,cat[i]),points = pd.DataFrame(rotyup(np.concatenate([ysrc[i,...],yout[i,...]],axis=0))),faces=pd.DataFrame(face),as_text=opt['as_text']);
-            img = im[i,...];
-            img = img.transpose((1,2,0));
-            img = Image.fromarray(np.uint8(255.0*img));
-            img.save(ply_path+os.sep+'_%04d_%03d_%s_input.png'%(ib,i,cat[i]));
-            img = src[i,...];
-            img = Image.fromarray(np.uint8(255.0*img));
-            img.save(ply_path+os.sep+'_%04d_%03d_%s_src_msk.png'%(ib,i,cat[i]));
-            img = tgt[i,...];
-            img = Image.fromarray(np.uint8(255.0*img));
-            img.save(ply_path+os.sep+'_%04d_%03d_%s_tgt_msk.png'%(ib,i,cat[i]));
-
-def rotyup(pts):
-    from scipy.spatial.transform import Rotation as R;
-    r = R.from_rotvec(-np.pi/2 * np.array([1, 0, 0]));
-    return (r.apply(pts)).astype(np.float32);
+        img = d[0].data.cpu().numpy();
+        box2d_src = d[1].data.cpu().numpy();
+        box3d_src = d[2].data.cpu().numpy();
+        box2d_tgt = d[3].data.cpu().numpy();
+        box3d_tgt = d[4].data.cpu().numpy();
+        rs = d[5].cpu().numpy()
+        ys = out['y'].data.cpu().numpy();
+        for i in range(img.shape[0]):
+            fig = plt.figure();
+            r = rs[i,...];
+            y = ys[i,...];
+            y *= np.pi;
+            y[:,1] *= 2;
+            coord = np.concatenate([r.reshape(-1,1),y.reshape(-1,2)],axis=1);
+            c3dir = sph2car(coord.reshape(1,-1));
+            c3d = np.zeros([2,3],dtype=np.float32);
+            c3d[1,:] = mv(np.mean(box3d_src[i,:,:3],axis=0,keepdims=True))[:,:3];
+            c3d[0,:] = c3d[1,:] + c3dir;
+            c3d = mv_inv(c3d);
+            c2d = proj(mv(c3d));
+            ax = fig.add_subplot(121);
+            ax.imshow(img[0,...]);
+            ax.set_aspect('equal');
+            ax.scatter(box2d_src[i,0:4,0],box2d_src[i,0:4,1],color='b',marker='*');
+            ax.scatter(box2d_src[i,4:8,0],box2d_src[i,4:8,1],color='c',marker='*');
+            ax.scatter(box2d_tgt[i,0:4,0],box2d_tgt[i,0:4,1],color='k',marker='x');
+            ax.scatter(box2d_tgt[i,4:8,0],box2d_tgt[i,4:8,1],color='r',marker='x');
+            ax.scatter(c2d[0,0],c2d[0,1],color='b',marker='o');
+            ax.scatter(c2d[1,0],c2d[1,1],color='r',marker='o');
+            ax = fig.add_subplot(122,projection='3d');
+            ax.set_aspect('equal');
+            ax.scatter(box3d_src[i,0:4,0],box3d_src[i,0:4,1],box3d_src[i,0:4,2],color='b',marker='*');
+            ax.scatter(box3d_src[i,4:8,0],box3d_src[i,4:8,1],box3d_src[i,4:8,2],color='c',marker='*');
+            ax.scatter(box3d_tgt[i,0:4,0],box3d_tgt[i,0:4,1],box3d_tgt[i,0:4,2],color='k',marker='x');
+            ax.scatter(box3d_tgt[i,4:8,0],box3d_tgt[i,4:8,1],box3d_tgt[i,4:8,2],color='r',marker='x');
+            ax.plot(c3d[:,0],c3d[:,1],c3d[:,2]);
+            cs = np.mean(box3d_src[0,:,:3],axis=0);
+            ax.scatter(cs[0],cs[1],cs[2],color='r',marker='o');
+            ct = np.mean(box3d_tgt[0,:,:3],axis=0);
+            ax.scatter(ct[0],ct[1],ct[2],color='b',marker='o');
+            plt.savefig(ply_path+os.sep+'_%04d_%03d_%s.png'%(ib,i,cat[i]));
     
     

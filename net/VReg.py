@@ -42,7 +42,7 @@ class Net(nn.Module):
         t2d = input[3];
         xs = s2d.view(s2d.size(0),-1,1);
         xt = t2d.view(t2d.size(0),1,-1);
-        f = torch.bmm(xs,xt);
+        f = torch.matmul(xs,xt);
         f = f.view(f.size(0),-1).contiguous();
         y = self.model(f);
         out = {'y':out};

@@ -121,7 +121,7 @@ class Data(data.Dataset):
                 srcpick = alpha*np.random.randint(0,bspick)+(1-alpha)*np.random.randint(bspick+1,num);
             else:
                 srcpick = 0;
-        img = np.array(Image.open(fname.replace('.json','.ply_r_000.png')));
+        img = np.array(Image.open(fname.replace('.json','.ply_r_000.png'))).astype(np.float32)/255.0;
         s3d = np.array(data['box'][srcpick]);
         s2d = proj(mv(s3d));
         #
@@ -179,16 +179,22 @@ def run(**kwargs):
         ax = fig.add_subplot(121);
         ax.imshow(img[0,...]);
         ax.set_aspect('equal');
-        ax.scatter(box2d_src[0,:,0],box2d_src[0,:,1],marker='*');
-        ax.scatter(box2d_tgt[0,:,0],box2d_tgt[0,:,1],marker='x');
+        ax.scatter(box2d_src[0,0:4,0],box2d_src[0,0:4,1],color='b',marker='*');
+        ax.scatter(box2d_src[0,4:8,0],box2d_src[0,4:8,1],color='c',marker='*');
+        ax.scatter(box2d_tgt[0,0:4,0],box2d_tgt[0,0:4,1],color='k',marker='x');
+        ax.scatter(box2d_tgt[0,4:8,0],box2d_tgt[0,4:8,1],color='r',marker='x');
         ax.scatter(c2d[0,0],c2d[0,1],color='b',marker='o');
         ax.scatter(c2d[1,0],c2d[1,1],color='r',marker='o');
         ax = fig.add_subplot(122,projection='3d');
         ax.set_aspect('equal');
-        ax.scatter(box3d_src[0,:,0],box3d_src[0,:,1],box3d_src[0,:,2]);
-        ax.scatter(box3d_tgt[0,:,0],box3d_tgt[0,:,1],box3d_tgt[0,:,2]);
+        ax.scatter(box3d_src[0,0:4,0],box3d_src[0,0:4,1],box3d_src[0,0:4,2],color='b',marker='*');
+        ax.scatter(box3d_src[0,4:8,0],box3d_src[0,4:8,1],box3d_src[0,4:8,2],color='c',marker='*');
+        ax.scatter(box3d_tgt[0,0:4,0],box3d_tgt[0,0:4,1],box3d_tgt[0,0:4,2],color='k',marker='x');
+        ax.scatter(box3d_tgt[0,4:8,0],box3d_tgt[0,4:8,1],box3d_tgt[0,4:8,2],color='r',marker='x');
         ax.plot(c3d[:,0],c3d[:,1],c3d[:,2]);
-        #box2d_tgt = np.array(d[3]);
-        #box3d_tgt = np.array(d[4]);
+        cs = np.mean(box3d_src[0,:,:3],axis=0);
+        ax.scatter(cs[0],cs[1],cs[2],color='r',marker='o');
+        ct = np.mean(box3d_tgt[0,:,:3],axis=0);
+        ax.scatter(ct[0],ct[1],ct[2],color='b',marker='o');
         break;
     plt.show();
