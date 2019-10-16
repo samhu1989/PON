@@ -38,6 +38,43 @@ t2 = {
 40:'table/regular_table/table_base/pedestal_base/central_support'
 };
 
+def zup(env):
+    from scipy.spatial.transform import Rotation as R;
+    r = R.from_rotvec(np.pi/2 * np.array([1, 0, 0]));
+    for i in range(len(env['box'])):
+        pts = env['box'][i][:,:].copy();
+        env['box'][i][:,:] = (r.apply(pts)).astype(np.float32)
+    return;
+        
+def norm_env(env):
+    min = np.finfo(np.float32).eps;
+    for i in range(len(env['box'])):
+        mf = np.min( env['box'][i][:,2] );
+        if min < mf:
+            mf = min;
+    t = -mf;
+    hull_pts = None;
+    for i in range(len(env['box'])):
+        env['box'][i][:,2] += t;
+        env['t'][i][2] += t;
+        if hull_pts is None:
+            hull_pts = env['box'][i][:,[0,1]];
+        else:
+            hull_pts = np.concatenate([hull_pts,env['box'][i][:,[0,1]]],axis=0);
+    hull = ConvexHull(hull_pts);
+    t = - np.mean(hull_pts[hull.vertices,:],axis=0,keepdims=True);
+    for i in range(len(env['box'])):
+        env['box'][i][:,[0,1]] += t;
+        env['t'][i][[0,1]] += t[0,:];
+    s = 0.0;
+    for i in range(len(env['box'])):
+        mx = np.max(np.sqrt(np.sum(np.square(env['box'][i][:,:]),axis=-1)),axis=0);
+        if mx > s:
+            s = mx;
+    for i in range(len(env['box'])):
+        env['box'][i][:,:] /= s;
+    
+
 def debug_pts(pts,ptsall):
     import matplotlib.pyplot as plt;
     from mpl_toolkits.mplot3d import Axes3D
@@ -121,6 +158,10 @@ def gen(p0,p1,debug=False):
     pts2box(p1,env,debug=debug);
     if debug:
         debug_env(env,p0,p1);
+    zup(env);
+    norm_env(env);
+    if debug:
+        debug_env(env,p0,p1);
     return env;
 
 def run(**kwargs):
@@ -154,6 +195,7 @@ def run(**kwargs):
         else:
             h52 = h5py.File(hfn.replace('Table-1','Table-2'),'r');
         iobj = np.random.randint(0,len(rdict),dtype= np.int32);
+        print(i,':',hfn,'-',iobj);
         robj = rdict[iobj];
         pts0 = getpts(h51,p1,iobj);
         pts1 = getpts(h52,p2,iobj);
