@@ -122,16 +122,22 @@ class Data(data.Dataset):
             else:
                 srcpick = 0;
         img = np.array(Image.open(fname.replace('.json','.ply_r_000.png'))).astype(np.float32)/255.0;
+        img = img.astype(np.float32);
         s3d = np.array(data['box'][srcpick]);
+        s3d = s3d.astype(np.float32);
         s2d = proj(mv(s3d));
+        s2d = s2d.astype(np.float32);
         #
         t3d = np.array(data['box'][pick]);
+        t3d = t3d.astype(np.float32);
         t2d = proj(mv(t3d));
+        t2d = t2d.astype(np.float32);
         #
         c3d = np.concatenate([np.mean(t3d,axis=0,keepdims=True),np.mean(s3d,axis=0,keepdims=True)],axis=0);
         mvc3d = mv(c3d);
         dirc3d = mvc3d[0,:] - mvc3d[1,:];
         coord = car2sph(dirc3d.reshape(1,-1));
+        coord = coord.astype(np.float32);
         #
         #s3d = self.mv(s3d);
         #t3d = self.mv(t3d);
@@ -139,7 +145,7 @@ class Data(data.Dataset):
         gt = coord[:,1:3];
         gt[:,0] /= np.pi;
         gt[:,1] /= (2*np.pi); 
-        return torch.from_numpy(img),torch.from_numpy(s2d),torch.from_numpy(s3d),torch.from_numpy(t2d),torch.from_numpy(t3d),torch.from_numpy(r),torch.from_numpy(gt),'boxV';
+        return torch.from_numpy(),torch.from_numpy(s2d),torch.from_numpy(s3d),torch.from_numpy(t2d),torch.from_numpy(t3d),torch.from_numpy(r),torch.from_numpy(gt),'boxV';
 
     def __len__(self):
         return len(self.datapath);
