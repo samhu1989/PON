@@ -43,7 +43,9 @@ from util.dataset.ToyV import*;
 bestcnt = 3;
 best = np.array([10000]*bestcnt,dtype=np.float32);
 bestn = [""]*bestcnt;
-import matplotlib.pyplot as plt;    
+import matplotlib.pyplot as plt;
+from mpl_toolkits.mplot3d import Axes3D;
+
 def writelog(**kwargs):
     global best;
     global bestn;
@@ -103,12 +105,13 @@ def writelog(**kwargs):
         box3d_tgt = d[4].data.cpu().numpy();
         rs = d[5].data.cpu().numpy()
         ys = out['y'].data.cpu().numpy();
+        cat = d[-1];
         for i in range(img.shape[0]):
             fig = plt.figure();
             r = rs[i,...];
             y = ys[i,...];
             y *= np.pi;
-            y[:,1] *= 2;
+            y[1] *= 2;
             coord = np.concatenate([r.reshape(-1,1),y.reshape(-1,2)],axis=1);
             c3dir = sph2car(coord.reshape(1,-1));
             c3d = np.zeros([2,3],dtype=np.float32);
@@ -126,7 +129,7 @@ def writelog(**kwargs):
             ax.scatter(c2d[0,0],c2d[0,1],color='b',marker='o');
             ax.scatter(c2d[1,0],c2d[1,1],color='r',marker='o');
             ax = fig.add_subplot(122,projection='3d');
-            ax.set_aspect('equal');
+            #ax.set_aspect('equal');
             ax.scatter(box3d_src[i,0:4,0],box3d_src[i,0:4,1],box3d_src[i,0:4,2],color='b',marker='*');
             ax.scatter(box3d_src[i,4:8,0],box3d_src[i,4:8,1],box3d_src[i,4:8,2],color='c',marker='*');
             ax.scatter(box3d_tgt[i,0:4,0],box3d_tgt[i,0:4,1],box3d_tgt[i,0:4,2],color='k',marker='x');
@@ -137,5 +140,5 @@ def writelog(**kwargs):
             ct = np.mean(box3d_tgt[0,:,:3],axis=0);
             ax.scatter(ct[0],ct[1],ct[2],color='b',marker='o');
             plt.savefig(ply_path+os.sep+'_%04d_%03d_%s.png'%(ib,i,cat[i]));
-    
+            plt.close(fig);
     
