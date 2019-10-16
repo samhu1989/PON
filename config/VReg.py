@@ -120,7 +120,7 @@ def writelog(**kwargs):
             c3d = mv_inv(c3d);
             c2d = proj(mv(c3d));
             ax = fig.add_subplot(121);
-            ax.imshow(img[0,...]);
+            ax.imshow(img[i,...]);
             ax.set_aspect('equal');
             ax.scatter(box2d_src[i,0:4,0],box2d_src[i,0:4,1],color='b',marker='*');
             ax.scatter(box2d_src[i,4:8,0],box2d_src[i,4:8,1],color='c',marker='*');

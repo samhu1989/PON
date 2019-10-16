@@ -2,13 +2,13 @@ import os;
 import sys;
 import torch;
 sys.path.append('./ext/');
-import cd.dist_chamfer as ext;
-distChamfer =  ext.chamferDist();
 from util.tools import genface,write_pts2sphere;
 import pandas as pd;
 as_text = False;
 
 def loss(data,out):
+    import cd.dist_chamfer as ext;
+    distChamfer =  ext.chamferDist();
     loss = {};
     dist1, dist2 = distChamfer(data[1],out['y']);
     ax1 = [x for x in range(1,dist1.dim())]
@@ -18,6 +18,8 @@ def loss(data,out):
     return loss;
 
 def accuracy(data,out):
+    import cd.dist_chamfer as ext;
+    distChamfer =  ext.chamferDist();
     acc = {};
     dist1, dist2 = distChamfer(data[1],out['y']);
     ax1 = [x for x in range(1,dist1.dim())]
