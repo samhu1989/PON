@@ -45,7 +45,7 @@ class Net(nn.Module):
         f = torch.bmm(xs,xt);
         f = f.view(f.size(0),-1).contiguous();
         y = self.model(f);
-        out = {'y':out};
+        out = {'y':y};
         return out;
     
     def _init_layers(self):

@@ -43,7 +43,7 @@ from util.dataset.ToyV import*;
 bestcnt = 3;
 best = np.array([10000]*bestcnt,dtype=np.float32);
 bestn = [""]*bestcnt;
-    
+import matplotlib.pyplot as plt;    
 def writelog(**kwargs):
     global best;
     global bestn;
@@ -101,7 +101,7 @@ def writelog(**kwargs):
         box3d_src = d[2].data.cpu().numpy();
         box2d_tgt = d[3].data.cpu().numpy();
         box3d_tgt = d[4].data.cpu().numpy();
-        rs = d[5].cpu().numpy()
+        rs = d[5].data.cpu().numpy()
         ys = out['y'].data.cpu().numpy();
         for i in range(img.shape[0]):
             fig = plt.figure();

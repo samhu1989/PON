@@ -145,7 +145,7 @@ class Data(data.Dataset):
         gt = coord[:,1:3];
         gt[:,0] /= np.pi;
         gt[:,1] /= (2*np.pi); 
-        return torch.from_numpy(),torch.from_numpy(s2d),torch.from_numpy(s3d),torch.from_numpy(t2d),torch.from_numpy(t3d),torch.from_numpy(r),torch.from_numpy(gt),'boxV';
+        return torch.from_numpy(img),torch.from_numpy(s2d),torch.from_numpy(s3d),torch.from_numpy(t2d),torch.from_numpy(t3d),torch.from_numpy(r),torch.from_numpy(gt),'boxV';
 
     def __len__(self):
         return len(self.datapath);
