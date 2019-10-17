@@ -103,7 +103,8 @@ def writelog(**kwargs):
         box3d_src = d[2].data.cpu().numpy();
         box2d_tgt = d[3].data.cpu().numpy();
         box3d_tgt = d[4].data.cpu().numpy();
-        rs = d[5].data.cpu().numpy()
+        rs = d[5].data.cpu().numpy();
+        gts = d[6].data.cpu().numpy();
         ys = out['y'].data.cpu().numpy();
         cat = d[-1];
         for i in range(img.shape[0]):
@@ -119,6 +120,17 @@ def writelog(**kwargs):
             c3d[0,:] = c3d[1,:] + c3dir;
             c3d = mv_inv(c3d);
             c2d = proj(mv(c3d));
+            #
+            gt = gts[i,...];
+            gt *= np.pi;
+            gt[1] *= 2;
+            coord2 = np.concatenate([r.reshape(-1,1),gt.reshape(-1,2)],axis=1);
+            c3dir2 = sph2car(coord2.reshape(1,-1));
+            c3d2 = np.zeros([2,3],dtype=np.float32);
+            c3d2[1,:] = mv(np.mean(box3d_src[i,:,:3],axis=0,keepdims=True))[:,:3];
+            c3d2[0,:] = c3d2[1,:] + c3dir2;
+            c3d2 = mv_inv(c3d2);
+            #
             ax = fig.add_subplot(121);
             ax.imshow(img[i,...]);
             ax.set_aspect('equal');
@@ -134,10 +146,11 @@ def writelog(**kwargs):
             ax.scatter(box3d_src[i,4:8,0],box3d_src[i,4:8,1],box3d_src[i,4:8,2],color='c',marker='*');
             ax.scatter(box3d_tgt[i,0:4,0],box3d_tgt[i,0:4,1],box3d_tgt[i,0:4,2],color='k',marker='x');
             ax.scatter(box3d_tgt[i,4:8,0],box3d_tgt[i,4:8,1],box3d_tgt[i,4:8,2],color='r',marker='x');
-            ax.plot(c3d[:,0],c3d[:,1],c3d[:,2]);
-            cs = np.mean(box3d_src[0,:,:3],axis=0);
+            ax.plot(c3d[:,0],c3d[:,1],c3d[:,2],color='k');
+            ax.plot(c3d2[:,0],c3d2[:,1],c3d2[:,2],color='r');
+            cs = np.mean(box3d_src[i,:,:3],axis=0);
             ax.scatter(cs[0],cs[1],cs[2],color='r',marker='o');
-            ct = np.mean(box3d_tgt[0,:,:3],axis=0);
+            ct = np.mean(box3d_tgt[i,:,:3],axis=0);
             ax.scatter(ct[0],ct[1],ct[2],color='b',marker='o');
             plt.savefig(ply_path+os.sep+'_%04d_%03d_%s.png'%(ib,i,cat[i]));
             plt.close(fig);
