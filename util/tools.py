@@ -75,6 +75,27 @@ class AvgMeterGroup(object):
             ret += ','+k+':%10.6f'%v.avg;
         return ret;
         
+def get_lr(optimizer):
+    for param_group in optimizer.param_groups:
+        return param_group['lr'];
+       
+writers = {}; 
+def write_tfb(tfb_dir,meters,iter,nb,optim):
+    from torch.utils.tensorboard import SummaryWriter;
+    global writers;
+    if tfb_dir in writers.keys():
+        writer = writers[tfb_dir];
+    else:
+        writer = SummaryWriter(log_dir=tfb_dir);
+        writers[tfb_dir] = writer;
+    for km,meter in meters.items():
+        writer.add_scalar(km+'/'+'mean',meter.overall_meter.avg,iter);
+        for k,v in meter.category_meters.items():
+            writer.add_scalar(km+'/'+k,v.avg,iter);
+    writer.add_scalar('lr',get_lr(optim),iter);
+    if iter % nb == 0:
+        writer.close();
+        
 def triangulate(pts):
     hull_list = [];
     for i in range(pts.shape[0]):

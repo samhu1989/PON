@@ -33,7 +33,7 @@ from util.data.ply import write_ply
 import json;
 import numpy as np;
 import os;
-from util.tools import repeat_face,write_pts2sphere;
+from util.tools import repeat_face,write_pts2sphere,write_tfb;
 import pandas as pd;
 from PIL import Image;
 import matplotlib as mpl
@@ -45,6 +45,7 @@ best = np.array([10000]*bestcnt,dtype=np.float32);
 bestn = [""]*bestcnt;
 import matplotlib.pyplot as plt;
 from mpl_toolkits.mplot3d import Axes3D;
+
 
 def writelog(**kwargs):
     global best;
@@ -58,6 +59,7 @@ def writelog(**kwargs):
     net = kwargs['net'];
     d = kwargs['data'];
     meter = kwargs['meter'];
+    optim = kwargs['optim'];
     print('['+str(datetime.now())+'][%d/%d,%d/%d]'%(iepoch,nepoch,ib,nb)+'training:'+str(kwargs['istraining']));
     if not 'log_tmp' in opt.keys():
         opt['log_tmp'] = opt['log']+os.sep+opt['net']+'_'+opt['config']+'_'+opt['mode']+'_'+str(datetime.now()).replace(' ','-').replace(':','-');
@@ -74,7 +76,12 @@ def writelog(**kwargs):
     with open(opt['log_tmp']+os.sep+'log.txt','a') as logtxt:
         print('['+str(datetime.now())+'][%d/%d,%d/%d]'%(iepoch,nepoch,ib,nb)+'training:'+str(kwargs['istraining']),file=logtxt);
         print(json.dumps(meter,cls=NpEncoder),file=logtxt);
-        
+    if kwargs['istraining']:
+        tfb_dir = os.path.join(opt['log_tmp'],'tfb','train');
+    else:
+        tfb_dir = os.path.join(opt['log_tmp'],'tfb','test');
+    write_tfb(tfb_dir,meter,ib+nb*iepoch,nb,optim);
+    
     if not kwargs['istraining'] and ib >= nb-1:
         if meter['cd'].overall_meter.avg < best[-1]:
             fn = bestn[-1];

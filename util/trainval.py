@@ -3,6 +3,7 @@ import traceback
 import importlib
 from torch.utils.data import DataLoader;
 from torch import optim;
+from torch.optim import lr_scheduler;
 from .tools import *;
 
 def data2cuda(data):
@@ -47,6 +48,7 @@ def run(**kwargs):
     
     #run the code
     optimizer = eval('optim.'+opt['optim'])(config.parameters(net),lr=opt['lr'],weight_decay=opt['weight_decay']);
+    sheduler = lr_scheduler.ExponentialLR(optimizer,0.9);
     #load pre-trained
     if opt['model']!='':
         partial_restore(net,opt['model']);
@@ -68,7 +70,7 @@ def run(**kwargs):
                     else:
                         val_meters[k] = AvgMeterGroup(k);
                         val_meters[k].update(v,data[-1]);
-                config.writelog(net=net,data=data,out=out,meter=val_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(val_data),istraining=False);
+                config.writelog(net=net,data=data,out=out,meter=val_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(val_data),optim=optimizer,istraining=False);
         net.train();
         #train
         train_meters = {};
@@ -87,4 +89,5 @@ def run(**kwargs):
                     train_meters[k].update(v,data[-1]);
             loss['overall'].backward();
             optimizer.step();
-            config.writelog(net=net,data=data,out=out,meter=train_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(train_data),istraining=True);
+            config.writelog(net=net,data=data,out=out,meter=train_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(train_data),optim=optimizer,istraining=True);
+        sheduler.step();
