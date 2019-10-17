@@ -30,19 +30,22 @@ class Net(nn.Module):
     def __init__(self,**kwargs):
         super(Net, self).__init__();
         self.model = nn.Sequential(
+            *block(32,256),
+            *block(256,256),
             *block(256,128),
             *block(128,64),
             nn.Linear(64,2),
-            nn.Hardtanh(min_val=0.0,max_val=1.0,inplace=True)
+            #nn.Hardtanh(min_val=0.0,max_val=1.0,inplace=True)
+            nn.Sigmoid()
         );
         self._init_layers();
 
     def forward(self,input):
         s2d = input[1];
         t2d = input[3];
-        xs = s2d.view(s2d.size(0),-1,1);
-        xt = t2d.view(t2d.size(0),1,-1);
-        f = torch.bmm(xs,xt);
+        xs = s2d.view(s2d.size(0),-1);
+        xt = t2d.view(t2d.size(0),-1);
+        f = torch.cat([xt,xs],axis=1);
         f = f.view(f.size(0),-1).contiguous();
         y = self.model(f);
         out = {'y':y};

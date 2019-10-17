@@ -82,7 +82,15 @@ def sph2car(vec):
     coord[:,1] = r*sth*sphi;
     coord[:,2] = r*cth;
     return coord; 
- 
+    
+def recon(bxs,r,angle):
+    coord = np.concatenate([r.reshape(-1,1),angle.reshape(-1,2)],axis=1);
+    c3dir = sph2car(coord.reshape(1,-1));
+    c3d = np.zeros([2,3],dtype=np.float32);
+    c3d[1,:] = mv(np.mean(bxs[:,:3],axis=0,keepdims=True))[:,:3];
+    c3d[0,:] = c3d[1,:] + c3dir;
+    c3d = mv_inv(c3d);
+    return c3d;
 
 class Data(data.Dataset):
     def __init__(self,opt,train=True):
@@ -158,7 +166,7 @@ def run(**kwargs):
     opt['pts_num_gt'] = 1200;
     train_data = Data(opt,True);
     val_data = Data(opt,False);
-    train_load = data.DataLoader(train_data,batch_size=opt['batch_size'],shuffle=False,num_workers=opt['workers']);
+    train_load = data.DataLoader(train_data,batch_size=opt['batch_size'],shuffle=True,num_workers=opt['workers']);
     val_load = data.DataLoader(val_data,batch_size=1,shuffle=False,num_workers=opt['workers']);
     if not os.path.exists('./log/debug_dataset/'):
         os.mkdir('./log/debug_dataset/');
@@ -175,14 +183,9 @@ def run(**kwargs):
         r = d[5].cpu().numpy()[0,...];
         gt = d[6].cpu().numpy()[0,...];
         gt *= np.pi;
-        gt[:,1] *= 2;
-        coord = np.concatenate([r.reshape(-1,1),gt.reshape(-1,2)],axis=1);
-        c3dir = sph2car(coord.reshape(1,-1));
-        c3d = np.zeros([2,3],dtype=np.float32);
-        c3d[1,:] = mv(np.mean(box3d_src[0,:,:3],axis=0,keepdims=True))[:,:3];
-        c3d[0,:] = c3d[1,:] + c3dir;
-        c3d = mv_inv(c3d);
-        c2d = proj(mv(c3d));
+        gt[1] *= 2;
+        c3d = recon(box3d_src[0,...],r,gt);
+        #c2d = proj(mv(c3d));
         ax = fig.add_subplot(121);
         ax.imshow(img[0,...]);
         ax.set_aspect('equal');

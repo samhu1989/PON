@@ -12,6 +12,7 @@ as_text = False;
 
 from .config import parameters,NpEncoder;
 import torch;
+import numpy as np;
 
 def accuracy(data,out):
     acc = {};
@@ -37,7 +38,9 @@ from util.tools import repeat_face,write_pts2sphere,write_tfb;
 import pandas as pd;
 from PIL import Image;
 import matplotlib as mpl
-mpl.use('Agg');
+import platform;
+if not platform.platform().startswith('Windows'):
+    mpl.use('Agg');
 from util.dataset.ToyV import*;
 
 bestcnt = 3;
