@@ -15,7 +15,7 @@ def randbox(env):
     s = np.random.uniform(0.1,1.0,[1,3]).astype(np.float32);
     v = box_vert*s;
     #random rotation
-    q = np.random.normal(0.0,1.0,[4]).astype(np.float32);
+    q = np.random.normal(0.0001,1.0,[4]).astype(np.float32);
     norm = np.linalg.norm(q);
     r = R.from_quat(q/norm);
     v = r.apply(v);
