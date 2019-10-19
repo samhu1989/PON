@@ -42,8 +42,8 @@ class Net(nn.Module):
     def forward(self,input):
         s2d = input[1];
         t2d = input[3];
-        xs = s2d.view(s2d.size(0),-1,1);
-        xt = t2d.view(t2d.size(0),1,-1);
+        xs = s2d.view(s2d.size(0),-1,1)/112.0;
+        xt = t2d.view(t2d.size(0),1,-1)/112.0;
         xs = torch.cat([xs,torch.ones(s2d.size(0),1,1).type(s2d.type())],dim=1);
         xt = torch.cat([xt,torch.ones(t2d.size(0),1,1).type(t2d.type())],dim=2);
         f = torch.bmm(xs,xt);
