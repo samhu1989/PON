@@ -12,7 +12,10 @@ import pandas as pd;
 from .cmap import color;
 
 def partial_restore(net,path,keymap={}):
-    olddict = torch.load(path);
+    if torch.cuda.is_available():
+        olddict = torch.load(path);
+    else:
+        olddict = torch.load(path,map_location=torch.device('cpu'));
     #print(olddict.keys());
     mdict = net.state_dict();
     #print(olddict.keys());

@@ -134,9 +134,9 @@ def run(**kwargs):
                 ax.scatter(box2d_src[ni,4:8,0],box2d_src[ni,4:8,1],color='c',marker='*');
                 ax.scatter(box2d_tgt[ni,0:4,0],box2d_tgt[ni,0:4,1],color='k',marker='x');
                 ax.scatter(box2d_tgt[ni,4:8,0],box2d_tgt[ni,4:8,1],color='r',marker='x');
+                ax.set_aspect('equal', adjustable='box');
                 #
                 ax = fig.add_subplot(132,projection='3d');
-                ax.axis('equal');
                 ax.view_init(elev=10., azim=30)
                 ax.plot_trisurf(box3d_tgt[ni,...,0],box3d_tgt[ni,...,1],tri,box3d_tgt[ni,...,2],color=(0,0,1,0.1));
                 ax.plot_trisurf(box3d_src[ni,...,0],box3d_src[ni,...,1],tri,box3d_src[ni,...,2],color=(0,1,0,0.1));
@@ -154,9 +154,9 @@ def run(**kwargs):
                 ax.scatter(box3d_src[ni,4:8,0],box3d_src[ni,4:8,1],box3d_src[ni,4:8,2],color='c',marker='*');
                 ax.scatter(box3d_tgt[ni,0:4,0],box3d_tgt[ni,0:4,1],box3d_tgt[ni,0:4,2],color='k',marker='x');
                 ax.scatter(box3d_tgt[ni,4:8,0],box3d_tgt[ni,4:8,1],box3d_tgt[ni,4:8,2],color='r',marker='x');
+                ax.set_aspect('equal', adjustable='box');
                 #
                 ax = fig.add_subplot(133,projection='3d');
-                ax.axis('equal');
                 ax.view_init(elev=10., azim=120)
                 ax.plot_trisurf(box3d_tgt[ni,...,0],box3d_tgt[ni,...,1],tri,box3d_tgt[ni,...,2],color=(0,0,1,0.1));
                 ax.plot_trisurf(box3d_src[ni,...,0],box3d_src[ni,...,1],tri,box3d_src[ni,...,2],color=(0,1,0,0.1));
@@ -166,6 +166,7 @@ def run(**kwargs):
                 ax.scatter(box3d_src[ni,4:8,0],box3d_src[ni,4:8,1],box3d_src[ni,4:8,2],color='c',marker='*');
                 ax.scatter(box3d_tgt[ni,0:4,0],box3d_tgt[ni,0:4,1],box3d_tgt[ni,0:4,2],color='k',marker='x');
                 ax.scatter(box3d_tgt[ni,4:8,0],box3d_tgt[ni,4:8,1],box3d_tgt[ni,4:8,2],color='r',marker='x');
+                ax.set_aspect('equal', adjustable='box');
                 plt.savefig(os.path.join(outdir,"_%04d_%04d.png"%(i,ni)));
                 if opt['ply']:
                     plt.show();
