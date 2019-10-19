@@ -89,7 +89,6 @@ def center_env(env):
         env['box'][i][:,0:2] += t;
         env['t'][i][:,0:2] += t;
     
-    
 def place(env,idx):
     #if no box in env add the current box add origin with a random rotation along axis z;
     if 0 == len(env['box']):
