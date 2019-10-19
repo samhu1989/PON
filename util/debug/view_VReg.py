@@ -13,6 +13,7 @@ from ..data.gen_toybox import box_face;
 from net.g.box import Box;
 from util.dataset.ToyV import recon;
 from util.tools import partial_restore;
+import os;
 
 
 def data2cuda(data):
@@ -101,6 +102,9 @@ def run(**kwargs):
         load = train_load;
     else:
         load = val_load;
+    outdir = os.path.dirname(opt['model'])+os.sep+'view_'+opt['user_key'];
+    if not os.path.exists(outdir):
+        os.mkdir(outdir);
     for i, data in enumerate(load,0):
         data2cuda(data);
         net.eval();
@@ -122,33 +126,50 @@ def run(**kwargs):
         for ri in range(row):
             for cj in range(col):
                 ni = ri*col+cj;
-                fig = plt.figure(figsize=(64,32));
-                ax = fig.add_subplot(121);
+                fig = plt.figure(figsize=(48,16));
+                ax = fig.add_subplot(131);
                 ax.axis('equal');
                 ax.imshow(img[ni,...]);
                 ax.scatter(box2d_src[ni,0:4,0],box2d_src[ni,0:4,1],color='b',marker='*');
                 ax.scatter(box2d_src[ni,4:8,0],box2d_src[ni,4:8,1],color='c',marker='*');
                 ax.scatter(box2d_tgt[ni,0:4,0],box2d_tgt[ni,0:4,1],color='k',marker='x');
                 ax.scatter(box2d_tgt[ni,4:8,0],box2d_tgt[ni,4:8,1],color='r',marker='x');
-                ax = fig.add_subplot(122,projection='3d');
+                #
+                ax = fig.add_subplot(132,projection='3d');
                 ax.axis('equal');
+                ax.view_init(elev=10., azim=30)
                 ax.plot_trisurf(box3d_tgt[ni,...,0],box3d_tgt[ni,...,1],tri,box3d_tgt[ni,...,2],color=(0,0,1,0.1));
                 ax.plot_trisurf(box3d_src[ni,...,0],box3d_src[ni,...,1],tri,box3d_src[ni,...,2],color=(0,1,0,0.1));
                 ygt = gts[ni,...];
                 ygt *= np.pi;
                 ygt[1] *= 2;
-                c3d = recon(box3d_src[ni,...],r[ni,...],ygt);
-                ax.plot(c3d[:,0],c3d[:,1],c3d[:,2],color='k');
+                c3d1 = recon(box3d_src[ni,...],r[ni,...],ygt);
+                ax.plot(c3d1[:,0],c3d1[:,1],c3d1[:,2],color='k');
                 ymap = y[ni,...];
                 ymap *= np.pi;
                 ymap[1] *= 2;
-                c3d = recon(box3d_src[ni,...],r[ni,...],ymap);
-                ax.plot(c3d[:,0],c3d[:,1],c3d[:,2],color='r');
+                c3d2 = recon(box3d_src[ni,...],r[ni,...],ymap);
+                ax.plot(c3d2[:,0],c3d2[:,1],c3d2[:,2],color='r');
                 ax.scatter(box3d_src[ni,0:4,0],box3d_src[ni,0:4,1],box3d_src[ni,0:4,2],color='b',marker='*');
                 ax.scatter(box3d_src[ni,4:8,0],box3d_src[ni,4:8,1],box3d_src[ni,4:8,2],color='c',marker='*');
                 ax.scatter(box3d_tgt[ni,0:4,0],box3d_tgt[ni,0:4,1],box3d_tgt[ni,0:4,2],color='k',marker='x');
                 ax.scatter(box3d_tgt[ni,4:8,0],box3d_tgt[ni,4:8,1],box3d_tgt[ni,4:8,2],color='r',marker='x');
-                plt.show();
+                #
+                ax = fig.add_subplot(133,projection='3d');
+                ax.axis('equal');
+                ax.view_init(elev=10., azim=120)
+                ax.plot_trisurf(box3d_tgt[ni,...,0],box3d_tgt[ni,...,1],tri,box3d_tgt[ni,...,2],color=(0,0,1,0.1));
+                ax.plot_trisurf(box3d_src[ni,...,0],box3d_src[ni,...,1],tri,box3d_src[ni,...,2],color=(0,1,0,0.1));
+                ax.plot(c3d1[:,0],c3d1[:,1],c3d1[:,2],color='k');
+                ax.plot(c3d2[:,0],c3d2[:,1],c3d2[:,2],color='r');
+                ax.scatter(box3d_src[ni,0:4,0],box3d_src[ni,0:4,1],box3d_src[ni,0:4,2],color='b',marker='*');
+                ax.scatter(box3d_src[ni,4:8,0],box3d_src[ni,4:8,1],box3d_src[ni,4:8,2],color='c',marker='*');
+                ax.scatter(box3d_tgt[ni,0:4,0],box3d_tgt[ni,0:4,1],box3d_tgt[ni,0:4,2],color='k',marker='x');
+                ax.scatter(box3d_tgt[ni,4:8,0],box3d_tgt[ni,4:8,1],box3d_tgt[ni,4:8,2],color='r',marker='x');
+                plt.savefig(os.path.join(outdir,"_%04d_%04d.png"%(i,ni)));
+                if opt['ply']:
+                    plt.show();
+                plt.close(fig);
             
     #run the code
     '''

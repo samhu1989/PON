@@ -23,19 +23,19 @@ def block(in_feat, out_feat, normalize=True):
     layers = [nn.Linear(in_feat, out_feat)]
     if normalize:
         layers.append(nn.BatchNorm1d(out_feat))
-    layers.append(nn.LeakyReLU(0.2, inplace=True))
+        layers.append(nn.LeakyReLU(0.2, inplace=True))
     return layers;
 
 class Net(nn.Module):
     def __init__(self,**kwargs):
         super(Net, self).__init__();
         self.model = nn.Sequential(
-            *block(256,256),
-            *block(256,128),
-            *block(128,64),
+            *block(256,256,False),
+            *block(256,128,False),
+            *block(128,64,False),
             nn.Linear(64,2),
-            #nn.Hardtanh(min_val=0.0,max_val=1.0,inplace=True)
-            nn.Sigmoid()
+            nn.Hardtanh(min_val=0.0,max_val=1.0,inplace=True)
+            #nn.Sigmoid()
         );
         self._init_layers();
 

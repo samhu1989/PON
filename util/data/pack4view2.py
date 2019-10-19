@@ -18,7 +18,7 @@ def pack_res(path):
         os.mkdir(packed_path);
     fs = os.listdir(path);
     for f in fs:
-        if f.endswith('input.png'):
+        if f.endswith('.png'):
             batch = '_'+f.split('_')[1];
             if not os.path.exists(packed_path+os.sep+batch):
                 os.mkdir(packed_path+os.sep+batch);

@@ -1,5 +1,5 @@
 ### Part Based Single View Shape Reconstruction
-##### Project Goal
+## Project Goal
 1. Verify the superiority of part based representation in shape reconstruction by proposing a novel neural network for the task.
 
 2. The network should:
@@ -8,6 +8,43 @@
     
       
     
+
+### report 20191018:
+
+#### diagnosing:
+
+a. hard sigmoid vs sigmoid
+
+![hardsig](./img/hardsig.png)
+
+![hardsigmoid](E:\WorkSpace\PON\PON\doc\img\hardsigmoid.png)
+
+2. why outer products ?
+
+assume row vector
+
+the experiment learning 
+$$
+f:M \rightarrow (\theta,\varphi)
+$$
+
+$$
+M = [x_{s1},y_{s1},z_{s1},\cdots,x_{s8},y_{s8},z_{s8}]^T[x_{t1},y_{t1},z_{t1},\cdots,x_{t8},y_{t8},z_{t8}]
+$$
+
+
+$$
+v_1^Tv_2 = (2v_1)^T(\frac{1}{2}v_2)
+$$
+it may conflict 
+
+concatenate vs. outer product
+
+![whyouterproduct](E:\WorkSpace\PON\PON\doc\img\whyouterproduct.png)
+
+3. continue to train
+
+![continue_to_train](E:\WorkSpace\PON\PON\doc\img\continue_to_train.png)
 
 
 
@@ -26,6 +63,10 @@ the training set  comes from chair
 the test set comes from table
 
 the corner fit experiment:
+
+vectorizing 2D coordinates and using outer product to generate 256 dim feature 
+
+using MLP(256,128) ->(128,64)->(64,32)->(32,2)
 
 ![CycleAtlasNet](./img/toyV.png "")
 

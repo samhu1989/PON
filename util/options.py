@@ -19,6 +19,7 @@ def get_opt():
     #int flags
     parser.add_argument('--batch_size','-bs',type=int,default=32,help='batch size');
     parser.add_argument('--nepoch','-nepoch',type=int,help='epoch number');
+    parser.add_argument('--lr_decay_freq','-lrd',type=int,default=1,help='decay lr every few epochs');
     return parser.parse_args();
 
 def usage():

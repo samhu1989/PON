@@ -93,8 +93,6 @@ def write_tfb(tfb_dir,meters,iter,nb,optim):
         for k,v in meter.category_meters.items():
             writer.add_scalar(km+'/'+k,v.avg,iter);
     writer.add_scalar('lr',get_lr(optim),iter);
-    if iter % nb == 0:
-        writer.close();
         
 def triangulate(pts):
     hull_list = [];
