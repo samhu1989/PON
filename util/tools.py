@@ -43,11 +43,11 @@ class AverageValueMeter(object):
         self.sum = 0.0
         self.count = 0.0
 
-    def update(self, val, n=1):
-        self.val = float(val)
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
+    def update(self, val, n=1.0):
+        self.val = float(val);
+        self.sum += val * n;
+        self.count += n;
+        self.avg = self.sum / self.count;
         
         
 class AvgMeterGroup(object):
