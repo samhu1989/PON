@@ -60,7 +60,10 @@ class Data(data.Dataset):
         else:
             data = self.gen_on_fly();
         num = len(data['box']);
-        pick = np.random.randint(0,num);
+        if self.train:
+            pick = np.random.randint(0,num);
+        else:
+            pick = idx%num;
         if pick == 0:
             srcpick = np.random.randint(1,num);
         else:

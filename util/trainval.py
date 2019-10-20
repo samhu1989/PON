@@ -5,6 +5,8 @@ from torch.utils.data import DataLoader;
 from torch import optim;
 from torch.optim import lr_scheduler;
 from .tools import *;
+import json;
+from config.config import NpEncoder;
 
 def data2cuda(data):
     for i in range(len(data)):
