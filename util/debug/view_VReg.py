@@ -11,7 +11,7 @@ from functools import partial;
 from torch.utils.data import DataLoader;
 from ..data.gen_toybox import box_face;
 from net.g.box import Box;
-from util.dataset.ToyV import recon;
+from util.dataset.ToyV import recon,mv,proj;
 from util.tools import partial_restore;
 import os;
 
@@ -127,17 +127,9 @@ def run(**kwargs):
             for cj in range(col):
                 ni = ri*col+cj;
                 fig = plt.figure(figsize=(48,16));
-                ax = fig.add_subplot(131);
-                ax.axis('equal');
-                ax.imshow(img[ni,...]);
-                ax.scatter(box2d_src[ni,0:4,0],box2d_src[ni,0:4,1],color='b',marker='*');
-                ax.scatter(box2d_src[ni,4:8,0],box2d_src[ni,4:8,1],color='c',marker='*');
-                ax.scatter(box2d_tgt[ni,0:4,0],box2d_tgt[ni,0:4,1],color='k',marker='x');
-                ax.scatter(box2d_tgt[ni,4:8,0],box2d_tgt[ni,4:8,1],color='r',marker='x');
-                ax.set_aspect('equal', adjustable='box');
                 #
                 ax = fig.add_subplot(132,projection='3d');
-                ax.view_init(elev=10., azim=30)
+                ax.view_init(elev=20, azim=0)
                 ax.plot_trisurf(box3d_tgt[ni,...,0],box3d_tgt[ni,...,1],tri,box3d_tgt[ni,...,2],color=(0,0,1,0.1));
                 ax.plot_trisurf(box3d_src[ni,...,0],box3d_src[ni,...,1],tri,box3d_src[ni,...,2],color=(0,1,0,0.1));
                 ygt = gts[ni,...];
@@ -157,7 +149,7 @@ def run(**kwargs):
                 ax.set_aspect('equal', adjustable='box');
                 #
                 ax = fig.add_subplot(133,projection='3d');
-                ax.view_init(elev=10., azim=120)
+                ax.view_init(elev=20, azim=90)
                 ax.plot_trisurf(box3d_tgt[ni,...,0],box3d_tgt[ni,...,1],tri,box3d_tgt[ni,...,2],color=(0,0,1,0.1));
                 ax.plot_trisurf(box3d_src[ni,...,0],box3d_src[ni,...,1],tri,box3d_src[ni,...,2],color=(0,1,0,0.1));
                 ax.plot(c3d1[:,0],c3d1[:,1],c3d1[:,2],color='k');
@@ -167,6 +159,19 @@ def run(**kwargs):
                 ax.scatter(box3d_tgt[ni,0:4,0],box3d_tgt[ni,0:4,1],box3d_tgt[ni,0:4,2],color='k',marker='x');
                 ax.scatter(box3d_tgt[ni,4:8,0],box3d_tgt[ni,4:8,1],box3d_tgt[ni,4:8,2],color='r',marker='x');
                 ax.set_aspect('equal', adjustable='box');
+                #
+                ax = fig.add_subplot(131);
+                ax.set_aspect('equal', adjustable='box');
+                ax.imshow(img[ni,...]);
+                ax.scatter(box2d_src[ni,0:4,0],box2d_src[ni,0:4,1],color='b',marker='*');
+                ax.scatter(box2d_src[ni,4:8,0],box2d_src[ni,4:8,1],color='c',marker='*');
+                ax.scatter(box2d_tgt[ni,0:4,0],box2d_tgt[ni,0:4,1],color='k',marker='x');
+                ax.scatter(box2d_tgt[ni,4:8,0],box2d_tgt[ni,4:8,1],color='r',marker='x');
+                ax.set_aspect('equal', adjustable='box');
+                c2d1 = proj(mv(c3d1));
+                c2d2 = proj(mv(c3d2));
+                ax.plot(c2d1[:,0],c2d1[:,1],color='k');
+                ax.plot(c2d2[:,0],c2d2[:,1],color='r');
                 plt.savefig(os.path.join(outdir,"_%04d_%04d.png"%(i,ni)));
                 if opt['ply']:
                     plt.show();
