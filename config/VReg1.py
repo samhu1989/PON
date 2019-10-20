@@ -86,8 +86,6 @@ def writelog(**kwargs):
     write_tfb(tfb_dir,meter,ib+nb*iepoch,nb,optim);
     
     if not kwargs['istraining'] and ib >= nb-1:
-        torch.save(net.state_dict(),opt['log_tmp']+os.sep+'latest_%d.pth'%iepoch);
-        os.remove(opt['log_tmp']+os.sep+'latest_%d.pth'%(iepoch-1));
         if meter['cd'].overall_meter.avg < best[-1]:
             fn = bestn[-1];
             if fn:

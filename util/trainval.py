@@ -90,5 +90,7 @@ def run(**kwargs):
             loss['overall'].backward();
             optimizer.step();
             config.writelog(net=net,data=data,out=out,meter=train_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(train_data),optim=optimizer,istraining=True);
+        torch.save(net.state_dict(),opt['log_tmp']+os.sep+'latest_%d.pth'%iepoch);
+        os.remove(opt['log_tmp']+os.sep+'latest_%d.pth'%(iepoch-1));
         if iepoch % opt['lr_decay_freq'] == 0: 
             sheduler.step();
