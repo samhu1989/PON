@@ -36,7 +36,7 @@ class Data(data.Dataset):
         self.train = train;
         self.datapath = [];
         if self.train:
-            self.datapath = [None]*8192;
+            self.datapath = [None]*(opt['batch_size']*8192);
         else:
             dataroot = os.path.join(self.root,'test');
             fs = os.listdir(dataroot);

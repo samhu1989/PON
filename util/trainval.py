@@ -73,8 +73,11 @@ def run(**kwargs):
                         val_meters[k] = AvgMeterGroup(k);
                         val_meters[k].update(v,data[-1]);
                 config.writelog(net=net,data=data,out=out,meter=val_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(val_data),optim=optimizer,istraining=False);
+        torch.save(net.state_dict(),opt['log_tmp']+os.sep+'latest_%d.pth'%iepoch);
+        if iepoch > 0:
+            os.remove(opt['log_tmp']+os.sep+'latest_%d.pth'%(iepoch-1));
+        #
         net.train();
-        #train
         train_meters = {};
         for i, data in enumerate(train_load,0):
             optimizer.zero_grad();
@@ -92,8 +95,5 @@ def run(**kwargs):
             loss['overall'].backward();
             optimizer.step();
             config.writelog(net=net,data=data,out=out,meter=train_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(train_data),optim=optimizer,istraining=True);
-        torch.save(net.state_dict(),opt['log_tmp']+os.sep+'latest_%d.pth'%iepoch);
-        if iepoch > 0:
-            os.remove(opt['log_tmp']+os.sep+'latest_%d.pth'%(iepoch-1));
         if iepoch % opt['lr_decay_freq'] == 0: 
             sheduler.step();
