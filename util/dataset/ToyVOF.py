@@ -43,6 +43,7 @@ class Data(data.Dataset):
             for f in fs:
                 if (not 'msk' in f) and f.endswith('.json'):
                     self.datapath.append(os.path.join(dataroot,f));
+            self.datapath.sort();
                 
     def __getitem__(self, index):
         try:
