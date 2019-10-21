@@ -92,8 +92,8 @@ class Data(data.Dataset):
         if self.opt['user_key'] == '3d':
             pass;
         elif self.opt['user_key'] == '2d':
-            s2d[:,3] *= 0.0;
-            t2d[:,3] *= 0.0;
+            s2d[:,2] *= 0.0;
+            t2d[:,2] *= 0.0;
         else:
             assert False,'need to choose 2d or 3d in user key for ToyVOD';
             
