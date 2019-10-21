@@ -31,7 +31,7 @@ class Net(nn.Module):
         super(Net, self).__init__();
         self.model = nn.Sequential(
             *block(625,1024,False),
-            *block(625,256,False),
+            *block(1024,256,False),
             nn.Linear(256,2),
             #nn.Hardtanh(min_val=0.0,max_val=1.0,inplace=True)
             nn.Sigmoid()
