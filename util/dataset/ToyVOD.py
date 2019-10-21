@@ -31,6 +31,7 @@ def randbox(env):
 
 class Data(data.Dataset):
     def __init__(self,opt,train=True):
+        self.opt = opt;
         self.root = opt['data_path'];
         self.pts_num = opt['pts_num_gt'];
         self.train = train;
@@ -88,9 +89,9 @@ class Data(data.Dataset):
         t2d = proj3d(mv(t3d));
         t2d = t2d.astype(np.float32);
         #
-        if opt['user_key'] == '3d':
+        if self.opt['user_key'] == '3d':
             pass;
-        elif opt['user_key'] == '2d':
+        elif self.opt['user_key'] == '2d':
             s2d[:,3] *= 0.0;
             t2d[:,3] *= 0.0;
         else:
