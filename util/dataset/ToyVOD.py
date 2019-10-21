@@ -80,14 +80,22 @@ class Data(data.Dataset):
             img = np.ones([224,224,3],dtype=np.float32);
         s3d = np.array(data['box'][srcpick]);
         s3d = s3d.astype(np.float32);
-        s2d = proj(mv(s3d));
+        s2d = proj3d(mv(s3d));
         s2d = s2d.astype(np.float32);
         #
         t3d = np.array(data['box'][pick]);
         t3d = t3d.astype(np.float32);
-        t2d = proj(mv(t3d));
+        t2d = proj3d(mv(t3d));
         t2d = t2d.astype(np.float32);
         #
+        if opt['user_key'] == '3d':
+            pass;
+        elif opt['user_key'] == '2d':
+            s2d[:,3] *= 0.0;
+            t2d[:,3] *= 0.0;
+        else:
+            assert False,'need to choose 2d or 3d in user key for ToyVOD';
+            
         c3d = np.concatenate([np.mean(t3d,axis=0,keepdims=True),np.mean(s3d,axis=0,keepdims=True)],axis=0);
         mvc3d = mv(c3d);
         dirc3d = mvc3d[0,:] - mvc3d[1,:];

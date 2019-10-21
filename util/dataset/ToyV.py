@@ -48,6 +48,22 @@ def proj(pts):
     pts[:,0] = (224-1) * (1 - pts[:,0]) / 2;
     pts[:,1] = (224-1) * (pts[:,1] - 1) / (-2);
     return pts[:,:2];
+
+def proj3d(pts):
+    if pts.shape[-1] == 3:
+        tmp = np.concatenate([pts,np.ones([pts.shape[0],1])],axis=1);
+    elif pts.shape[-1] == 4:
+        tmp = pts;
+    else:
+        assert False,'invalid input'; 
+    tmp = tmp.transpose(1,0);
+    tmp = np.matmul(projm,tmp);
+    tmp = tmp.transpose(1,0);
+    pts = tmp[:,:3];
+    pts[:,0：3] /= tmp[:,3];
+    pts[:,0] = (224-1) * (1 - pts[:,0]) / 2;
+    pts[:,1] = (224-1) * (pts[:,1] - 1) / (-2);
+    return pts;
     
 def mv(pts):
     tmp = np.concatenate([pts,np.ones([pts.shape[0],1])],axis=1);
