@@ -106,6 +106,7 @@ class Data(data.Dataset):
         for f in fs:
             if (not 'msk' in f) and f.endswith('.json'):
                 self.datapath.append(os.path.join(dataroot,f));
+        self.datapath.sort();
                 
     def __getitem__(self, index):
         try:
@@ -120,7 +121,10 @@ class Data(data.Dataset):
         fname = self.datapath[index];
         data = json.load(open(fname,'r'));
         num = len(data['box']);
-        pick = np.random.randint(0,num);
+        if self.train:
+            pick = np.random.randint(0,num);
+        else:
+            pick = idx%num;
         if pick == 0:
             srcpick = np.random.randint(1,num);
         else:
