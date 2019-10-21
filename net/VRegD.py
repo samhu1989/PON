@@ -40,7 +40,7 @@ class Net(nn.Module):
     def forward(self,input):
         s2d = input[1];
         t2d = input[3];
-        s = np.ones([1,1,3],np.float32);
+        s = np.ones([1,1,3],dtype=np.float32);
         s[:,:,:2] *= 112.0;
         s = torch.from_numpy(s);
         s2d = s2d / s.type(s2d.type());
