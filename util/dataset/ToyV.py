@@ -60,7 +60,9 @@ def proj3d(pts):
     tmp = np.matmul(projm,tmp);
     tmp = tmp.transpose(1,0);
     pts = tmp[:,:3];
-    pts[:,:3] /= tmp[:,3];
+    pts[:,:0] /= tmp[:,3];
+    pts[:,:1] /= tmp[:,3];
+    pts[:,:2] /= tmp[:,3];
     pts[:,0] = (224-1) * (1 - pts[:,0]) / 2;
     pts[:,1] = (224-1) * (pts[:,1] - 1) / (-2);
     return pts;
