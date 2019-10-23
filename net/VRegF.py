@@ -31,8 +31,8 @@ class Net(nn.Module):
         super(Net, self).__init__();
         self.model = nn.Sequential(
             *block(625,1024,False),
-            *block(1024,256,False),
-            *block(256,2,False)
+            *block(1024,512,False),
+            *block(512,2,False)
         );
         self._init_layers();
 
