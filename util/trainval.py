@@ -74,8 +74,10 @@ def run(**kwargs):
                         val_meters[k].update(v,data[-1]);
                 config.writelog(net=net,data=data,out=out,meter=val_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(val_data),optim=optimizer,istraining=False);
         torch.save(net.state_dict(),opt['log_tmp']+os.sep+'latest_%d.pth'%iepoch);
+        torch.save(optimizer.state_dict(),opt['log_tmp']+os.sep+'latest_opt_%d.pth'%iepoch);
         if iepoch > 0:
             os.remove(opt['log_tmp']+os.sep+'latest_%d.pth'%(iepoch-1));
+            os.remove(opt['log_tmp']+os.sep+'latest_opt_%d.pth'%(iepoch-1));
         #
         net.train();
         train_meters = {};
