@@ -1,7 +1,7 @@
 pts_num = 1200;
 pts_num_gt = 1200;
 grid_num = 2;
-workers = 4;
+workers = 8;
 optim = 'Adam';
 lr = 1e-3;
 nepoch = 1;
@@ -30,7 +30,7 @@ def a2v(vec):
 
 def accuracy(data,out):
     acc = {};
-    L2 = ( a2v(data[6]) - a2v(out['y']) )**2;
+    L2 = ( data[6] - out['y'] )**2;
     ax = [x for x in range(1,L2.dim())];
     acc['cd'] = torch.mean(L2,dim=ax);
     return acc;
