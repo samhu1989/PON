@@ -1,7 +1,7 @@
 pts_num = 1200;
 pts_num_gt = 1200;
 grid_num = 2;
-workers = 6;
+workers = 4;
 optim = 'Adam';
 lr = 1e-3;
 nepoch = 1;
