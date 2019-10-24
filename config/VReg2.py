@@ -34,15 +34,15 @@ def accuracy(data,out):
     ax = [x for x in range(1,L2.dim())];
     acc['L2'] = torch.mean(L2,dim=ax);
     vec = ( a2v(data[6]) - a2v(out['y']) )**2;
-    acc['vec'] = torch.mean(vec,dim=ax);
+    acc['cd'] = torch.mean(vec,dim=ax);
     return acc;
     
 def loss(data,out):
     loss = {};
     vec = ( a2v(data[6]) - a2v(out['y']) )**2;
     ax = [x for x in range(1,vec.dim())];
-    loss['vec'] = torch.mean(vec,dim=ax);
-    loss['overall'] = torch.mean(loss['vec']);
+    loss['cd'] = torch.mean(vec,dim=ax);
+    loss['overall'] = torch.mean(loss['cd']);
     return loss;
     
 from .VReg1 import writelog;
