@@ -120,3 +120,17 @@ class Data(data.Dataset):
     
     def __len__(self):
         return len(self.datapath);
+        
+def run(**kwargs):
+    opt = kwargs;
+    opt['workers'] = 0;
+    opt['pts_num_gt'] = 1200;
+    train_data = Data(opt,True);
+    val_data = Data(opt,False);
+    train_load = data.DataLoader(train_data,batch_size=opt['batch_size'],shuffle=True,num_workers=opt['workers']);
+    val_load = data.DataLoader(val_data,batch_size=16,shuffle=False,num_workers=opt['workers']);
+    if not os.path.exists('./log/debug_dataset/'):
+        os.mkdir('./log/debug_dataset/');
+    print('go over')
+    for i, d in enumerate(val_load,0):
+        print(i);
