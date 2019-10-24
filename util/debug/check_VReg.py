@@ -63,7 +63,7 @@ def animate(i,config,net,optim,data):
     return pv;
 
 def run(**kwargs):
-    print('a')
+    global iternum;
     #get configuration
     try:
         config = importlib.import_module('config.'+kwargs['config']);
@@ -75,6 +75,7 @@ def run(**kwargs):
         print(e);
         traceback.print_exc();
         exit();
+    iternum = opt['nepoch']
     #get network
     try:
         m = importlib.import_module('net.'+opt['net']);
@@ -101,16 +102,13 @@ def run(**kwargs):
         data2cuda(data);
         d = data;
         break;
-    print('b')
     #
     box_src = data[2].data.cpu().numpy();
     box_tgt = data[4].data.cpu().numpy();
     r = data[5].data.cpu().numpy();
     gt = data[6].data.cpu().numpy();
-    
     #run the code
     optim = eval('optim.'+opt['optim'])(config.parameters(net),lr=opt['lr'],weight_decay=opt['weight_decay']);
-
     tri = box_face;
     global pv;
     num = box_src.shape[0];
@@ -123,7 +121,7 @@ def run(**kwargs):
             ax.axis('equal');
             ax.plot_trisurf(box_tgt[ni,...,0],box_tgt[ni,...,1],tri,box_tgt[ni,...,2],color=(0,0,1,0.1));
             ax.plot_trisurf(box_src[ni,...,0],box_src[ni,...,1],tri,box_src[ni,...,2],color=(0,1,0,0.1));
-            y = gt[ni,...];
+            y = gt[ni,...].copy();
             y *= np.pi;
             y[1] *= 2;
             c3d = recon(box_src[ni,...],r[ni,...],y);
