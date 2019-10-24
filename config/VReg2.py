@@ -45,4 +45,4 @@ def loss(data,out):
     loss['overall'] = torch.mean(loss['vec']);
     return loss;
     
-from .VReg1 import write_log;
+from .VReg1 import writelog;
