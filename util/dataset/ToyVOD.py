@@ -31,11 +31,16 @@ def randbox(env):
 
 class Data(data.Dataset):
     def __init__(self,opt,train=True):
-        self.opt = opt;
         self.root = opt['data_path'];
         self.pts_num = opt['pts_num_gt'];
         self.train = train;
         self.datapath = [];
+        if opt['user_key'] == '3d':
+            self.use_3d = True;
+        elif opt['user_key'] == '2d':
+            self.use_3d = False;
+        else:
+            assert False,'need to choose 2d or 3d in user key for ToyVOD';
         if self.train:
             self.datapath = [None]*(opt['batch_size']*8192);
         else:
@@ -89,27 +94,23 @@ class Data(data.Dataset):
         t2d = proj3d(mv(t3d));
         t2d = t2d.astype(np.float32);
         #
-        if self.opt['user_key'] == '3d':
+        if self.use_3d:
             pass;
-        elif self.opt['user_key'] == '2d':
+        else:
             s2d[:,2] *= 0.0;
             t2d[:,2] *= 0.0;
-        else:
-            assert False,'need to choose 2d or 3d in user key for ToyVOD';
             
         c3d = np.concatenate([np.mean(t3d,axis=0,keepdims=True),np.mean(s3d,axis=0,keepdims=True)],axis=0);
         mvc3d = mv(c3d);
         dirc3d = mvc3d[0,:] - mvc3d[1,:];
         coord = car2sph(dirc3d.reshape(1,-1));
         coord = coord.astype(np.float32);
-        #s3d = self.mv(s3d);
-        #t3d = self.mv(t3d);
         r = coord[:,0];
         gt = coord[:,1:3];
         gt[:,0] /= np.pi;
         gt[:,1] /= (2*np.pi);
         gt = gt.reshape(2);
-        return torch.from_numpy(img),torch.from_numpy(s2d),torch.from_numpy(s3d),torch.from_numpy(t2d),torch.from_numpy(t3d),torch.from_numpy(r),torch.from_numpy(gt),'boxVOD';
+        return torch.from_numpy(img.copy()),torch.from_numpy(s2d.copy()),torch.from_numpy(s3d.copy()),torch.from_numpy(t2d.copy()),torch.from_numpy(t3d.copy()),torch.from_numpy(r.copy()),torch.from_numpy(gt.copy()),'boxVOD';
     
     def gen_on_fly(self):
         env={'idx':[],'box':[],'top':[1,1],'base':[],'R':[],'t':[]};
