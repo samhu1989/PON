@@ -98,7 +98,7 @@ def run(**kwargs):
     if opt['model']!='':
         partial_restore(net,opt['model']);
         print("Previous weights loaded");
-    if opt['user_key'] == 'train':
+    if 'train' in opt['user_key']:
         load = train_load;
     else:
         load = val_load;

@@ -35,9 +35,9 @@ class Data(data.Dataset):
         self.pts_num = opt['pts_num_gt'];
         self.train = train;
         self.datapath = [];
-        if opt['user_key'] == '3d':
+        if '3d' in opt['user_key']:
             self.use_3d = True;
-        elif opt['user_key'] == '2d':
+        elif '2d' in opt['user_key']:
             self.use_3d = False;
         else:
             assert False,'need to choose 2d or 3d in user key for ToyVOD';
