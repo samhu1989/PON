@@ -102,10 +102,12 @@ def run(**kwargs):
         load = train_load;
     else:
         load = val_load;
-    outdir = os.path.dirname(opt['model'])+os.sep+'view_'+opt['user_key'];
-    if not os.path.exists(outdir):
-        os.mkdir(outdir);
+    if opt['model']!='':
+        outdir = os.path.dirname(opt['model'])+os.sep+'view_'+opt['user_key'];
+        if not os.path.exists(outdir):
+            os.mkdir(outdir);
     for i, data in enumerate(load,0):
+        print(i,'/',len(train_data)//opt['batch_size']);
         data2cuda(data);
         net.eval();
         with torch.no_grad():
@@ -172,7 +174,8 @@ def run(**kwargs):
                 c2d2 = proj(mv(c3d2));
                 ax.plot(c2d1[:,0],c2d1[:,1],color='k');
                 ax.plot(c2d2[:,0],c2d2[:,1],color='r');
-                plt.savefig(os.path.join(outdir,"_%04d_%04d.png"%(i,ni)));
+                if opt['model']!='':
+                    plt.savefig(os.path.join(outdir,"_%04d_%04d.png"%(i,ni)));
                 if opt['ply']:
                     plt.show();
                 plt.close(fig);

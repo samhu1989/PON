@@ -2,6 +2,10 @@ from .ToyV import *;
 from ..data.gen_c2tbox import *;
 from ..data.gen_toybox import center_env;
 from scipy.spatial.transform import Rotation as R;
+from util.render.rungl import rungl,donegl,calnormal;
+from util.data.gen_toybox import box_face;
+from functools import partial;
+from OpenGL.GL import *;
 box_vert = np.array(
     [
         [-0.5,0.5,0.0],[0.5,0.5,0.0],[0.5,-0.5,0.0],[-0.5,-0.5,0.0],
@@ -28,6 +32,8 @@ def randbox(env):
     env['R'].append(r.as_quat());
     env['t'].append(t.reshape(-1));
     return;
+    
+
 
 class Data(data.Dataset):
     def __init__(self,opt,train=True):
@@ -79,11 +85,23 @@ class Data(data.Dataset):
                 srcpick = alpha*np.random.randint(0,bspick)+(1-alpha)*np.random.randint(bspick+1,num);
             else:
                 srcpick = 0;
+        def drawenv(env,box_face):
+            
+            glBegin(GL_TRIANGLES);
+            for bi in range(len(env['box'])):
+                for i in range(box_face.shape[0]):
+                    p = env['box'][bi][box_face[i,:],:];
+                    n = calnormal(p[0,:].copy(),p[1,:].copy(),p[2,:].copy());
+                    glNormal3f(n[0],n[1],n[2]);
+                    for j in range(p.shape[0]):
+                        glVertex3f(p[j,0],p[j,1],p[j,2]);
+            glEnd();
+            glFlush();
         if not self.train:
             img = np.array(Image.open(fname.replace('.json','.ply_r_000.png'))).astype(np.float32)/255.0;
             img = img.astype(np.float32);
         else:
-            img = np.ones([224,224,3],dtype=np.float32);
+            img = rungl(partial(drawenv,env=data,box_face=box_face)).astype(np.float32)/255.0;
         s3d = np.array(data['box'][srcpick]);
         s3d = s3d.astype(np.float32);
         s2d = proj3d(mv(s3d));
@@ -121,6 +139,9 @@ class Data(data.Dataset):
     
     def __len__(self):
         return len(self.datapath);
+        
+    def __del__(self):
+        donegl();
         
 def run(**kwargs):
     opt = kwargs;
