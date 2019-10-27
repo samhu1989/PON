@@ -146,5 +146,5 @@ def donegl():
 def run(**kwargs):
     data = rungl();
     image = Image.fromarray(data,'RGBA');
-    image.save('glut.png');
+    image.save('./log/glut.png');
     return;
