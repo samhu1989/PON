@@ -32,8 +32,6 @@ def randbox(env):
     env['R'].append(r.as_quat());
     env['t'].append(t.reshape(-1));
     return;
-    
-
 
 class Data(data.Dataset):
     def __init__(self,opt,train=True):
@@ -86,7 +84,6 @@ class Data(data.Dataset):
             else:
                 srcpick = 0;
         def drawenv(env,box_face):
-            
             glBegin(GL_TRIANGLES);
             for bi in range(len(env['box'])):
                 for i in range(box_face.shape[0]):
