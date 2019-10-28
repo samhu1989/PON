@@ -2,14 +2,14 @@ from util.dataset.ToyV import projm,mvm;
 from util.data.gen_toybox import box_face;
 import numpy as np;
 from PIL import Image;
-import platform;
+import platform as pf;
 import os;
 #Windows
-if platform.platform().startswith('Windows'):
+if pf.platform().startswith('Windows'):
     import glfw;
     from OpenGL.GL import *
     from OpenGL import GL;
-elif platform.platform().startswith('Linux'):
+elif pf.platform().startswith('Linux'):
     os.environ['PYOPENGL_PLATFORM'] = 'osmesa';
     from OpenGL import osmesa;
     from OpenGL.GL import *
@@ -126,7 +126,7 @@ def myglReadColorBuffer(buffers):
 window = None;
 buffers = None;
 ctx = None;
-if platform.platform().startswith('Windows'):
+if pf.platform().startswith('Windows'):
     def runglfw(draw=draw):
         if not glfw.init():
             return;
@@ -155,7 +155,7 @@ if platform.platform().startswith('Windows'):
             glfw.terminate();
     donegl=doneglfw;
     rungl = runglfw
-elif platform.platform().startswith('Linux'):
+elif pf.platform().startswith('Linux'):
     def runglmesa(draw=draw):
         if ctx is None:
             ctx = osmesa.OSMesaCreateContext(OSMESA_RGBA, None);
