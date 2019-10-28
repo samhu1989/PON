@@ -148,7 +148,7 @@ if platform.platform().startswith('Windows'):
     donegl=doneglfw;
     rungl = runglfw
 elif platform.platform().startswith('Linux'):
-    os.environ['PYOPENGL_PLATFORM'] == 'osmesa';
+    os.environ['PYOPENGL_PLATFORM'] = 'osmesa';
     from OpenGL import osmesa;
     def runglmesa(draw=draw):
         if ctx is None:
