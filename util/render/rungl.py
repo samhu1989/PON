@@ -150,6 +150,7 @@ if pf.platform().startswith('Windows'):
         m = np.flip(m,[0,1]);
         return m;
     def doneglfw():
+        global window,buffers;
         if not (window is None):
             glfw.destroy_window(window);
             glfw.terminate();
@@ -172,6 +173,7 @@ elif pf.platform().startswith('Linux'):
         m = np.flip(m,[0,1]);
         return m;
     def doneglmesa():
+        global ctx;
         if not (ctx is None):
             osmesa.OSMesaDestroyContext(ctx);
     donegl=doneglmesa;
