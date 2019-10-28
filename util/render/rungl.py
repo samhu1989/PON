@@ -1,10 +1,12 @@
 from OpenGL.GL import *
 from OpenGL import GL
+from OpenGL.osmesa import *
 from util.dataset.ToyV import projm,mvm;
 from util.data.gen_toybox import box_face;
 import numpy as np;
 from PIL import Image;
 import glfw
+import platform;
 
 w,h = 224,224;
 box_vert = np.array(
@@ -115,7 +117,7 @@ def myglReadColorBuffer(buffers):
     
 window = None;
 buffers = None;
-def rungl(draw=draw):
+def runglfw(draw=draw):
     if not glfw.init():
         return;
     global window,buffers;
@@ -137,11 +139,41 @@ def rungl(draw=draw):
     m = m.reshape(w,h,4);
     m = np.flip(m,[0,1]);
     return m;
+
+ctx = None;
+def runglmesa(draw=draw):
+    os.environ['PYOPENGL_PLATFORM'] == 'osmesa';
+    if ctx is None:
+        ctx = OSMesaCreateContext(OSMESA_RGBA, None);
+
+    buf = arrays.GLubyteArray.zeros((h, w, 4))
+    assert(OSMesaMakeCurrent(ctx, buf, GL_UNSIGNED_BYTE, w, h));
+    assert(OSMesaGetCurrentContext())
+
+    initGL();
+    reshape(w,h);
+    display(draw);
+
+    data = glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE)
+    m = np.frombuffer(data,np.uint8);
+    m = m.reshape(w,h,4);
+    m = np.flip(m,[0,1]);
+    return m
+    
+def rungl(draw=draw):
+    if platform.platform().startswith('Windows'):
+        runglfw(draw);
+    elif platform.platform().startswith('Linux'):
+        runglmesa(draw);
+    else:
+        assert(False,'Unkown platform');
     
 def donegl():
     if not (window is None):
        glfw.destroy_window(window);
        glfw.terminate();
+    if not (ctx is None):
+       OSMesaDestroyContext(ctx);
 
 def run(**kwargs):
     data = rungl();
