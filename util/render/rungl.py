@@ -5,6 +5,7 @@ from util.data.gen_toybox import box_face;
 import numpy as np;
 from PIL import Image;
 import platform;
+import os;
 
 w,h = 224,224;
 box_vert = np.array(
