@@ -4,6 +4,19 @@ import numpy as np;
 from PIL import Image;
 import platform;
 import os;
+#Windows
+if platform.platform().startswith('Windows'):
+    import glfw;
+    from OpenGL.GL import *
+    from OpenGL import GL;
+elif platform.platform().startswith('Linux'):
+    os.environ['PYOPENGL_PLATFORM'] = 'osmesa';
+    from OpenGL import osmesa;
+    from OpenGL.GL import *
+    from OpenGL import GL
+else:
+    assert(False,'Unkown platform');
+    
 
 w,h = 224,224;
 box_vert = np.array(
@@ -42,69 +55,7 @@ def normalize(v):
 def calnormal(p1,p2,p3):
     N = np.cross(p3-p1, p2-p1);
     return normalize(N);
-
-window = None;
-buffers = None;
-ctx = None;
-if platform.platform().startswith('Windows'):
-    import glfw;
-    from OpenGL.GL import *
-    from OpenGL import GL
-    def runglfw(draw=draw):
-        if not glfw.init():
-            return;
-        global window,buffers;
-        if window is None:
-            # Set window hint NOT visible
-            glfw.window_hint(glfw.VISIBLE, False);
-            # Create a windowed mode window and its OpenGL context
-            window = glfw.create_window(w,h, "hidden window", None, None);
-            glfw.make_context_current(window);
-            buffers = myglCreateBuffers(w,h);
-        if not window:
-            glfw.terminate();
-            return;
-        initGL();
-        reshape(w,h);
-        display(draw);
-        data, width, height = myglReadColorBuffer(buffers);
-        m = np.frombuffer(data,np.uint8);
-        m = m.reshape(w,h,4);
-        m = np.flip(m,[0,1]);
-        return m;
-    def doneglfw():
-        if not (window is None):
-            glfw.destroy_window(window);
-            glfw.terminate();
-    donegl=doneglfw;
-    rungl = runglfw
-elif platform.platform().startswith('Linux'):
-    os.environ['PYOPENGL_PLATFORM'] = 'osmesa';
-    from OpenGL import osmesa;
-    from OpenGL.GL import *
-    from OpenGL import GL
-    def runglmesa(draw=draw):
-        if ctx is None:
-            ctx = osmesa.OSMesaCreateContext(OSMESA_RGBA, None);
-        buf = arrays.GLubyteArray.zeros((h, w, 4))
-        assert(osmesa.OSMesaMakeCurrent(ctx, buf, GL_UNSIGNED_BYTE, w, h));
-        assert(osmesa.OSMesaGetCurrentContext())
-        initGL();
-        reshape(w,h);
-        display(draw);
-        data = glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE)
-        m = np.frombuffer(data,np.uint8);
-        m = m.reshape(w,h,4);
-        m = np.flip(m,[0,1]);
-        return m;
-    def doneglmesa():
-        if not (ctx is None):
-            osmesa.OSMesaDestroyContext(ctx);
-    donegl=doneglmesa;
-    rungl = runglmesa
-else:
-    assert(False,'Unkown platform');
-
+    
 def draw():
     glBegin(GL_TRIANGLES);
     for i in range(box_face.shape[0]):
@@ -171,6 +122,61 @@ def myglReadColorBuffer(buffers):
     glReadBuffer(GL_COLOR_ATTACHMENT0)
     data = glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE)
     return data, width, height
+
+window = None;
+buffers = None;
+ctx = None;
+if platform.platform().startswith('Windows'):
+    def runglfw(draw=draw):
+        if not glfw.init():
+            return;
+        global window,buffers;
+        if window is None:
+            # Set window hint NOT visible
+            glfw.window_hint(glfw.VISIBLE, False);
+            # Create a windowed mode window and its OpenGL context
+            window = glfw.create_window(w,h, "hidden window", None, None);
+            glfw.make_context_current(window);
+            buffers = myglCreateBuffers(w,h);
+        if not window:
+            glfw.terminate();
+            return;
+        initGL();
+        reshape(w,h);
+        display(draw);
+        data, width, height = myglReadColorBuffer(buffers);
+        m = np.frombuffer(data,np.uint8);
+        m = m.reshape(w,h,4);
+        m = np.flip(m,[0,1]);
+        return m;
+    def doneglfw():
+        if not (window is None):
+            glfw.destroy_window(window);
+            glfw.terminate();
+    donegl=doneglfw;
+    rungl = runglfw
+elif platform.platform().startswith('Linux'):
+    def runglmesa(draw=draw):
+        if ctx is None:
+            ctx = osmesa.OSMesaCreateContext(OSMESA_RGBA, None);
+        buf = arrays.GLubyteArray.zeros((h, w, 4))
+        assert(osmesa.OSMesaMakeCurrent(ctx, buf, GL_UNSIGNED_BYTE, w, h));
+        assert(osmesa.OSMesaGetCurrentContext())
+        initGL();
+        reshape(w,h);
+        display(draw);
+        data = glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE)
+        m = np.frombuffer(data,np.uint8);
+        m = m.reshape(w,h,4);
+        m = np.flip(m,[0,1]);
+        return m;
+    def doneglmesa():
+        if not (ctx is None):
+            osmesa.OSMesaDestroyContext(ctx);
+    donegl=doneglmesa;
+    rungl = runglmesa
+else:
+    assert(False,'Unkown platform');
 
 def run(**kwargs):
     data = rungl();
