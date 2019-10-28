@@ -157,6 +157,7 @@ if pf.platform().startswith('Windows'):
     rungl = runglfw
 elif pf.platform().startswith('Linux'):
     def runglmesa(draw=draw):
+        global ctx;
         if ctx is None:
             ctx = osmesa.OSMesaCreateContext(OSMESA_RGBA, None);
         buf = arrays.GLubyteArray.zeros((h, w, 4))
