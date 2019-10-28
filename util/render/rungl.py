@@ -15,7 +15,8 @@ elif pf.platform().startswith('Linux'):
     from OpenGL.GL import *
     from OpenGL import GL
 else:
-    assert(False,'Unkown platform');
+    print('Unknown platform');
+    exit();
     
 
 w,h = 224,224;
