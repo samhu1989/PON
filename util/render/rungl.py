@@ -160,7 +160,7 @@ elif pf.platform().startswith('Linux'):
     def runglmesa(draw=draw):
         global ctx;
         if ctx is None:
-            ctx = osmesa.OSMesaCreateContext(OSMESA_RGBA, None);
+            ctx = osmesa.OSMesaCreateContext(osmesa.OSMESA_RGBA, None);
         buf = arrays.GLubyteArray.zeros((h, w, 4))
         assert(osmesa.OSMesaMakeCurrent(ctx, buf, GL_UNSIGNED_BYTE, w, h));
         assert(osmesa.OSMesaGetCurrentContext())
