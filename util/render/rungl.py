@@ -179,7 +179,8 @@ elif pf.platform().startswith('Linux'):
     donegl=doneglmesa;
     rungl = runglmesa
 else:
-    assert(False,'Unkown platform');
+    print('Unknown Platform');
+    exit();
 
 def run(**kwargs):
     data = rungl();
