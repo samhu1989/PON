@@ -33,6 +33,17 @@ def randbox(env):
     env['R'].append(r.as_quat());
     env['t'].append(t.reshape(-1));
     return;
+    
+def valid(env):
+    x2d1 = proj(mv(env['box'][0]));
+    x2d2 = proj(mv(env['box'][1]));
+    h1 = Delaunay(x2d1);
+    h2 = Delaunay(x2d2);
+    if (h1.find_simplex(x2d2) >= 0).any():
+        return False;
+    if (h2.find_simplex(x2d1) >= 0).any():
+        return False;
+    return True;
 
 class Data(data.Dataset):
     def __init__(self,opt,train=True):
@@ -84,6 +95,17 @@ class Data(data.Dataset):
                 srcpick = alpha*np.random.randint(0,bspick)+(1-alpha)*np.random.randint(bspick+1,num);
             else:
                 srcpick = 0;
+        # 
+        s3d = np.array(data['box'][srcpick]);
+        s3d = s3d.astype(np.float32);
+        s2d = proj3d(mv(s3d));
+        s2d = s2d.astype(np.float32);
+        #
+        t3d = np.array(data['box'][pick]);
+        t3d = t3d.astype(np.float32);
+        t2d = proj3d(mv(t3d));
+        t2d = t2d.astype(np.float32);        
+        #       
         def drawenv(env,box_face):
             glBegin(GL_TRIANGLES);
             for bi in range(len(env['box'])):
@@ -100,15 +122,6 @@ class Data(data.Dataset):
             img = img.astype(np.float32);
         else:
             img = rungl(partial(drawenv,env=data,box_face=box_face)).astype(np.float32)/255.0;
-        s3d = np.array(data['box'][srcpick]);
-        s3d = s3d.astype(np.float32);
-        s2d = proj3d(mv(s3d));
-        s2d = s2d.astype(np.float32);
-        #
-        t3d = np.array(data['box'][pick]);
-        t3d = t3d.astype(np.float32);
-        t2d = proj3d(mv(t3d));
-        t2d = t2d.astype(np.float32);
         #
         if self.use_3d:
             pass;
@@ -134,6 +147,8 @@ class Data(data.Dataset):
         randbox(env);
         randbox(env);
         norm_env(env);
+        if not valid(env):
+            return self.gen_on_fly();
         return env;
     
     def __len__(self):
@@ -157,9 +172,5 @@ def run(**kwargs):
         fig = plt.figure();
         fig.add_subplot(311);
         plt.imshow(d[0].cpu().numpy()[0,...]);
-        fig.add_subplot(312);
-        plt.imshow(d[1].cpu().numpy()[0,...],cmap='gray');
-        fig.add_subplot(313);
-        plt.imshow(d[3].cpu().numpy()[0,...],cmap='gray');
         plt.show();
         
