@@ -40,8 +40,8 @@ class Net(nn.Module):
         
     def forward(self,input):
         img = input[0];
-        s = input[7];
-        e = input[8];
+        s = input[6];
+        e = input[7];
         x = img[:,:,:,:3].contiguous();
         x = x.permute(0,3,1,2).contiguous();
         dmap = self.unet(x);
@@ -49,6 +49,7 @@ class Net(nn.Module):
         y = path_integral(dmap,p,dp);
         out = {'vec':y};
         out['y'] = self.v2a(y);
+        out['dmap'] = dmap;
         return out;
         
     def v2a(self,vec):

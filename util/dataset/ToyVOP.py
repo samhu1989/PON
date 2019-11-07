@@ -123,24 +123,31 @@ class Data(data.Dataset):
         else:
             img = rungl(partial(drawenv,env=data,box_face=box_face)).astype(np.float32)/255.0;
         #
-        if self.use_3d:
-            pass;
-        else:
-            s2d[:,2] *= 0.0;
-            t2d[:,2] *= 0.0;
-            
-        c3d = np.concatenate([np.mean(t3d,axis=0,keepdims=True),np.mean(s3d,axis=0,keepdims=True)],axis=0);
-        mvc3d = mv(c3d);
+        mins = 1000;
+        minsi = -1;
+        mint = 1000;
+        minti = -1;
+        for i in range(s2d.shape[0]):
+            if s2d[i,2] < mins:
+                mins = s2d[i,2];
+                minsi = i;
+            if t2d[i,2] < mint:
+                mint = t2d[i,2];
+                minti = i;
+        #
+        f3d = np.zeros([2,3],dtype=np.float32);
+        f3d[0,:] = t3d[minti,:];
+        f3d[1,:] = s3d[minsi,:];
+        mvc3d = mv(f3d);
         dirc3d = mvc3d[0,:] - mvc3d[1,:];
         coord = car2sph(dirc3d.reshape(1,-1));
         coord = coord.astype(np.float32);
-        c2d = proj(mvc3d);
         r = coord[:,0];
         gt = coord[:,1:3];
         gt[:,0] /= np.pi;
         gt[:,1] /= (2*np.pi);
         gt = gt.reshape(2);
-        return torch.from_numpy(img.copy()),torch.from_numpy(s2d.copy()),torch.from_numpy(s3d.copy()),torch.from_numpy(t2d.copy()),torch.from_numpy(t3d.copy()),torch.from_numpy(r.copy()),torch.from_numpy(gt.copy()),torch.from_numpy(c2d[1,:].copy()),torch.from_numpy(c2d[0,:].copy()),'boxVOP';
+        return torch.from_numpy(img.copy()),torch.from_numpy(s3d.copy()),torch.from_numpy(t3d.copy()),troch.from_numpy(mvc3d.copy()),torch.from_numpy(r.copy()),torch.from_numpy(gt.copy()),torch.from_numpy(s2d[minsi,:2].copy()),torch.from_numpy(t2d[minti,:2].copy()),'boxVOP';
     
     def gen_on_fly(self):
         env={'idx':[],'box':[],'top':[1,1],'base':[],'R':[],'t':[]};
@@ -170,7 +177,12 @@ def run(**kwargs):
     print('go over');
     for i, d in enumerate(train_load,0):
         fig = plt.figure();
-        fig.add_subplot(311);
+        fig.add_subplot(131);
         plt.imshow(d[0].cpu().numpy()[0,...]);
+        s2d = d[7].cpu().numpy()[0,...];
+        t2d = d[8].cpu().numpy()[0,...];
+        plt.plot(s2d[0],s2d[1],'*');
+        plt.plot(t2d[0],t2d[1],'x');
+        
         plt.show();
         
