@@ -1,7 +1,48 @@
 import torch;
 import numpy as np;
 import torch.nn as nn;
-from .unet import UNet;
+from .upart import *;
+#
+class UNet(nn.Module):
+    def __init__(self, n_channels, n_classes, bilinear=True):
+        super(UNet, self).__init__()
+        self.n_channels = n_channels
+        self.n_classes = n_classes
+        self.bilinear = bilinear
+        self.inc = DoubleConv(n_channels, 32)
+        self.down1 = Down(32, 64)
+        self.down2 = Down(64, 128)
+        self.down3 = Down(128, 256)
+        self.down4 = Down(256, 256)
+        self.upu1 = Up(512, 128, bilinear)
+        self.upu2 = Up(256, 64, bilinear)
+        self.upu3 = Up(128, 32, bilinear)
+        self.upu4 = Up(64, 32, bilinear)
+        self.outu = OutConv(32, n_classes//2)
+        self.upv1 = Up(512, 128, bilinear)
+        self.upv2 = Up(256, 64, bilinear)
+        self.upv3 = Up(128, 32, bilinear)
+        self.upv4 = Up(64, 32, bilinear)
+        self.outv = OutConv(32, n_classes//2)
+
+    def forward(self, x):
+        x1 = self.inc(x)
+        x2 = self.down1(x1)
+        x3 = self.down2(x2)
+        x4 = self.down3(x3)
+        x5 = self.down4(x4)
+        u = self.upu1(x5, x4)
+        u = self.upu2(u, x3)
+        u = self.upu3(u, x2)
+        u = self.upu4(u, x1)
+        u = self.outu(u)
+        v = self.upv1(x5, x4)
+        v = self.upv2(v, x3)
+        v = self.upv3(v, x2)
+        v = self.upv4(v, x1)
+        v = self.outv(v)
+        logits = torch.cat([u,v],dim=1).contiguous();
+        return logits
 # map (b,6,224,224)
 # p (b,100)
 # dp(b,2,100)

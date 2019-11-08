@@ -31,14 +31,14 @@ def a2v(r,vec):
 
 def accuracy(data,out):
     acc = {};
-    L2 = ( a2v(data[5],data[6]) - out['vec'] )**2;
+    L2 = ( a2v(data[4],data[5]) - out['vec'] )**2;
     ax = [x for x in range(1,L2.dim())];
     acc['cd'] = torch.mean(L2,dim=ax);
     return acc;
     
 def loss(data,out):
     loss = {};
-    L2 = ( a2v(data[5],data[6]) - out['vec'] )**2;
+    L2 = ( a2v(data[4],data[5]) - out['vec'] )**2;
     ax = [x for x in range(1,L2.dim())];
     loss['cd'] = torch.mean(L2,dim=ax);
     loss['overall'] = torch.mean(loss['cd']);

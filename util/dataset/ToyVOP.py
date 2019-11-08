@@ -56,7 +56,7 @@ class Data(data.Dataset):
         elif '2d' in opt['user_key']:
             self.use_3d = False;
         else:
-            assert False,'need to choose 2d or 3d in user key for ToyVODM';
+            assert False,'need to choose 2d or 3d in user key for ToyVOP';
         if self.train:
             self.datapath = [None]*(opt['batch_size']*8192);
         else:
@@ -147,7 +147,7 @@ class Data(data.Dataset):
         gt[:,0] /= np.pi;
         gt[:,1] /= (2*np.pi);
         gt = gt.reshape(2);
-        return torch.from_numpy(img.copy()),torch.from_numpy(s3d.copy()),torch.from_numpy(t3d.copy()),troch.from_numpy(mvc3d.copy()),torch.from_numpy(r.copy()),torch.from_numpy(gt.copy()),torch.from_numpy(s2d[minsi,:2].copy()),torch.from_numpy(t2d[minti,:2].copy()),'boxVOP';
+        return torch.from_numpy(img.copy()),torch.from_numpy(s3d.copy()),torch.from_numpy(t3d.copy()),torch.from_numpy(mvc3d.copy()),torch.from_numpy(r.copy()),torch.from_numpy(gt.copy()),torch.from_numpy(s2d[minsi,:2].copy()),torch.from_numpy(t2d[minti,:2].copy()),'boxVOP';
     
     def gen_on_fly(self):
         env={'idx':[],'box':[],'top':[1,1],'base':[],'R':[],'t':[]};
@@ -183,6 +183,5 @@ def run(**kwargs):
         t2d = d[8].cpu().numpy()[0,...];
         plt.plot(s2d[0],s2d[1],'*');
         plt.plot(t2d[0],t2d[1],'x');
-        
         plt.show();
         
