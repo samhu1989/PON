@@ -44,6 +44,9 @@ def valid(env):
     if (h2.find_simplex(x2d1) >= 0).any():
         return False;
     return True;
+    
+def dist2d(v1,v2):
+    return np.sqrt(np.sum((v1-v2)**2));
 
 class Data(data.Dataset):
     def __init__(self,opt,train=True):
@@ -131,7 +134,9 @@ class Data(data.Dataset):
             if s2d[i,2] < mins:
                 mins = s2d[i,2];
                 minsi = i;
-            if t2d[i,2] < mint:
+                
+        for i in range(t2d.shape[0]):
+            if t2d[i,2] < mint and dist2d(s2d[minsi,:2],t2d[i,:2]) > 4:
                 mint = t2d[i,2];
                 minti = i;
         #
