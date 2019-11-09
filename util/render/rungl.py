@@ -153,7 +153,6 @@ if pf.platform().startswith('Windows'):
     def doneglfw():
         global window,buffers;
         if not (window is None):
-            glfw.destroy_window(window);
             glfw.terminate();
     donegl=doneglfw;
     rungl = runglfw
