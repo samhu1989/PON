@@ -18,8 +18,7 @@ box_vert = np.array(
     dtype=np.float32
     );
     
-def randbox(env):
-    #random scale
+def randbox2(env):
     s = np.random.uniform(0.1,1.0,[1,3]).astype(np.float32);
     v = box_vert*s;
     #random rotation
@@ -28,25 +27,13 @@ def randbox(env):
     r = R.from_quat(q/norm);
     v = r.apply(v);
     #random translation
-    t = np.random.normal(0.0,0.5,[1,3]).astype(np.float32);
+    t = -1.0*v[np.random.randint(0,8),:];
     v += t;
     env['idx'].append(np.random.randint(0,100));
-    env['box'].append(v);
+    env['box'].append(v.copy());
     env['base'].append(s[0,0]*s[0,1]);
     env['R'].append(r.as_quat());
     env['t'].append(t.reshape(-1));
-    return;
-    
-def valid(env):
-    x2d1 = proj(mv(env['box'][0]));
-    x2d2 = proj(mv(env['box'][1]));
-    h1 = Delaunay(x2d1);
-    h2 = Delaunay(x2d2);
-    if (h1.find_simplex(x2d2) >= 0).any():
-        return False;
-    if (h2.find_simplex(x2d1) >= 0).any():
-        return False;
-    return True;
     
 def dist2d(v1,v2):
     return np.sqrt(np.sum((v1-v2)**2));
@@ -119,12 +106,14 @@ class Data(data.Dataset):
                 srcpick = 0;
         # 
         s3d = np.array(data['box'][srcpick]);
+        cs3d = np.mean(s3d,axis=0);
         s3d = s3d.astype(np.float32);
         s2d = proj3d(mv(s3d));
         s2d = s2d.astype(np.float32);
         #
         t3d = np.array(data['box'][pick]);
         t3d = t3d.astype(np.float32);
+        ct3d = np.mean(t3d,axis=0);
         t2d = proj3d(mv(t3d));
         t2d = t2d.astype(np.float32);        
         #       
@@ -149,15 +138,26 @@ class Data(data.Dataset):
         minsi = -1;
         mint = 1000;
         minti = -1;
-        for i in range(s2d.shape[0]):
-            if s2d[i,2] < mins:
-                mins = s2d[i,2];
-                minsi = i;
-                
-        for i in range(t2d.shape[0]):
-            if t2d[i,2] < mint and dist2d(s2d[minsi,:2],t2d[i,:2]) > 4:
-                mint = t2d[i,2];
-                minti = i;
+        if self.train:
+            for i in range(s2d.shape[0]):
+                if s2d[i,2] < mins:
+                    mins = s2d[i,2];
+                    minsi = i;
+
+            for i in range(t2d.shape[0]):
+                if t2d[i,2] < mint and dist2d(s2d[minsi,:2],t2d[i,:2]) > 10:
+                    mint = t2d[i,2];
+                    minti = i;
+        else:
+            for i in range(s2d.shape[0]):
+                if s2d[i,2] < mins and s3d[i,2] < cs3d[2]:
+                    mins = s2d[i,2];
+                    minsi = i;
+
+            for i in range(t2d.shape[0]):
+                if t2d[i,2] < mint and t3d[i,2] < ct3d[2] and dist2d(s2d[minsi,:2],t2d[i,:2]) > 10:
+                    mint = t2d[i,2];
+                    minti = i;
         #
         f3d = np.zeros([2,3],dtype=np.float32);
         f3d[0,:] = t3d[minti,:];
@@ -175,11 +175,9 @@ class Data(data.Dataset):
     
     def gen_on_fly(self):
         env={'idx':[],'box':[],'top':[1,1],'base':[],'R':[],'t':[]};
-        randbox(env);
-        randbox(env);
+        randbox2(env);
+        randbox2(env);
         norm_env(env);
-        if not valid(env):
-            return self.gen_on_fly();
         return env;
     
     def __len__(self):
@@ -199,7 +197,7 @@ def run(**kwargs):
     if not os.path.exists('./log/debug_dataset/'):
         os.mkdir('./log/debug_dataset/');
     print('go over');
-    for i, d in enumerate(train_load,0):
+    for i, d in enumerate(val_load,0):
         fig = plt.figure();
         fig.add_subplot(121);
         im = d[0].cpu().numpy()[0,...]
@@ -210,10 +208,6 @@ def run(**kwargs):
         plt.plot(t2d[0],t2d[1],'x');
         sobel = im2w(im);
         fig.add_subplot(122);
-        print(sobel.shape);
-        print(sobel.min());
-        print(sobel.max());
         plt.imshow(sobel,cmap=plt.cm.gray);
         plt.show();
-        break;
         

@@ -45,6 +45,12 @@ def zup(env):
         pts = env['box'][i][:,:].copy();
         env['box'][i][:,:] = (r.apply(pts)).astype(np.float32)
     return;
+    
+def normalize(v):
+    norm = np.linalg.norm(v[0,:])
+    if norm == 0: 
+       return v
+    return v / norm;
         
 def norm_env(env):
     min = np.finfo(np.float32).eps;

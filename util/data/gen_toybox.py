@@ -197,7 +197,7 @@ class Encoder(JSONEncoder):
         if isinstance(o,np.ndarray):
             return o.tolist();
         else:
-            return o;
+            return float(o);
 
 def gen(bidx):
     #decide the number of boxes [2,3] 
@@ -218,7 +218,7 @@ def run(**kwargs):
         else:
             bidx = (np.random.uniform(0,5,[bnum]).astype(np.int32)).tolist();
         env = gen(bidx);
-        json.dump(env,open(os.path.join(data_root,'%04d.json'%i),'w'),cls=Encoder);
+        json.dump(env,open(os.path.join(data_root,'%04d.json'%i),'w'),cls=data_handler);
         write_env(os.path.join(data_root,'%04d.ply'%i),env);
         write_env_msk(os.path.join(data_root,'%04d'%i),env);
     return;

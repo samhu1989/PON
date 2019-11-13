@@ -34,16 +34,22 @@ def randbox(env):
     env['t'].append(t.reshape(-1));
     return;
     
-def valid(env):
-    x2d1 = proj(mv(env['box'][0]));
-    x2d2 = proj(mv(env['box'][1]));
-    h1 = Delaunay(x2d1);
-    h2 = Delaunay(x2d2);
-    if (h1.find_simplex(x2d2) >= 0).any():
-        return False;
-    if (h2.find_simplex(x2d1) >= 0).any():
-        return False;
-    return True;
+def randbox2(env):
+    s = np.random.uniform(0.1,1.0,[1,3]).astype(np.float32);
+    v = box_vert*s;
+    #random rotation
+    q = np.random.normal(0.0001,1.0,[4]).astype(np.float32);
+    norm = np.linalg.norm(q);
+    r = R.from_quat(q/norm);
+    v = r.apply(v);
+    #random translation
+    t = -1.0*v[np.random.randint(0,8),:];
+    v += t;
+    env['idx'].append(np.random.randint(0,100));
+    env['box'].append(v.copy());
+    env['base'].append(s[0,0]*s[0,1]);
+    env['R'].append(r.as_quat());
+    env['t'].append(t.reshape(-1));
     
 def dist2d(v1,v2):
     return np.sqrt(np.sum((v1-v2)**2));
@@ -156,11 +162,9 @@ class Data(data.Dataset):
     
     def gen_on_fly(self):
         env={'idx':[],'box':[],'top':[1,1],'base':[],'R':[],'t':[]};
-        randbox(env);
-        randbox(env);
+        randbox2(env);
+        randbox2(env);
         norm_env(env);
-        if not valid(env):
-            return self.gen_on_fly();
         return env;
     
     def __len__(self):

@@ -27,11 +27,28 @@ def randbox(env):
     t = np.random.normal(0.0,0.5,[1,3]).astype(np.float32);
     v += t;
     env['idx'].append(np.random.randint(0,100));
-    env['box'].append(v);
+    env['box'].append(v.copy());
     env['base'].append(s[0,0]*s[0,1]);
     env['R'].append(r.as_quat());
     env['t'].append(t.reshape(-1));
     return;
+    
+def randbox2(env):
+    s = np.random.uniform(0.1,1.0,[1,3]).astype(np.float32);
+    v = box_vert*s;
+    #random rotation
+    q = np.random.normal(0.0001,1.0,[4]).astype(np.float32);
+    norm = np.linalg.norm(q);
+    r = R.from_quat(q/norm);
+    v = r.apply(v);
+    #random translation
+    t = -1.0*v[np.random.randint(0,8),:];
+    v += t;
+    env['idx'].append(np.random.randint(0,100));
+    env['box'].append(v.copy());
+    env['base'].append(s[0,0]*s[0,1]);
+    env['R'].append(r.as_quat());
+    env['t'].append(t.reshape(-1));
 
 class Data(data.Dataset):
     def __init__(self,opt,train=True):
