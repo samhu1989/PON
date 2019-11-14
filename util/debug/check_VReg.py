@@ -47,7 +47,7 @@ def animate(i,config,net,optim,data):
     gts = data[6].data.cpu().numpy();
     y = out['y'].data.cpu().numpy();
     num = box3d_src.shape[0];
-    col = 8;
+    col = int(np.sqrt(num));
     row = num // col;
     for ri in range(row):
         for cj in range(col):
