@@ -14,6 +14,7 @@ def get_opt():
     parser.add_argument('--user_key','-key',type=str,default='',help='costumized key string');
     parser.add_argument('--input','-i',type=str,default='',help='input filename');
     parser.add_argument('--output','-o',type=str,default='',help='output filename');
+    parser.add_argument('--optim','-opt',type=str,default='Adam',help='optimizer');
     #binary flags:
     parser.add_argument('--ply',action='store_true');
     #int flags

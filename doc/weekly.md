@@ -6,8 +6,74 @@
    
     - do reconstruction in few shot setting 
     
-      
-    
+
+
+
+### update 20191119:
+
+ <font color=#ff0000>Thoughts on Human 3d perception  mechanism :</font>
+
+![giphy](\img\giphy.gif)
+
+Based on some observation, now I believe the human monocular static 3d perception is path related.
+
+human will choose "more reliable" path to aggregate local information to draw a global conclusion.
+
+
+
+however, the previous experiments was based on the wildly generated boxes, therefore no success yet.
+
+ 
+
+
+
+##### <font color=#55ff55>Go Back to Small Training Set </font>:
+
+train on mini dataset with box regression from (Chair Category)
+
+training dataset result can easily overfit (entire image and 2D masks for two boxes are inputed to neural network)：
+
+![_0000_0000](\img\_0000_0000.png)
+
+![_0000_0001](\img\_0000_0001.png)
+
+results on test set: (boxes regressed from Table Category): it can generalize in some degree
+
+![_0000_0000](\img\t_0000_0000.png)
+
+![_0003_0003](\img\t_0003_0003.png)
+
+##### <font color=#55ff55>Human Study </font>:
+
+conclusion:
+
+ <font color=#ff0000>the ambiguity is too large in the wildly generated boxes dataset </font>
+
+the study conducted at:
+
+http://171.67.77.236:8082/study
+
+![humanstudy](\img\humanstudy.png)
+
+
+
+statistic result for human study  can be viewed at:
+
+http://171.67.77.236:8082/studyres/000
+
+dA - dB > 0 mean A is closer 
+
+dA - dB < 0 means B is closer
+
+in this example 
+
+5 people select A 
+
+18 people select B
+
+![1574117677855](.\img\humanstudyres.png)
+
+
 
 ### report 20191018:
 
