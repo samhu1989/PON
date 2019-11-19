@@ -25,23 +25,7 @@ the proposed pipeline:
 
 however, the previous experiments was based on the wildly generated boxes, therefore no success yet.
 
- 
-
-##### <font color=#55ff55>Go Back to Small Training Set </font>:
-
-train on mini dataset with box regression from (Chair Category)
-
-training dataset result can easily overfit (entire image and 2D masks for two boxes are inputed to neural network)：
-
-![_0000_0000](\img\_0000_0000.png)
-
-![_0000_0001](\img\_0000_0001.png)
-
-results on test set: (boxes regressed from Table Category): it can generalize in some degree
-
-![_0000_0000](\img\t_0000_0000.png)
-
-![_0003_0003](\img\t_0003_0003.png)
+ ![1574123058597](E:\WorkSpace\PON\PON\doc\img\pint.png)
 
 ##### <font color=#55ff55>Human Study </font>:
 
@@ -74,6 +58,22 @@ in this example
 ![1574117677855](.\img\humanstudyres.png)
 
 
+
+##### <font color=#55ff55>Go Back to Small Training Set </font>:
+
+train on mini dataset with box regression from (Chair Category)
+
+training dataset result can easily overfit (entire image and 2D masks for two boxes are inputed to neural network)：
+
+![_0000_0000](\img\_0000_0000.png)
+
+![_0000_0001](\img\_0000_0001.png)
+
+results on test set: (boxes regressed from Table Category): it can generalize in some degree
+
+![_0000_0000](\img\t_0000_0000.png)
+
+![_0003_0003](\img\t_0003_0003.png)
 
 ### report 20191018:
 
