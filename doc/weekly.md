@@ -19,13 +19,13 @@ Based on some observation, now I believe the human monocular static 3d perceptio
 
 human will choose "more reliable" path to aggregate local information to draw a global conclusion.
 
+the proposed pipeline:
 
+![pathintegral](\img\pathintegral.png)
 
 however, the previous experiments was based on the wildly generated boxes, therefore no success yet.
 
  
-
-
 
 ##### <font color=#55ff55>Go Back to Small Training Set </font>:
 
