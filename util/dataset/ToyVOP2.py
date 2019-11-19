@@ -67,14 +67,14 @@ class Data(data.Dataset):
         else:
             assert False,'need to choose 2d or 3d in user key for ToyVOP';
         if self.train:
-            self.datapath = [None]*(opt['batch_size']*8192);
+            dataroot = os.path.join(self.root,'train');
         else:
             dataroot = os.path.join(self.root,'test');
-            fs = os.listdir(dataroot);
-            for f in fs:
-                if (not 'msk' in f) and f.endswith('.json'):
-                    self.datapath.append(os.path.join(dataroot,f));
-            self.datapath.sort();
+        fs = os.listdir(dataroot);
+        for f in fs:
+            if (not 'msk' in f) and f.endswith('.json'):
+                self.datapath.append(os.path.join(dataroot,f));
+        self.datapath.sort();
                 
     def __getitem__(self, index):
         try:
@@ -86,11 +86,8 @@ class Data(data.Dataset):
         
     def load(self,idx):
         index = idx%self.__len__();
-        if not self.train:
-            fname = self.datapath[index];
-            data = json.load(open(fname,'r'));
-        else:
-            data = self.gen_on_fly();
+        fname = self.datapath[index];
+        data = json.load(open(fname,'r'));
         num = len(data['box']);
         if self.train:
             pick = np.random.randint(0,num);
@@ -115,24 +112,10 @@ class Data(data.Dataset):
         t3d = t3d.astype(np.float32);
         ct3d = np.mean(t3d,axis=0);
         t2d = proj3d(mv(t3d));
-        t2d = t2d.astype(np.float32);        
-        #       
-        def drawenv(env,box_face):
-            glBegin(GL_TRIANGLES);
-            for bi in range(len(env['box'])):
-                for i in range(box_face.shape[0]):
-                    p = env['box'][bi][box_face[i,:],:];
-                    n = calnormal(p[0,:].copy(),p[1,:].copy(),p[2,:].copy());
-                    glNormal3f(n[0],n[1],n[2]);
-                    for j in range(p.shape[0]):
-                        glVertex3f(p[j,0],p[j,1],p[j,2]);
-            glEnd();
-            glFlush();
-        if not self.train:
-            img = np.array(Image.open(fname.replace('.json','.ply_r_000.png'))).astype(np.float32)/255.0;
-            img = img.astype(np.float32);
-        else:
-            img = rungl(partial(drawenv,env=data,box_face=box_face)).astype(np.float32)/255.0;
+        t2d = t2d.astype(np.float32);
+        #
+        img = np.array(Image.open(fname.replace('.json','.ply_r_000.png'))).astype(np.float32)/255.0;
+        img = img.astype(np.float32);
         #
         mins = 1000;
         minsi = -1;
@@ -172,13 +155,6 @@ class Data(data.Dataset):
         gt[:,1] /= (2*np.pi);
         gt = gt.reshape(2);
         return torch.from_numpy(img.copy()),torch.from_numpy(s3d.copy()),torch.from_numpy(t3d.copy()),torch.from_numpy(mvc3d.copy()),torch.from_numpy(r.copy()),torch.from_numpy(gt.copy()),torch.from_numpy(s2d[minsi,:2].copy()),torch.from_numpy(t2d[minti,:2].copy()),'boxVOP2';
-    
-    def gen_on_fly(self):
-        env={'idx':[],'box':[],'top':[1,1],'base':[],'R':[],'t':[]};
-        randbox2(env);
-        randbox2(env);
-        norm_env(env);
-        return env;
     
     def __len__(self):
         return len(self.datapath);
