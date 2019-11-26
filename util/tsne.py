@@ -105,6 +105,7 @@ def tsne(X, no_dims=2, initial_dims=50, perplexity=30.0,
         `Y = tsne.tsne(X, no_dims, perplexity), where X is an NxD NumPy array.
     :type X: torch.Tensor
     """
+    X = t.tensor(X, dtype=t.float32).to(device);
     # Check inputs
     if isinstance(no_dims, float):
         print("Error: array X should have type float.")
