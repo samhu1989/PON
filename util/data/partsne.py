@@ -8,38 +8,10 @@ import h5py;
 import logging;
 import random;
 from matplotlib.colors import ListedColormap,BoundaryNorm;
-#from mpl_toolkits.axes.grid1 import make_axes_locatable
+from util.partrl import *;
 
 cat2lbl = {};
 #center vector
-def cv(h5fname):
-    h5f = h5py.File(h5fname,'r');
-    label = np.array(h5f['label']);
-    pts = np.array(h5f['pts']);
-    v = [];
-    for i in range(label.shape[0]):
-        lbl = label[i,:];
-        plst = [];
-        for l in range(np.min(lbl),np.max(lbl)):
-            p = np.array( pts[i,lbl==l,:] );
-            if p.size > 1:
-                plst.append(p);
-        #
-        if len(plst) > 1:
-            for pi in range(len(plst)-1):
-                for pj in range(pi+1,len(plst)):
-                    if plst[pi].shape[0] > plst[pj].shape[0]:
-                        vec = np.mean(plst[pj],axis=0) - np.mean(plst[pi],axis=0);
-                    else:
-                        vec = np.mean(plst[pi],axis=0) - np.mean(plst[pj],axis=0);
-                    v.append(vec);
-    X = None;
-    if len(v) > 0:
-        X = np.stack(v);
-    h5f.close();
-    return X;
-#
-
 def getdata(root,opt):
     cnt = 0;
     Xs = [];
@@ -52,8 +24,8 @@ def getdata(root,opt):
             cat2lbl[os.path.basename(root)] = cnt;
             Xv = eval(opt['user_key'])(f);
             if Xv is not None:
-                if Xv.shape[0] > 100:
-                    index = random.choices(range(Xv.shape[0]), k=100)
+                if Xv.shape[0] > 200:
+                    index = random.choices(range(Xv.shape[0]), k=200)
                     Xv = Xv[index,:];
                 Xs.append(Xv);
                 Lv = np.zeros(Xv.shape[0]);
@@ -70,33 +42,38 @@ def run(**kwargs):
     print("getting data");
     X,labels = getdata(root,kwargs);
     print(X.shape);
-    start_time = time.time();
-    Y = tsne(X, 2, 50, 20.0, max_iter=0);
-    Y = Y.cpu().numpy();
-    #
-    print("--- %s seconds ---" % (time.time() - start_time));
-    tb20b = plt.cm.get_cmap('tab20b');
-    tb20c = plt.cm.get_cmap('tab20c');
-    colors = [tb20b.colors[i] for i in range(len(tb20b.colors))];
-    colors.extend( [tb20c.colors[i] for i in range(4)] );
-    cm = ListedColormap(colors)
-    norm = BoundaryNorm(np.linspace(-0.5,24.5,25), cm.N);
-    #data
-    fig = plt.figure(figsize=(12.8, 9.6));
-    ax = plt.subplot(121)
-    #
-    pts = ax.scatter(Y[:, 0], Y[:, 1], s=20, c=labels, cmap=cm,norm=norm);
-    #legend
-    cbar = plt.colorbar(pts,fraction=0.15, aspect=4,shrink=2.0)
-    #
-    cbar.ax.get_yaxis().set_ticks([])
-    for j, lab in enumerate(cat2lbl.keys()):
-        cbar.ax.text(0.0 ,(j + 0.5) / 24.0 , lab, ha='left', va='center')
-    #
-    ax = plt.subplot(122)
-    print('Chair:',cat2lbl['Chair']);
-    print('Table:',cat2lbl['Table']);
-    idx = np.logical_or( labels == cat2lbl['Chair'],labels == cat2lbl['Table'] );
-    pts = ax.scatter(Y[idx, 0], Y[idx, 1], s=20, c=labels[idx], cmap=cm,norm=norm);
-    #legend
-    plt.savefig('./log/tsne.png');
+    for per in [5.0,30.0,50.0,100.0]:
+        start_time = time.time();
+        Y = tsne(X, 2, perplexity=per);
+        Y = Y.cpu().numpy();
+        #
+        print("--- %s seconds ---" % (time.time() - start_time));
+        tb20b = plt.cm.get_cmap('tab20b');
+        tb20c = plt.cm.get_cmap('tab20c');
+        colors = [tb20b.colors[i] for i in range(len(tb20b.colors))];
+        colors.extend( [tb20c.colors[i] for i in range(4)] );
+        cm = ListedColormap(colors)
+        norm = BoundaryNorm(np.linspace(-0.5,23.5,25),cm.N);
+        #data
+        fig = plt.figure(figsize=(18.0, 6.0));
+        ax1 = plt.subplot(131)
+        ax1.axis('equal')
+        #
+        pts = ax1.scatter(Y[:, 0], Y[:, 1], s=20, c=labels, cmap=cm,norm=norm);
+        ax1.set(xlim=ax1.get_xlim(),ylim=ax1.get_ylim());
+        #legend
+        ax2 = plt.subplot(132)
+        cbar = plt.colorbar(pts,ax=ax2,fraction=1.0, aspect=1.0,shrink=1.0)
+        #
+        cbar.ax.get_yaxis().set_ticks([])
+        for j, lab in enumerate(cat2lbl.keys()):
+            cbar.ax.text(0.0 ,(j + 0.5) / 24.0 , lab, ha='left', va='center')
+        #
+        ax3 = plt.subplot(133)
+        ax3.axis('equal');
+        ax3.set(xlim=ax1.get_xlim(),ylim=ax1.get_ylim());
+        idx = np.logical_or( labels == cat2lbl['Chair'], labels == cat2lbl['Table'] );
+        pts = ax3.scatter(Y[idx, 0], Y[idx, 1], s=20, c=labels[idx], cmap=cm,norm=norm);
+        #legend
+        plt.savefig('./log/tsne/tsne_%s_%f.png'%(kwargs['user_key'],per));
+        plt.close(fig);

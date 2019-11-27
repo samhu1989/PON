@@ -159,9 +159,10 @@ def tsne(X, no_dims=2, initial_dims=50, perplexity=30.0,
         Y = Y - (t.mean(Y, 0)).repeat((n, 1))
 
         # Compute current value of cost function
-        if (iter + 1) % 10 == 0:
+        if (iter + 1) % 20 == 0:
             C = t.sum(P * t.log(P / Q))
             logging.debug("Iteration %d: error is %f" % (iter + 1, C))
+            print("Iteration %d: error is %f" % (iter + 1, C))
 
         # stop lying about P-values
         if iter == 100:
