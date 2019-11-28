@@ -7,9 +7,21 @@
     - do reconstruction in few shot setting 
     
 
-### visualize 20191128:![tsne_ncv_30.000000](E:\WorkSpace\PON\PON\doc\img\tsne_ncv_30.000000.png)
+### visualize 20191128:
 
-![tsne_ncv_5.000000](E:\WorkSpace\PON\PON\doc\img\tsne_ncv_5.000000.png)
+VAE
+
+binary bottleneck network to discover the relation
+
+18 dim concatenate box representation to represent relation and reduce dim for the relation distribution
+
+![tsne_ncv_50.000000](C:\workspace\PON\doc\img\tsne_ncv_50.000000.png)
+
+![tsne_ncv_5.000000](C:\workspace\PON\doc\img\tsne_ncv_5.000000.png)
+
+![tsne_ncv_30.000000](.\doc\img\tsne_ncv_30.000000.png
+
+![tsne_ncv_5.000000](C:\workspace\PON\doc\img\tsne_ncv_30.000000.png)
 
 ### update 20191119:
 
