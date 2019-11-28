@@ -24,8 +24,8 @@ def getdata(root,opt):
             cat2lbl[os.path.basename(root)] = cnt;
             Xv = eval(opt['user_key'])(f);
             if Xv is not None:
-                if Xv.shape[0] > 200:
-                    index = random.choices(range(Xv.shape[0]), k=200)
+                if Xv.shape[0] > 100:
+                    index = random.choices(range(Xv.shape[0]), k=100)
                     Xv = Xv[index,:];
                 Xs.append(Xv);
                 Lv = np.zeros(Xv.shape[0]);
@@ -72,7 +72,9 @@ def run(**kwargs):
         ax3 = plt.subplot(133)
         ax3.axis('equal');
         ax3.set(xlim=ax1.get_xlim(),ylim=ax1.get_ylim());
-        idx = np.logical_or( labels == cat2lbl['Chair'], labels == cat2lbl['Table'] );
+        idx1 = np.logical_or( labels == cat2lbl['Chair'], labels == cat2lbl['Table'] );
+        idx2 = np.logical_or( labels == cat2lbl['Knife'], labels == cat2lbl['Display'] );
+        idx = np.logical_or(idx1,idx2);
         pts = ax3.scatter(Y[idx, 0], Y[idx, 1], s=20, c=labels[idx], cmap=cm,norm=norm);
         #legend
         plt.savefig('./log/tsne/tsne_%s_%f.png'%(kwargs['user_key'],per));
