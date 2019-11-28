@@ -7,7 +7,9 @@
     - do reconstruction in few shot setting 
     
 
+### visualize 20191128:![tsne_ncv_30.000000](E:\WorkSpace\PON\PON\doc\img\tsne_ncv_30.000000.png)
 
+![tsne_ncv_5.000000](E:\WorkSpace\PON\PON\doc\img\tsne_ncv_5.000000.png)
 
 ### update 20191119:
 
