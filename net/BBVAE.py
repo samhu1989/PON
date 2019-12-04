@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import utils
 
 class Net(nn.Module):
     def __init__(self,**kwargs):
@@ -12,11 +11,9 @@ class Net(nn.Module):
         self.beta = kwargs['beta'];
         # encoder
         self.encoder = nn.Sequential(
-            nn.Linear(self.input_size,self.latent_size),
-            nn.BatchNorm1d(self.latent_size),
+            nn.Linear(self.input_size,self.latent_size//2),
             nn.ReLU(inplace=True),
-            nn.Linear(self.latent_size,self.latent_size),
-            nn.BatchNorm1d(self.latent_size),
+            nn.Linear(self.latent_size//2,self.latent_size),
             nn.ReLU(inplace=True)
         );
         # z parameter
@@ -25,12 +22,10 @@ class Net(nn.Module):
         # decoder
         self.decoder = nn.Sequential(
             nn.Linear(self.input_size-3+self.z_size,self.latent_size),
-            nn.BatchNorm1d(self.latent_size),
             nn.ReLU(inplace=True),
-            nn.Linear(self.latent_size,self.latent_size),
-            nn.BatchNorm1d(self.latent_size),
+            nn.Linear(self.latent_size,self.latent_size//2),
             nn.ReLU(inplace=True),
-            nn.Linear(self.latent_size,self.input_size),
+            nn.Linear(self.latent_size//2,self.input_size),
         );
 
     def encode(self, x):
@@ -46,10 +41,13 @@ class Net(nn.Module):
         y = torch.cat([x,z],dim=1).contiguous();
         return self.decoder(y);
 
-    def forward(self, x):
+    def forward(self,input):
+        x = input[0];
         mu, logvar = self.encode(x);
         z = self.sample(mu, logvar);
-        xpart = x[:,3:].contiguous();
+        idx = [i for i in range(0,self.input_size//2)];
+        idx.extend( [i for i in range(self.input_size//2+3,self.input_size)] );
+        xpart = x[:,idx].contiguous();
         rx = self.decode(xpart,z);
         out = {'rx':rx,'mu':mu,'logvar':logvar};
         return out;

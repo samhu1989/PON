@@ -96,6 +96,18 @@ def write_tfb(tfb_dir,meters,iter,nb,optim):
         for k,v in meter.category_meters.items():
             writer.add_scalar(km+'/'+k,v.avg,iter);
     writer.add_scalar('lr',get_lr(optim),iter);
+    
+def write_tfb_loss(tfb_dir,loss,iter,nb,optim):
+    from torch.utils.tensorboard import SummaryWriter;
+    global writers;
+    if tfb_dir in writers.keys():
+        writer = writers[tfb_dir];
+    else:
+        writer = SummaryWriter(log_dir=tfb_dir);
+        writers[tfb_dir] = writer;
+    for k,v in loss.items():
+        writer.add_scalar(k,v.data.cpu().numpy(),iter);
+    writer.add_scalar('lr',get_lr(optim),iter);
         
 def triangulate(pts):
     hull_list = [];
