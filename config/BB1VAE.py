@@ -16,7 +16,7 @@ workers = 4;
 lr = 1e-3;
 weight_decay = 0.0;
 nepoch = 1000;
-category = ['Chair','Table','StorageFurniture'];
+category = ['Chair','Table','StorageFurniture','Bed'];
 
 def loss(data,out):
     x = data[0];
