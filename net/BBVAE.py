@@ -38,7 +38,7 @@ class Net(nn.Module):
         return eps.mul(std).add_(mu)
 
     def decode(self,x,z):
-        y = torch.cat([x,z],dim=1).contiguous();
+        y = torch.cat([z,x],dim=1).contiguous();
         return self.decoder(y);
 
     def forward(self,input):
