@@ -9,6 +9,7 @@ class Net(nn.Module):
         self.latent_size = kwargs['latent_size'];
         self.z_size = kwargs['z_size'];
         self.beta = kwargs['beta'];
+        self.part_idx = kwargs['part_idx'];
         # encoder
         self.encoder = nn.Sequential(
             nn.Linear(self.input_size,self.latent_size//2),
@@ -45,9 +46,7 @@ class Net(nn.Module):
         x = input[0];
         mu, logvar = self.encode(x);
         z = self.sample(mu, logvar);
-        idx = [i for i in range(0,self.input_size//2)];
-        idx.extend( [i for i in range(self.input_size//2+3,self.input_size-6)] );
-        xpart = x[:,idx].contiguous();
+        xpart = x[:,self.part_idx].contiguous();
         rx = self.decode(xpart,z);
         out = {'rx':rx,'mu':mu,'logvar':logvar};
         return out;
