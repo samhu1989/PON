@@ -10,15 +10,15 @@ from .config import NpEncoder;
 
 beta = 1;
 input_size = 24;
-latent_size = 256;
-z_size = 4;
+latent_size = 1024;
+z_size = 8;
 part_idx = [i for i in range(0,input_size//2)];
 part_idx.extend( [i for i in range(input_size//2+3,input_size-6)] );
 workers = 4;
 lr = 1e-3;
 weight_decay = 0.0;
 nepoch = 1000;
-category = ['Chair','Table','StorageFurniture','Bed'];
+category = ['Chair','Table','StorageFurniture','Bed','Display'];
 
 def loss(data,out):
     x = data[0];

@@ -7,7 +7,7 @@ from datetime import datetime;
 import json;
 import numpy as np;
 from .config import NpEncoder;
-from .BB1VAE import writelog,input_size,latent_size,z_size,workers,lr,weight_decay,nepoch,category,loss,parameters;
+from .BB1VAE import writelog,input_size,latent_size,z_size,workers,lr,weight_decay,nepoch,category,part_idx,loss,parameters;
 
 beta = 100;
     
