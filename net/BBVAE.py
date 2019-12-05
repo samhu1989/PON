@@ -45,8 +45,10 @@ class Net(nn.Module):
     def forward(self,input):
         x = input[0];
         mu, logvar = self.encode(x);
-        z = self.sample(mu, logvar);
+        z1 = self.sample(mu, logvar);
+        z2 = self.sample(mu, logvar);
         xpart = x[:,self.part_idx].contiguous();
-        rx = self.decode(xpart,z);
-        out = {'rx':rx,'mu':mu,'logvar':logvar};
+        rx1 = self.decode(xpart,z1);
+        rx2 = self.decode(xpart,z2);
+        out = {'rx1':rx1,'rx2':rx2,'mu':mu,'logvar':logvar};
         return out;

@@ -22,12 +22,15 @@ category = ['Chair','Table','StorageFurniture','Bed','Display'];
 
 def loss(data,out):
     x = data[0];
-    recon_x = out['rx'];
+    rx1 = out['rx1'];
+    rx2 = out['rx2'];
     mu = out['mu'];
     logvar = out['logvar'];
     loss = {};
     loss['kl'] =  ( -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()) ) / x.size(0);
-    loss['recon'] = torch.sum( ( recon_x - x )**2 ) / x.size(0) ;
+    recon1 = torch.sum( ( rx1 - x )**2, dim = 1 );
+    recon2 = torch.sum( ( rx2 - x )**2, dim = 1 );
+    loss['recon'] = torch.mean( torch.min(recon1,recon2) );
     loss['betakl'] = beta*loss['kl'];
     loss['overall'] = loss['betakl'] + loss['recon'];
     return loss;
