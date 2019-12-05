@@ -10,7 +10,7 @@ from .config import NpEncoder;
 
 beta = 1;
 input_size = 24;
-latent_size = 1024;
+latent_size = 256;
 z_size = 16;
 workers = 4;
 lr = 1e-3;
@@ -29,7 +29,6 @@ def loss(data,out):
     loss['betakl'] = beta*loss['kl'];
     loss['overall'] = loss['betakl'] + loss['recon'];
     return loss;
-    
     
 def parameters(net):
     return net.parameters(); # train all parameters

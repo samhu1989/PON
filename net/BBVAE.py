@@ -21,7 +21,7 @@ class Net(nn.Module):
         self.fc_var = nn.Linear(self.latent_size,self.z_size)
         # decoder
         self.decoder = nn.Sequential(
-            nn.Linear(self.input_size-3+self.z_size,self.latent_size),
+            nn.Linear(self.input_size-9+self.z_size,self.latent_size),
             nn.ReLU(inplace=True),
             nn.Linear(self.latent_size,self.latent_size//2),
             nn.ReLU(inplace=True),
@@ -29,7 +29,7 @@ class Net(nn.Module):
         );
 
     def encode(self, x):
-        x = self.encoder(x)
+        x = self.encoder(x);
         return self.fc_mu(x), self.fc_var(x)
 
     def sample(self, mu, logvar):
@@ -46,7 +46,7 @@ class Net(nn.Module):
         mu, logvar = self.encode(x);
         z = self.sample(mu, logvar);
         idx = [i for i in range(0,self.input_size//2)];
-        idx.extend( [i for i in range(self.input_size//2+3,self.input_size)] );
+        idx.extend( [i for i in range(self.input_size//2+3,self.input_size-6)] );
         xpart = x[:,idx].contiguous();
         rx = self.decode(xpart,z);
         out = {'rx':rx,'mu':mu,'logvar':logvar};

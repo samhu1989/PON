@@ -7,21 +7,13 @@ from datetime import datetime;
 import json;
 import numpy as np;
 from .config import NpEncoder;
-from .BB1VAE import writelog;
+from .BB1VAE import writelog,input_size,latent_size,z_size,workers,lr,weight_decay,nepoch,category;
 
 beta = 5;
-input_size = 24;
-latent_size = 1024;
-z_size = 16;
-workers = 4;
-lr = 1e-3;
-weight_decay = 0.0;
-nepoch = 1000;
-category = ['Chair','Table','StorageFurniture','Bed'];
 
 def loss(data,out):
     x = data[0];
-    recon_x = out['rx'];
+    recon_x = out['rx']; 
     mu = out['mu'];
     logvar = out['logvar'];
     loss = {};
