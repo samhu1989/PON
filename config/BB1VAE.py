@@ -20,7 +20,7 @@ weight_decay = 0.0;
 nepoch = 1000;
 category = ['Chair','Table','StorageFurniture','Bed','Display'];
 
-def loss(data,out):
+def loss(data,out,beta=beta):
     x = data[0];
     rx1 = out['rx1'];
     rx2 = out['rx2'];
