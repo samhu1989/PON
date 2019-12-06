@@ -68,7 +68,6 @@ def writelog(**kwargs):
         for k,v in loss.items():
             info += k + ":" + str(v.data.cpu().numpy()) + ","
         print(info,file=logtxt);
-        print(data[1],file=logtxt);
         print(info);
         
 
