@@ -40,7 +40,10 @@ class Data(data.Dataset):
 
     def __getitem__(self, idx):
         index = idx % self.len;
-        return torch.from_numpy(self.data[index]),self.cat[index];
+        X = self.data[index];
+        X[12:15] -= X[:3];
+        X[:3] -= X[:3];
+        return torch.from_numpy(X),self.cat[index];
 
     def __len__(self):
         return self.len;

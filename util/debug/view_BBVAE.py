@@ -118,28 +118,31 @@ def run(**kwargs):
         partial_restore(net,opt['model']);
         print("Previous weights loaded");
         
+    bi = int(opt['user_key']);    
     if opt['model']!='':
-        outdir = os.path.dirname(opt['model'])+os.sep+'view_'+opt['user_key'];
+        outdir = os.path.dirname(opt['model'])+os.sep+'view_%d'%bi;
         if not os.path.exists(outdir):
             os.mkdir(outdir); 
     #
     input_size = opt['input_size'];
-    idx = [i for i in range(0,input_size//2)];
-    idx.extend( [i for i in range(input_size//2+3,input_size)] );
+    idx = opt['part_idx'];
     tri = box_face;
-    bi = 16
+    
     for i, data in enumerate(train_load,0):
         print(i,'/',len(train_data)//opt['batch_size']);
         data2cuda(data);
         net.eval();
-        zs = np.linspace(-1.5,1.5,10).astype(np.float32);
+        zs = np.linspace(-3,3,20).astype(np.float32);
         xx = data[0][bi,idx].contiguous().view(1,-1);
         ox = data[0][bi,:].contiguous().view(1,-1);
+        cat = data[1][bi];
+        print(cat);
         #==================================
         ptsa, ptsb = parse(ox.data.cpu().numpy()[0,:]);
         #==================================
-        fig = plt.figure(figsize=(6.4,4.8));
-        ax = fig.add_subplot(1,1,1,projection='3d');
+        fig = plt.figure(figsize=(9.6,4.8));
+        ax = fig.add_subplot(1,2,1,projection='3d');
+        ax.view_init(elev=20, azim=90)
         ax.set_aspect('equal', adjustable='box');
         ax.set_xlim([-1,1]);
         ax.set_ylim([-1,1]);
@@ -147,21 +150,30 @@ def run(**kwargs):
         #
         ax.plot_trisurf(ptsa[...,0],ptsa[...,2],tri,ptsa[...,1],color=(0,0,1,0.1));
         ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
-        plt.savefig(os.path.join(outdir,'bbvae_input.png'));
+        
+        ax = fig.add_subplot(1,2,2,projection='3d');
+        ax.set_aspect('equal', adjustable='box');
+        ax.set_xlim([-1,1]);
+        ax.set_ylim([-1,1]);
+        ax.set_zlim([-1,1]);
+        #
+        ax.plot_trisurf(ptsa[...,0],ptsa[...,2],tri,ptsa[...,1],color=(0,0,1,0.1));
+        ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
+        plt.savefig(os.path.join(outdir,'_%d_%s_input.png'%(i,cat)));
         plt.close(fig);
-        for zi in range(16):
-            for i in range(10):
-                fig = plt.figure(figsize=(6.4,4.8));
-                z = np.zeros([1,16],dtype=np.float32);
+        for zi in range(opt['z_size']):
+            for i in range(20):
+                fig = plt.figure(figsize=(9.6,4.8));
+                z = np.zeros([1,opt['z_size']],dtype=np.float32);
                 z[0,zi] = zs[i];
                 z = torch.from_numpy(z).cuda();
-                
                 with torch.no_grad(): 
                     r = net.decode(xx,z);
                 x = r.data.cpu().numpy()[0,:];
                 ptsa, ptsb = parse(x);
                 #==================
-                ax = fig.add_subplot(1,1,1,projection='3d');
+                ax = fig.add_subplot(1,2,1,projection='3d');
+                ax.view_init(elev=20, azim=90)
                 ax.set_aspect('equal', adjustable='box');
                 ax.set_xlim([-1,1]);
                 ax.set_ylim([-1,1]);
@@ -169,7 +181,15 @@ def run(**kwargs):
                 #
                 ax.plot_trisurf(ptsa[...,0],ptsa[...,2],tri,ptsa[...,1],color=(0,0,1,0.1));
                 ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
-                plt.savefig(os.path.join(outdir,'bbvae_%d_%f.png'%(zi,zs[i])));
+                #
+                ax = fig.add_subplot(1,2,2,projection='3d');
+                ax.set_aspect('equal', adjustable='box');
+                ax.set_xlim([-1,1]);
+                ax.set_ylim([-1,1]);
+                ax.set_zlim([-1,1]);
+                #
+                ax.plot_trisurf(ptsa[...,0],ptsa[...,2],tri,ptsa[...,1],color=(0,0,1,0.1));
+                ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
+                plt.savefig(os.path.join(outdir,'_%d_bbvae_%d_%f.png'%(i,zi,zs[i])));
                 plt.close(fig);
-        break;
         
