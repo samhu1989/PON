@@ -161,11 +161,14 @@ def run(**kwargs):
         ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
         plt.savefig(os.path.join(outdir,'_%d_%s_input.png'%(i,cat)));
         plt.close(fig);
+        outdiri = os.path.join(outdir,'_%d_%s_output'%(i,cat))
+        if not os.path.exists(outdiri):
+            os.mkdir(outdiri);
         for zi in range(opt['z_size']):
-            for i in range(20):
+            for ri in range(20):
                 fig = plt.figure(figsize=(9.6,4.8));
                 z = np.zeros([1,opt['z_size']],dtype=np.float32);
-                z[0,zi] = zs[i];
+                z[0,zi] = zs[ri];
                 z = torch.from_numpy(z).cuda();
                 with torch.no_grad(): 
                     r = net.decode(xx,z);
@@ -190,6 +193,6 @@ def run(**kwargs):
                 #
                 ax.plot_trisurf(ptsa[...,0],ptsa[...,2],tri,ptsa[...,1],color=(0,0,1,0.1));
                 ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
-                plt.savefig(os.path.join(outdir,'_%d_bbvae_%d_%f.png'%(i,zi,zs[i])));
+                plt.savefig(os.path.join(outdiri,'_%d_%f.png'%(zi,zs[ri])));
                 plt.close(fig);
         

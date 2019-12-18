@@ -7,6 +7,40 @@
     - do reconstruction in few shot setting 
     
 
+
+
+#### Report 20191213
+
+<font color=#55ff55>Done </font>:
+
+visualization with Beta-VAE:
+
+the settings:
+
+bottleneck size / latent size = 8
+
+input  representation vector of 2 boxes with center(x,y,z) (3) size (l,w,h) (3) rotation (6) (first two row of the rotation matrix )
+
+ie. 12 dimension for each boxes
+
+with L2 as reconstruction loss
+
+beta = 100 as weight for KL loss
+
+the condition vector removes 9 dimension from the second boxes 
+
+the following images show one picked meaningful case in which the 7th dim learns one meaningful relation of the two bars from the chair category 
+
+in a lot of cases, I couldn't figure out the meaning of the latent dimensions
+
+![bvae](E:\WorkSpace\PON\PON\doc\img\bvae.png)
+
+<font color=#ff0099>To Do: </font>
+
+working on the  binary latent space, expecting to discover more discrete relation space
+
+
+
 ### visualize 20191128:
 
 VAE

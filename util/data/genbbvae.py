@@ -22,7 +22,8 @@ def getX(h5fname):
     label = np.array(h5f['label']);
     pts = np.array(h5f['pts']);
     v = [];
-    snum = min(label.shape[0],100);
+    #snum = min(label.shape[0],300);
+    snum = label.shape[0];
     for i in range(snum):
         lbl = label[i,:];
         plst = [];
@@ -67,7 +68,7 @@ def getdata(root,opt):
           f = os.path.join(root, name)
           if f.endswith('.h5'):
             catname = os.path.basename(root);
-            if catname == 'Bag' or catname == 'Bottle' or catname == 'Bed':
+            if catname != 'Chair' and catname != 'Table':
                 continue;
             cat2lbl[catname] = cnt;
             Xv = getX(f);
