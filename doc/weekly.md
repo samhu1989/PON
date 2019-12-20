@@ -7,6 +7,14 @@
     - do reconstruction in few shot setting 
     
 
+#### Report 20191220
+
+<font color=#55ff55>Done </font>:
+
+AutoEncoding with Binary BottleNeck
+
+ie. training with SS activation test with sign function9
+
 
 
 #### Report 20191213

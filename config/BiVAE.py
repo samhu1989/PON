@@ -18,7 +18,6 @@ workers = 4;
 lr = 1e-3;
 weight_decay = 0.0;
 nepoch = 1000;
-category = ['Chair','Table','StorageFurniture','Bed','Display'];
 
 def loss(data,out,beta=beta):
     x = data[0];
@@ -27,6 +26,15 @@ def loss(data,out,beta=beta):
     recon = torch.sum( ( rx - x )**2, dim = 1 );
     loss['recon'] = torch.mean(recon);
     loss['overall'] = loss['recon'];
+    return loss;
+    
+def loss(data,out,beta=beta):
+    x = data[0];
+    rx = out['rx'];
+    loss = {};
+    recon = torch.sum( ( rx - x )**2, dim = 1 );
+    loss['recon'] = recon
+    loss['overall'] = torch.mean(loss['recon']);
     return loss;
     
 def parameters(net):
