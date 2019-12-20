@@ -7,15 +7,25 @@
     - do reconstruction in few shot setting 
     
 
-#### Report 20191220
+#### meeting notes 20191219:
 
-<font color=#55ff55>Done </font>:
+In todays' meeting we agreed on a more clear technique proposal:
 
-AutoEncoding with Binary BottleNeck
+a. given a pre-defined part relationship vocabulary;
 
-ie. training with SS activation test with sign function9
+b. input an object image and part mask
 
+we output:
 
+1) for each part, we predict a box (size and rotation) as its 3d representation
+
+2) in the input image, for each pair of part
+
+predicting their relation category and corresponding parameters;
+
+*) we assemble the boxes with the predicted relationship (greedy assemble first)
+
+c. we want to check if such image-grounded prediction network can be better generalized to novel category e.g. from chair to table.
 
 #### Report 20191213
 
@@ -41,7 +51,7 @@ the following images show one picked meaningful case in which the 7th dim learns
 
 in a lot of cases, I couldn't figure out the meaning of the latent dimensions
 
-![bvae](E:\WorkSpace\PON\PON\doc\img\bvae.png)
+![bvae](./doc/img/bvae.png)
 
 <font color=#ff0099>To Do: </font>
 
@@ -57,13 +67,13 @@ binary bottleneck network to discover the relation
 
 18 dim concatenate box representation to represent relation and reduce dim for the relation distribution
 
-![tsne_ncv_50.000000](C:\workspace\PON\doc\img\tsne_ncv_50.000000.png)
+![tsne_ncv_50.000000](.\doc\img\tsne_ncv_50.000000.png)
 
-![tsne_ncv_5.000000](C:\workspace\PON\doc\img\tsne_ncv_5.000000.png)
+![tsne_ncv_5.000000](.\doc\img\tsne_ncv_5.000000.png)
 
 ![tsne_ncv_30.000000](.\doc\img\tsne_ncv_30.000000.png
 
-![tsne_ncv_5.000000](C:\workspace\PON\doc\img\tsne_ncv_30.000000.png)
+![tsne_ncv_5.000000](./doc/img/tsne_ncv_30.000000.png)
 
 ### update 20191119:
 
