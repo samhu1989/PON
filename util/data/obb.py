@@ -18,7 +18,15 @@ class OBB:
     @property
     def extents(self):
         return abs(self.transform((self.max - self.min) / 2.0))
-
+        
+    @property
+    def size(self):
+        return (self.max - self.min) / 2.0 ;
+        
+    @property
+    def volume(self):
+        return np.prod(self.max - self.min);
+        
     @property
     def points(self):
         return [
@@ -42,6 +50,20 @@ class OBB:
             self.transform((self.max[0], self.min[1], self.max[2]))
         ]
 
+    @property
+    def tov(self):
+        vs = [self.size.flatten(),self.centroid.flatten(),self.rotation.flatten()]
+        return np.concatenate(vs,axis=0);
+        
+    @classmethod
+    def v2points(cls,vec):
+        coord = np.array([[1,1,-1],[-1,1,-1],[-1,1,1],[1,1,1],[1,-1,-1],[-1,-1,-1],[-1,-1,1],[1,-1,1]],dtype=np.float32);
+        size = vec[:3];
+        coords = size[np.newaxis,:]*coord;
+        center = vec[3:6];
+        rot = vec[6:15];
+        return dot(coords,rot.reshape(3,3)) + center[np.newaxis,:];
+    
     @classmethod
     def build_from_covariance_matrix(cls, covariance_matrix, points):
         if not isinstance(points, ndarray):

@@ -1,152 +1,113 @@
-from __future__ import print_function
-import sys
-import os
-sys.path.append(os.path.dirname(__file__))
-import argparse
-import random
-import torch
-import torch.nn as nn
-import torch.nn.parallel
-import torch.backends.cudnn as cudnn
-import torch.optim as optim;
-from torch.nn.parameter import Parameter
-import torch.utils.data
-from torch.autograd import Variable
-from PIL import Image
-import numpy as np
-import pdb
+import torch;
+import torch.nn as nn;
 import torch.nn.functional as F;
 import resnet;
 
-class CageGen(nn.Module):
-    def __init__(self,bottleneck_size=2500,bn=True):
-        super(CageGen,self).__init__();
-        self.bottleneck_size = bottleneck_size;
-        self.conv1 = torch.nn.Conv1d(self.bottleneck_size,self.bottleneck_size,1);
-        self.conv2 = torch.nn.Conv1d(self.bottleneck_size,self.bottleneck_size//2,1);
-        self.bn = bn;
-        self.act = nn.Softmax();
-        if self.bn:
-            self.bn1 = torch.nn.BatchNorm1d(self.bottleneck_size);
-            self.bn2 = torch.nn.BatchNorm1d(self.bottleneck_size//2);
+class BoxNet(nn.Module):
+    def __init__(self,**kwargs):
+        self.enc = resnet.resnet18(pretrained=False,input_channel=3,num_classes=512);
+        self.dec1 = nn.Sequential(
+                nn.Linear(512,512),
+                nn.ReLU(inplace=True)
+                );
+        self.dec_size = nn.Sequential(
+                nn.Linear(512,3),
+                nn.ReLU(inplace=True)
+                );
+        self.dec_r1 = nn.Linear(512,3);
+        self.dec_r2 = nn.Linear(512,3);
+                
+    def forward(self,img):
+        y = self.enc(img);
+        y = self.dec1(y);
+        size = self.dec_size(y);
+        r1 = self.dec_r1(y);
+        r2 = self.dec_r2(y);
+        return size,r1,r2;
         
-    def forward(self,x):
-        return x;
-
-class CagePts(nn.Module):
-    def __init__(self,bottleneck_size=2500,bn=True):
-        super(CagePts,self).__init__();
-        self.bottleneck_size = bottleneck_size;
-        super(PointGenCon, self).__init__();
-        self.conv1 = torch.nn.Conv1d(self.bottleneck_size,self.bottleneck_size,1);
-        self.conv2 = torch.nn.Conv1d(self.bottleneck_size,self.bottleneck_size//2,1);
-        self.conv3 = torch.nn.Conv1d(self.bottleneck_size//2,self.bottleneck_size//4,1);
-        self.conv4 = torch.nn.Conv1d(self.bottleneck_size//4,8,1);
-        self.bn = bn;
-        self.act = nn.Softmax();
-        if self.bn:
-            self.bn1 = torch.nn.BatchNorm1d(self.bottleneck_size);
-            self.bn2 = torch.nn.BatchNorm1d(self.bottleneck_size//2);
-            self.bn3 = torch.nn.BatchNorm1d(self.bottleneck_size//4);
-        
-    def forward(self, x):
-        if self.bn:
-            x = F.relu(self.bn1(self.conv1(x)));
-            x = F.relu(self.bn2(self.conv2(x)));
-            x = F.relu(self.bn3(self.conv3(x)));
-            x = self.act(self.conv4(x))
-        else:
-            x = F.relu(self.conv1(x));
-            x = F.relu(self.conv2(x));
-            x = F.relu(self.conv3(x));
-            x = self.act(self.conv4(x));
-        return x;
-        
+class CNet(nn.Module):
+    def __init__(self,**kwargs):
+        self.enc = resnet.resnet18(pretrained=False,input_channel=5,num_classes=512);
+        self.dec_is = nn.Sequential(
+                nn.Linear(512,512),
+                nn.ReLU(inplace=True),
+                nn.Linear(512,1),
+                nn.Sigmoid()
+                );
+        self.dec_x1 = nn.Sequential(
+                nn.Conv1d(512+3,64,1),
+                nn.ReLU(inplace=True),
+                nn.Conv1d(64,1,1)
+                );
+        self.dec_x2 = nn.Sequential(
+                nn.Conv1d(512+3,64,1),
+                nn.ReLU(inplace=True),
+                nn.Conv1d(64,1,1)
+                );
+                
+    def forward(self,img,const):
+        x = self.enc(img);
+        y = self.dec_is(x);
+        f = x.unsqueeze(2).repeat(1,1,coord1.size(2)).contiguous();
+        const = const.permute(0,2,1).contiguous();
+        const = const.repeat(x.size(0),1,1);
+        expf1 = torch.cat((const,f),1).contiguous();
+        w1 = self.dec_x1(expf);
+        w1 = F.softmax(w1,dim=1);
+        w2 = self.dec_x2(expf);
+        w2 = F.softmax(w2,dim=1);
+        return y,w1,w2;
 
 class Net(nn.Module):
     def __init__(self,**kwargs):
-        super(Net, self).__init__();
-        self.pretrained_encoder = False;
-        self.pts_num = kwargs['pts_num']
-        self.bottleneck_size = 1024
-        self.grid_num = kwargs['grid_num']
-        self.grid_dim = kwargs['grid_dim']
-        self.mode = kwargs['mode']
-        self.bn = True
-        self.inv_y = None;
-        if ( self.mode == 'SVR' ) or ( self.mode =='InvSVR' ):
-            self.encoder = resnet.resnet18(pretrained=self.pretrained_encoder,num_classes=1024);
-        elif ( self.mode == 'AE' ) or ( self.mode =='InvAE' ):
-            self.encoder = nn.Sequential(
-                PointNetfeat(self.pts_num, global_feat=True, trans = False),
-                nn.Linear(1024, self.bottleneck_size),
-                nn.BatchNorm1d(self.bottleneck_size),
-                nn.ReLU()
-                );
-        elif ( self.mode == 'OPT' ) or ( self.mode =='InvOPT'):
-            self.bn = False;
-            self.encoder = OptEncoder(self.bottleneck_size);
-        else:
-            assert False,'unkown mode of InvAtlasNet'
-        self.decoder = nn.ModuleList([PointGenCon(bottleneck_size=self.grid_dim+self.bottleneck_size,bn=self.bn) for i in range(0,self.grid_num)]);
-        if self.mode.startswith('Inv'):
-            self.inv_decoder = nn.ModuleList([PointGenCon(bottleneck_size=3+self.bottleneck_size,odim=self.grid_dim,bn=self.bn)]);
-        self._init_layers();
-
+        self.cnet = CNet();
+        self.bnet = BoxNet();
+        
     def forward(self,input):
-        x = input[0];
-        if x.dim() == 4:
-            x = x[:,:3,:,:].contiguous();
-        f = self.encoder(x);
-        grid = self.rand_grid(f);
-        expf = f.unsqueeze(2).expand(f.size(0),f.size(1),grid.size(2)).contiguous();
-        outs = [];
-        for i in range(0,self.grid_num):
-            y = torch.cat((grid,expf),1).contiguous();
-            y = self.decoder[i](y);
-            outs.append(y);
-        yout = torch.cat(outs,2).contiguous();
-        yout = yout.transpose(2,1).contiguous();
-        if grid.size(2) != y.size(2):
-            expf = f.unsqueeze(2).expand(f.size(0),f.size(1),y.size(2)).contiguous();
-        out = {}
-        out['y'] = yout
-        if self.mode.startswith('Inv'):
-            inv_y = torch.cat((y,expf),1).contiguous();
-            inv_y = self.inv_decoder[0](inv_y);
-            inv_y = inv_y.transpose(2,1).contiguous();
-            out['inv_x'] = inv_y;
-        if self.grid_num > 1:
-            out['grid_x'] = torch.cat([grid  for i in range(0,self.grid_num)],2).contiguous().transpose(2,1).contiguous(); 
-        else:
-            out['grid_x'] = grid.transpose(2,1).contiguous();
-        #print(out['grid_x'].shape);
+        img = input[0];
+        x = img[:,:,:,:3].contiguous();
+        x = x.permute(0,3,1,2).contiguous();
+        #
+        ms = input[1].unsqueeze(1);
+        mt = input[2].unsqueeze(1);
+        #
+        xms = x*ms;
+        xmt = x*mt;
+        const = np.array([[[1,1,-1],[-1,1,-1],[-1,1,1],[1,1,1],[1,-1,-1],[-1,-1,-1],[-1,-1,1],[1,-1,1]]],dtype=np.float32);
+        const = torch.from_numpy(const);
+        const = const.type(x.type());
+        #
+        ss,sr1,sr2 = self.bnet(xms);
+        srot = self.rot(sr1,sr2);
+        #
+        ts,tr1,tr2 = self.bnet(xmt);
+        trot = self.rot(tr1,tr2);
+        #
+        xmst = x*(ms+mt);
+        xmst_ms_mt = torch.cat([xmst,ms,mt],dim=1);
+        y,ws,wt = self.cnet(xmst_ms_mt,const);
+        #
+        coords = torch.matmul(const*ss.unsqueeze(1).contiguous(),srot);
+        coords = torch.sum(ws.unsqueeze(1).contiguous()*coords,dim=2);
+        coordt = torch.matmul(const*ts.unsqueeze(1).contiguous(),trot);
+        coordt = torch.sum(wt.unsqueeze(1).contiguous()*coordt,dim=2);
+        vec = torch.cat([ss,sr1,sr2,st,coords-coordt,tr1,tr2],dim=1);
+        out = {'y':y,'vec':vec,'xs':coords,'xt':coordt};
         return out;
-    
-    def rand_grid(self,x):
-        rand_grid = torch.FloatTensor(x.size(0),self.grid_dim,self.pts_num//self.grid_num);
-        if self.grid_dim == 3:
-            rand_grid.normal_(0.0,1.0);
-            rand_grid += 1e-9;
-            rand_grid = rand_grid / torch.norm(rand_grid,p=2.0,dim=1,keepdim=True);
+        
+    def rot(self,r1,r2):
+        if self.training:
+            r3 = torch.cross(r1,r2);
+            rot = torch.stack([r1,r2,r3],dim=1);
+            rot = rot.view(-1,3,3);
         else:
-            rand_grid.uniform_(0.0,1.0);
-        if isinstance(x,Variable):
-            rand_grid = Variable(rand_grid);
-        if x.is_cuda:
-            rand_grid = rand_grid.cuda();
-        return rand_grid;
-    
-    def _init_layers(self):
-        for m in self.modules():
-            if isinstance(m,nn.Conv2d):
-                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels;
-                m.weight.data.normal_(0,np.sqrt(2./n));
-            elif isinstance(m,nn.Conv1d):
-                m.weight.data.normal_(0.0,0.02);
-            elif isinstance(m,nn.BatchNorm1d):
-                m.weight.data.normal_(1.0,0.02);
-                m.bias.data.fill_(0)
-            elif isinstance(m,nn.BatchNorm2d):
-                m.weight.data.fill_(1);
-                m.bias.data.zero_();
+            rr1 = r1 / torch.sqrt(torch.sum(r1**2,dim=1,keepdims=True));
+            rr2 = r2 - torch.sum(r2*rr1,dim=1,keepdims=True)*rr1;
+            rr2 = rr2 / torch.sqrt(torch.sum(rr2**2,dim=1,keepdims=True));
+            r3 = torch.cross(rr1,rr2);
+            rot = torch.stack([rr1,rr2,r3],dim=1);
+            rot = rot.view(-1,3,3);
+        return rot;
+        
+        
+        
