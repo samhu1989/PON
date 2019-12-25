@@ -45,17 +45,16 @@ class CNet(nn.Module):
                 nn.Conv1d(64,1,1)
                 );
                 
-    def forward(self,img,const):
+    def forward(self,img,c1,c2):
         x = self.enc(img);
         y = self.dec_is(x);
-        f = x.unsqueeze(2).repeat(1,1,coord1.size(2)).contiguous();
-        const = const.permute(0,2,1).contiguous();
-        const = const.repeat(x.size(0),1,1);
-        expf1 = torch.cat((const,f),1).contiguous();
-        w1 = self.dec_x1(expf);
-        w1 = F.softmax(w1,dim=1);
-        w2 = self.dec_x2(expf);
-        w2 = F.softmax(w2,dim=1);
+        f = x.unsqueeze(2).repeat(1,1,c1.size(2)).contiguous();
+        expf1 = torch.cat((c1,f),1).contiguous();
+        expf2 = torch.cat((c2,f),1).contiguous();
+        w1 = self.dec_x1(expf1);
+        w1 = F.softmax(w1,dim=2);
+        w2 = self.dec_x2(expf2);
+        w2 = F.softmax(w2,dim=2);
         return y,w1,w2;
 
 class Net(nn.Module):
@@ -79,20 +78,24 @@ class Net(nn.Module):
         #
         ss,sr1,sr2 = self.bnet(xms);
         srot = self.rot(sr1,sr2);
+        c1 = torch.matmul(const,srot);
+        c1 = c1.permute(0,2,1).contiguous();
         #
         ts,tr1,tr2 = self.bnet(xmt);
         trot = self.rot(tr1,tr2);
+        c2 = torch.matmul(const,trot);
+        c2 = c2.permute(0,2,1).contiguous();
         #
         xmst = x*(ms+mt);
         xmst_ms_mt = torch.cat([xmst,ms,mt],dim=1);
-        y,ws,wt = self.cnet(xmst_ms_mt,const);
+        y,ws,wt = self.cnet(xmst_ms_mt,c1,c2);
         #
         coords = torch.matmul(const*ss.unsqueeze(1).contiguous(),srot);
-        coords = torch.sum(ws.unsqueeze(1).contiguous()*coords,dim=2);
+        coords = torch.sum(ws*coords,dim=2);
         coordt = torch.matmul(const*ts.unsqueeze(1).contiguous(),trot);
-        coordt = torch.sum(wt.unsqueeze(1).contiguous()*coordt,dim=2);
+        coordt = torch.sum(wt*coordt,dim=2);
         vec = torch.cat([ss,sr1,sr2,st,coords-coordt,tr1,tr2],dim=1);
-        out = {'y':y,'vec':vec,'xs':coords,'xt':coordt};
+        out = {'xms':xms,'xmt':xmt,'xmst':xmst,'y':y,'vec':vec,'xs':coords,'xt':coordt};
         return out;
         
     def rot(self,r1,r2):
