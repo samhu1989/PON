@@ -1,10 +1,12 @@
 import torch;
 import torch.nn as nn;
 import torch.nn.functional as F;
-import resnet;
+import net.resnet as resnet;
+import numpy as np;
 
 class BoxNet(nn.Module):
     def __init__(self,**kwargs):
+        super(BoxNet,self).__init__();
         self.enc = resnet.resnet18(pretrained=False,input_channel=3,num_classes=512);
         self.dec1 = nn.Sequential(
                 nn.Linear(512,512),
@@ -27,6 +29,7 @@ class BoxNet(nn.Module):
         
 class CNet(nn.Module):
     def __init__(self,**kwargs):
+        super(CNet,self).__init__();
         self.enc = resnet.resnet18(pretrained=False,input_channel=5,num_classes=512);
         self.dec_is = nn.Sequential(
                 nn.Linear(512,512),
@@ -59,6 +62,7 @@ class CNet(nn.Module):
 
 class Net(nn.Module):
     def __init__(self,**kwargs):
+        super(Net,self).__init__();
         self.cnet = CNet();
         self.bnet = BoxNet();
         
@@ -91,10 +95,12 @@ class Net(nn.Module):
         y,ws,wt = self.cnet(xmst_ms_mt,c1,c2);
         #
         coords = torch.matmul(const*ss.unsqueeze(1).contiguous(),srot);
+        coords = coords.permute(0,2,1).contiguous();
         coords = torch.sum(ws*coords,dim=2);
         coordt = torch.matmul(const*ts.unsqueeze(1).contiguous(),trot);
+        coordt = coordt.permute(0,2,1).contiguous();
         coordt = torch.sum(wt*coordt,dim=2);
-        vec = torch.cat([ss,sr1,sr2,st,coords-coordt,tr1,tr2],dim=1);
+        vec = torch.cat([ss,sr1,sr2,ts,coords-coordt,tr1,tr2],dim=1);
         out = {'xms':xms,'xmt':xmt,'xmst':xmst,'y':y,'vec':vec,'xs':coords,'xt':coordt};
         return out;
         

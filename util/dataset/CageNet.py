@@ -68,7 +68,7 @@ class Data(data.Dataset):
         subi = self.imap[idx];
         subj = self.jmap[idx];
         img = self.img[index];
-        msks = self.msk[index];
+        msk = self.msk[index];
         touch = self.touch[index];
         box = self.box[index];
         endi = self.end[index];
@@ -80,13 +80,13 @@ class Data(data.Dataset):
         for xi in range(touch.shape[0]):
             if subi == touch[xi,0] and subj == touch[xi,1]:
                 y = 1.0;
-            if if subj == touch[xi,0] and subi == touch[xi,1]:
+            if subj == touch[xi,0] and subi == touch[xi,1]:
                 y = 1.0;
         img = torch.from_numpy(img)
         msks = torch.from_numpy(msks)
         mskt = torch.from_numpy(mskt)
-        y = torch.from_numpy(np.array([y]))
-        vec = np.zeros([21],data=np.float32);
+        y = torch.from_numpy(np.array([y],dtype=np.float32))
+        vec = np.zeros([21],dtype=np.float32);
         #
         vec[:3] = boxs[:3];
         vec[3:9] = boxs[6:12];

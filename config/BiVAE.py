@@ -28,7 +28,7 @@ def loss(data,out,beta=beta):
     loss['overall'] = loss['recon'];
     return loss;
     
-def loss(data,out,beta=beta):
+def accuracy(data,out,beta=beta):
     x = data[0];
     rx = out['rx'];
     loss = {};
