@@ -21,32 +21,7 @@ def data2cuda(data):
         if torch.cuda.is_available() and isinstance(data[i],torch.Tensor):
             data[i] = data[i].cuda();
             data[i].requires_grad_(True);
-            
-def normalize(v):
-    norm = np.linalg.norm(v);
-    if norm == 0: 
-       return v
-    return v / norm;
-    
-def proj(v2,v1):
-    return np.dot(v2,v1)*v1;
-    
-def deal(x):
-    v1 = x[6:9];
-    x[6:9] = normalize(v1);
-    v1 = x[6:9];
-    v2 = x[9:12];
-    v2 = v2 - proj(v2,v1);
-    x[9:12] = normalize(v2);
-    #
-    v1 = x[18:21];
-    x[18:21] = normalize(v1);
-    v1 = x[18:21];
-    v2 = x[21:24];
-    v2 = v2 - proj(v2,v1);
-    x[21:24] = normalize(v2);
-    
-    
+                
 def parse(x):
     deal(x);
     #=================
@@ -132,7 +107,6 @@ def run(**kwargs):
         print(i,'/',len(train_data)//opt['batch_size']);
         data2cuda(data);
         net.eval();
-        zs = np.linspace(-3,3,20).astype(np.float32);
         xx = data[0][bi,idx].contiguous().view(1,-1);
         ox = data[0][bi,:].contiguous().view(1,-1);
         cat = data[1][bi];
@@ -152,7 +126,7 @@ def run(**kwargs):
         ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
         
         ax = fig.add_subplot(1,2,2,projection='3d');
-        ax.set_aspect('equal',adjustable='box');
+        ax.set_aspect('equal', adjustable='box');
         ax.set_xlim([-1,1]);
         ax.set_ylim([-1,1]);
         ax.set_zlim([-1,1]);
@@ -164,35 +138,35 @@ def run(**kwargs):
         outdiri = os.path.join(outdir,'_%d_%s_output'%(i,cat))
         if not os.path.exists(outdiri):
             os.mkdir(outdiri);
-        for zi in range(opt['z_size']):
-            for ri in range(20):
-                fig = plt.figure(figsize=(9.6,4.8));
-                z = np.zeros([1,opt['z_size']],dtype=np.float32);
-                z[0,zi] = zs[ri];
-                z = torch.from_numpy(z).cuda();
-                with torch.no_grad(): 
-                    r = net.decode(xx,z);
-                x = r.data.cpu().numpy()[0,:];
-                ptsa, ptsb = parse(x);
-                #==================
-                ax = fig.add_subplot(1,2,1,projection='3d');
-                ax.view_init(elev=20, azim=90)
-                ax.set_aspect('equal', adjustable='box');
-                ax.set_xlim([-1,1]);
-                ax.set_ylim([-1,1]);
-                ax.set_zlim([-1,1]);
-                #
-                ax.plot_trisurf(ptsa[...,0],ptsa[...,2],tri,ptsa[...,1],color=(0,0,1,0.1));
-                ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
-                #
-                ax = fig.add_subplot(1,2,2,projection='3d');
-                ax.set_aspect('equal', adjustable='box');
-                ax.set_xlim([-1,1]);
-                ax.set_ylim([-1,1]);
-                ax.set_zlim([-1,1]);
-                #
-                ax.plot_trisurf(ptsa[...,0],ptsa[...,2],tri,ptsa[...,1],color=(0,0,1,0.1));
-                ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
-                plt.savefig(os.path.join(outdiri,'_%d_%f.png'%(zi,zs[ri])));
-                plt.close(fig);
-        
+        for ri in range(256):
+            fig = plt.figure(figsize=(9.6,4.8));
+            z = -1*np.ones([1,opt['z_size']],dtype=np.float32);
+            code = bin(ri);
+            for ci in range(len(code)-1,1,-1):
+                z[0,ci-2] = 1.0 if code[ci]=='1' else -1.0 ;
+            z = torch.from_numpy(z).cuda();
+            with torch.no_grad(): 
+                r = net.decode(xx,z);
+            x = r.data.cpu().numpy()[0,:];
+            ptsa, ptsb = parse(x);
+            #==================
+            ax = fig.add_subplot(1,2,1,projection='3d');
+            ax.view_init(elev=20, azim=90)
+            ax.set_aspect('equal', adjustable='box');
+            ax.set_xlim([-1,1]);
+            ax.set_ylim([-1,1]);
+            ax.set_zlim([-1,1]);
+            #
+            ax.plot_trisurf(ptsa[...,0],ptsa[...,2],tri,ptsa[...,1],color=(0,0,1,0.1));
+            ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
+            #
+            ax = fig.add_subplot(1,2,2,projection='3d');
+            ax.set_aspect('equal', adjustable='box');
+            ax.set_xlim([-1,1]);
+            ax.set_ylim([-1,1]);
+            ax.set_zlim([-1,1]);
+            #
+            ax.plot_trisurf(ptsa[...,0],ptsa[...,2],tri,ptsa[...,1],color=(0,0,1,0.1));
+            ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
+            plt.savefig(os.path.join(outdiri,'_%d_%s.png'%(ri,code)));
+            plt.close(fig);

@@ -8,21 +8,26 @@ class BoxNet(nn.Module):
     def __init__(self,**kwargs):
         super(BoxNet,self).__init__();
         self.enc = resnet.resnet18(pretrained=False,input_channel=3,num_classes=512);
-        self.dec1 = nn.Sequential(
-                nn.Linear(512,512),
-                nn.ReLU(inplace=True)
-                );
         self.dec_size = nn.Sequential(
-                nn.Linear(512,3),
-                nn.ReLU(inplace=True)
+                nn.Linear(512,512),
+                nn.ReLU(inplace=True),
+                nn.Linear(512,3)
                 );
-        self.dec_r1 = nn.Linear(512,3);
-        self.dec_r2 = nn.Linear(512,3);
+        self.dec_r1 = nn.Sequential(
+                nn.Linear(512,512),
+                nn.ReLU(inplace=True),
+                nn.Linear(512,3)
+                );
+        self.dec_r2 = nn.Sequential(
+                nn.Linear(512,512),
+                nn.ReLU(inplace=True),
+                nn.Linear(512,3)
+                );
                 
     def forward(self,img):
         y = self.enc(img);
-        y = self.dec1(y);
         size = self.dec_size(y);
+        size = torch.max(size,torch.sigmoid(size));
         r1 = self.dec_r1(y);
         r2 = self.dec_r2(y);
         return size,r1,r2;
@@ -81,12 +86,14 @@ class Net(nn.Module):
         const = const.type(x.type());
         #
         ss,sr1,sr2 = self.bnet(xms);
-        srot = self.rot(sr1,sr2);
+        with torch.no_grad():
+            srot = self.rot(sr1,sr2);
         c1 = torch.matmul(const,srot);
         c1 = c1.permute(0,2,1).contiguous();
         #
         ts,tr1,tr2 = self.bnet(xmt);
-        trot = self.rot(tr1,tr2);
+        with torch.no_grad():
+            trot = self.rot(tr1,tr2);
         c2 = torch.matmul(const,trot);
         c2 = c2.permute(0,2,1).contiguous();
         #
@@ -94,11 +101,13 @@ class Net(nn.Module):
         xmst_ms_mt = torch.cat([xmst,ms,mt],dim=1);
         y,ws,wt = self.cnet(xmst_ms_mt,c1,c2);
         #
-        coords = torch.matmul(const*ss.unsqueeze(1).contiguous(),srot);
-        coords = coords.permute(0,2,1).contiguous();
+        with torch.no_grad():
+            coords = torch.matmul(const*ss.unsqueeze(1).contiguous(),srot);
+            coords = coords.permute(0,2,1).contiguous();
+            coordt = torch.matmul(const*ts.unsqueeze(1).contiguous(),trot);
+            coordt = coordt.permute(0,2,1).contiguous();
+        #
         coords = torch.sum(ws*coords,dim=2);
-        coordt = torch.matmul(const*ts.unsqueeze(1).contiguous(),trot);
-        coordt = coordt.permute(0,2,1).contiguous();
         coordt = torch.sum(wt*coordt,dim=2);
         vec = torch.cat([ss,sr1,sr2,ts,coords-coordt,tr1,tr2],dim=1);
         out = {'xms':xms,'xmt':xmt,'xmst':xmst,'y':y,'vec':vec,'xs':coords,'xt':coordt};

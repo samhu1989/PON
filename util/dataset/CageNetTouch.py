@@ -51,13 +51,8 @@ class Data(data.Dataset):
                         self.box.append(np.array(h5f['box']));
                         self.cat.append(c);
                         num = self.box[-1].shape[0];
-                        pairnum = int(comb(num,2));
+                        pairnum = self.touch[-1].shape[0];
                         self.index_map.extend([len(self.img)-1 for x in range(pairnum)]);
-                        for i in range(num-1):
-                            for j in range(i+1,num):
-                                self.imap.append(i);
-                                self.jmap.append(j);
-                                
                         if len(self.end) == 0:
                             self.end.append(pairnum);
                         else:
@@ -66,23 +61,18 @@ class Data(data.Dataset):
 
     def __getitem__(self, idx):
         index = self.index_map[idx];
-        subi = self.imap[idx];
-        subj = self.jmap[idx];
         img = self.img[index];
         msk = self.msk[index];
         touch = self.touch[index];
         box = self.box[index];
         endi = self.end[index];
+        subi = touch[idx-endi,0];
+        subj = touch[idx-endi,1];
         msks = msk[subi,...];
         boxs = box[subi,...];
         mskt = msk[subj,...];
         boxt = box[subj,...];
-        y = 0.0 ;
-        for xi in range(touch.shape[0]):
-            if subi == touch[xi,0] and subj == touch[xi,1]:
-                y = 1.0;
-            if subj == touch[xi,0] and subi == touch[xi,1]:
-                y = 1.0;
+        y = 1.0 ;
         img = torch.from_numpy(img)
         msks = torch.from_numpy(msks)
         mskt = torch.from_numpy(mskt)
@@ -114,13 +104,13 @@ def rot(r1,r2):
         
 def parse(vec):
     coord = np.array([[1,1,-1],[-1,1,-1],[-1,1,1],[1,1,1],[1,-1,-1],[-1,-1,-1],[-1,-1,1],[1,-1,1]],dtype=np.float32);
-    print(vec);
+    #print(vec);
     ss = vec[:3];
     coords = ss[np.newaxis,:]*coord;
     sr1 = vec[3:6];
     sr2 = vec[6:9]
     srot = rot(sr1,sr2);
-    print('srot',srot)
+    #print('srot',srot)
     vs = np.dot(coords,srot.reshape(3,3))
     ts = vec[9:12];
     coordt = ts[np.newaxis,:]*coord;
@@ -128,7 +118,7 @@ def parse(vec):
     tr1 = vec[15:18];
     tr2 = vec[18:21];
     trot = rot(tr1,tr2);
-    print('trot',trot)
+    #print('trot',trot)
     vt = np.dot(coordt,trot.reshape(3,3)) + center[np.newaxis,:];
     return  vs,vt;
         
@@ -151,7 +141,9 @@ def run(**kwargs):
         vec = d[4].data.cpu().numpy()[bi,...];
         Image.fromarray((img*255).astype(np.uint8),mode='RGB').save('./log/im.png');
         Image.fromarray((msks*255).astype(np.uint8),mode='L').save('./log/mks.png');
+        Image.fromarray((img*msks[:,:,np.newaxis]*255).astype(np.uint8),mode='RGB').save('./log/mkds.png');
         Image.fromarray((mskt*255).astype(np.uint8),mode='L').save('./log/mkt.png');
+        Image.fromarray((img*mskt[:,:,np.newaxis]*255).astype(np.uint8),mode='RGB').save('./log/mkdt.png');
         Image.fromarray((img*(msks+mskt)[:,:,np.newaxis]*255).astype(np.uint8),mode='RGB').save('./log/mkd.png');
         ptsa,ptsb = parse(vec);
         write_ply('./log/pa.ply',points=pd.DataFrame(ptsa),faces=pd.DataFrame(face));

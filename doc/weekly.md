@@ -7,6 +7,42 @@
     - do reconstruction in few shot setting 
     
 
+
+
+#### meeting notes 20191227：
+
+1. data preparation first
+
+2. baselines:
+
+   input just part image vs. input whole image ( expected result: part image is better in zero shot / whole image is better on seen  cases. is this true? ）
+
+   
+
+   holistic baseline:
+
+   SDM-Net (part based) or structure-net
+
+   GenRe (non-part based)
+
+   
+
+note : the comparison needs to clearly deliver the message on generalizability
+
+more thinking: future works
+
+how to correctly use the mask
+
+middle level context / hierarchy context
+
+<font color=#55ff55>Done: </font>
+
+implemented and debugged on one mini-batch
+
+
+
+![CageNet](E:\WorkSpace\PON\PON\doc\img\CageNet.png)
+
 #### meeting notes 20191219:
 
 In todays' meeting we agreed on a more clear technique proposal:
