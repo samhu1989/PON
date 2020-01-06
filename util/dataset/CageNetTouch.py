@@ -33,6 +33,7 @@ class Data(data.Dataset):
         self.touch = [];
         self.box = [];
         self.cat = [];
+        self.id = [];
         self.end = [];
         self.len = 0;
         cats = None;
@@ -50,6 +51,7 @@ class Data(data.Dataset):
                         self.touch.append(np.array(h5f['touch']));
                         self.box.append(np.array(h5f['box']));
                         self.cat.append(c);
+                        self.id.append(os.path.basename(f).split('.')[0]);
                         num = self.box[-1].shape[0];
                         pairnum = self.touch[-1].shape[0];
                         self.index_map.extend([len(self.img)-1 for x in range(pairnum)]);
@@ -89,7 +91,7 @@ class Data(data.Dataset):
         vec = torch.from_numpy(vec);
         boxs = torch.from_numpy(boxs.astype(np.float32));
         boxt = torch.from_numpy(boxt.astype(np.float32));
-        return img,msks,mskt,y,vec,boxs,boxt,self.cat[index];
+        return img,msks,mskt,y,vec,boxs,boxt,self.id[index],self.cat[index];
 
     def __len__(self):
         return len(self.index_map);

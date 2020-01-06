@@ -14,12 +14,12 @@ lr = 1e-3;
 weight_decay = 0.0;
 nepoch = 1000;
 print_epoch = 1;
+mode = 'full';
 
 def loss(data,out):
     ygt = data[3];
     vgt = data[4];
     yout = out['y'];
-    vout = out['vec'];
     loss = {};
     bce = nn.BCELoss(reduction='none')
     loss['bce'] = bce(yout,ygt.data);
@@ -31,7 +31,6 @@ def accuracy(data,out):
     ygt = data[3];
     vgt = data[4];
     yout = out['y'];
-    vout = out['vec'];
     loss = {};
     bce = nn.BCELoss(reduction='none')
     loss['bce'] = bce(yout,ygt.data);
