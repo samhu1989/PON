@@ -18,11 +18,11 @@ from scipy.special import comb, perm
 from PIL import Image;
 #
 class Data(data.Dataset):
-    def __init__(self, opt, train=True):
+    def __init__(self, opt, train='train'):
         if train:
-            self.root = os.path.join(opt['data_path'],'train');
+            self.root = os.path.join(opt['data_path'],train);
         else:
-            self.root = os.path.join(opt['data_path'],'test');
+            self.root = os.path.join(opt['data_path'],train);
         cat_lst = os.listdir(self.root);
         self.train = train;
         self.index_map = [];

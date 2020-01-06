@@ -1,6 +1,7 @@
 from numpy import ndarray, array, asarray, dot, cross, cov, array, finfo, min as npmin, max as npmax
 from numpy.linalg import eigh, norm
 import numpy as np;
+import trimesh;
 
 class OBB:
     def __init__(self):
@@ -70,7 +71,8 @@ class OBB:
             points = array(points, dtype=float)
         assert points.shape[1] == 3
 
-        obb = OBB()
+        obb = OBB();
+        
 
         u, s, vh = np.linalg.svd(covariance_matrix, full_matrices=True);
         obb.rotation = vh;
@@ -130,7 +132,25 @@ class OBB:
         covariance_matrix[1, 2] = c12
         covariance_matrix[2, 2] = c22
 
-        return OBB.build_from_covariance_matrix(covariance_matrix, points)
+        return OBB.build_from_covariance_matrix(covariance_matrix, points);
+        
+    @classmethod
+    def build_by_trimesh(cls, points):
+        if not isinstance(points, ndarray):
+            points = array(points, dtype=float);
+        try:
+            to_origin, size = trimesh.bounds.oriented_bounds(obj=points,angle_digits=1);
+        except:
+            return None;
+        xdir = to_origin[0,:3];
+        ydir = to_origin[1,:3];
+        zdir = to_origin[2,:3];
+        obb = OBB()
+        obb.rotation = np.vstack([xdir,ydir,zdir]);
+        p_primes = asarray([obb.rotation.dot(p) for p in points])
+        obb.min = npmin(p_primes, axis=0);
+        obb.max = npmax(p_primes, axis=0);
+        return obb;
 
     @classmethod
     def build_from_points(cls, points):

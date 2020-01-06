@@ -9,7 +9,9 @@ import argparse, sys, os
 parser = argparse.ArgumentParser(description='Renders given obj file by rotation a camera around it.')
 parser.add_argument('--views', type=int, default=30,
                     help='number of views to be rendered')
-parser.add_argument('--obj', type=str,
+parser.add_argument('--objs', type=str,
+                    help='Path to the obj file to be rendered.')
+parser.add_argument('--objp', type=str,
                     help='Path to the obj file to be rendered.')
 parser.add_argument('--output_folder', type=str, default='/tmp',
                     help='The path the output will be dumped to.')
@@ -25,6 +27,8 @@ parser.add_argument('--color_depth', type=str, default='8',
                     help='Number of bit per channel used for output. Either 8 or 16.')
 parser.add_argument('--format', type=str, default='PNG',
                     help='Format of files generated. Either PNG or OPEN_EXR')
+parser.add_argument('--angle', type=int, default=0,
+                    help='Angle')
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 args = parser.parse_args(argv)
@@ -37,10 +41,10 @@ tree = bpy.context.scene.node_tree
 links = tree.links
 
 # Add passes for additionally dumping albedo and normals.
-bpy.context.scene.render.layers["RenderLayer"].use_pass_normal = True
+#bpy.context.scene.render.layers["RenderLayer"].use_pass_normal = True
 bpy.context.scene.render.layers["RenderLayer"].use_pass_color = True
 bpy.context.scene.render.image_settings.file_format = args.format
-bpy.context.scene.render.image_settings.color_depth = args.color_depth
+#bpy.context.scene.render.image_settings.color_depth = args.color_depth
 
 # Clear default nodes
 for n in tree.nodes:
@@ -81,32 +85,27 @@ else:
 #normal_file_output.label = 'Normal Output'
 #links.new(bias_normal.outputs[0], normal_file_output.inputs[0])
 
-#albedo_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
-#albedo_file_output.label = 'Albedo Output'
-#links.new(render_layers.outputs['Color'], albedo_file_output.inputs[0])
+albedo_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
+albedo_file_output.label = 'Albedo Output'
+links.new(render_layers.outputs['Color'], albedo_file_output.inputs[0])
 
 # Delete default cube
 bpy.data.objects['Cube'].select = True
 bpy.ops.object.delete()
 
-if args.obj.endswith('.obj'):
-    bpy.ops.import_scene.obj(filepath=args.obj);
-elif args.obj.endswith('.ply'):
-    bpy.ops.import_mesh.ply(filepath=args.obj);
-#==========================================
-print(bpy.data.objects.keys());
-if args.obj.endswith('.ply'):
-    name = os.path.basename(args.obj).split('.ply')[0];
-elif args.obj.endswith('.obj'):
-    name = os.path.basename(args.obj).split('.obj')[0];
-try:
+root = args.objp;
+lst = args.objs.split('~');
+cnt = 1;
+model_identifier = lst[0].split('.')[0];
+for fs in lst:
+    bpy.ops.import_mesh.ply(filepath=os.path.join(root,fs));
+    name = os.path.basename(fs).split('.ply')[0];
     obj = bpy.data.objects[name];
     if bpy.context.object.data.vertex_colors.active is not None:
-        mat = bpy.data.materials.new('material_1');
+        mat = bpy.data.materials.new('material_%d'%cnt);
+        cnt += 1;
         obj.active_material = mat
         mat.use_vertex_color_paint = True;
-except:
-    pass;
 #===========================================
 for object in bpy.context.scene.objects:
     if object.name in ['Camera', 'Lamp']:
@@ -166,7 +165,7 @@ cam_constraint.up_axis = 'UP_Y'
 b_empty = parent_obj_to_camera(cam)
 cam_constraint.target = b_empty
 
-model_identifier = os.path.split(os.path.basename(args.obj))[1]
+
 fp = os.path.join(args.output_folder, model_identifier)
 scene.render.image_settings.file_format = 'PNG'  # set output format to .png
 
@@ -177,8 +176,11 @@ rotation_mode = 'XYZ'
 
 #for output_node in [depth_file_output, normal_file_output, albedo_file_output]:
     #output_node.base_path = ''
+    
+albedo_file_output.base_path = ''
+
 import numpy as np;
-angle = int(np.random.uniform(0.0,90.0));
+angle = args.angle
 print(angle);
 b_empty.rotation_euler[2] = radians(float(angle));
 
@@ -188,9 +190,9 @@ for i in range(0, args.views):
     scene.render.filepath = fp + "_%d.png"%int(angle);
     #depth_file_output.file_slots[0].path = scene.render.filepath + "_depth.png"
     #normal_file_output.file_slots[0].path = scene.render.filepath + "_normal.png"
-    #albedo_file_output.file_slots[0].path = scene.render.filepath + "_albedo.png"
+    albedo_file_output.file_slots[0].path = scene.render.filepath.replace('.png','_msk');
 
     bpy.ops.render.render(write_still=True)  # render still
 
-    b_empty.rotation_euler[2] += radians(stepsize)
+    b_empty.rotation_euler[2] += radians(angle)
 #running this script inside blender

@@ -5,8 +5,48 @@
 2. The network should:
    
     - do reconstruction in few shot setting 
-    
+#### report 20200103：
 
+issue:
+
+the current reconstruction accuracy is not reasonable.
+
+visual result at: http://171.67.77.236:8082
+
+six rotation layer (existing code)
+
+the table score is too low (more results needed to diagnose)
+
+box pair visualization.
+
+error in ground truth.
+
+
+
+
+
+| 	   |   accuracy (touch or not)  |   L2 (1e-1) 	|
+| :--- | ---- | ---- |
+| Chair |   0.897126   |  4.032847  |
+| Bag   |   0.588235   |  3.769608  |
+| Bed	|	0.395007   |  3.722060	|
+| Bottle|   0.695279   |  4.617071	|
+| Bowl  |	0.945946   |  4.469102  |
+| Clock  |	  0.423664 |  4.512960  |
+| Dishwasher | 0.466667|  4.516269  |
+| Display | 0.447853   |  4.083668  |
+| Earphone|  0.303457  |  5.124140  |
+| Faucet  | 0.298660   |  4.500903  |
+| Hat 	  | 0.527027   |  4.637480  |
+| Knife   |  0.575916  |  4.557213 |
+| Lamp 	  |  0.350000  |  4.394330  |
+| Laptop  | 0.370497   |  3.134173 |
+| Microwave | 0.298444 |  3.986184 |
+| Mug       | 0.737624  |  5.122827 |
+| Storage	| 0.406495 | 4.274177 |
+| Table     | 0.375298 | 4.350536 |
+| TrashCan  | 0.469363 | 4.425459 |
+| Vase | 0.631818 | 4.727471 |
 
 
 #### meeting notes 20191227：

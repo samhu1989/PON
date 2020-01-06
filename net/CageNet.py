@@ -27,7 +27,7 @@ class BoxNet(nn.Module):
     def forward(self,img):
         y = self.enc(img);
         size = self.dec_size(y);
-        size = torch.max(size,torch.sigmoid(size));
+        size = torch.max(size+0.5,torch.sigmoid(size));
         r1 = self.dec_r1(y);
         r2 = self.dec_r2(y);
         return size,r1,r2;

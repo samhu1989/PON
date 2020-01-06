@@ -260,5 +260,12 @@ def merge_mesh(path,dlst,with_face=False):
         write_ply(path,points = pointsc,faces=pd.DataFrame(face),color=True);
     else:
         write_ply(path,points = pointsc,color=True);
+        
+        
+def label_pts(path,pts,label):
+    colors = color[label - np.min(label),:];
+    pointsc = pd.concat([pd.DataFrame(pts),pd.DataFrame(colors)],axis=1,ignore_index=True);
+    write_ply(path,points = pointsc,color=True);
+    
     
     

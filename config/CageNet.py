@@ -34,7 +34,8 @@ def accuracy(data,out):
     vout = out['vec'];
     loss = {};
     bce = nn.BCELoss(reduction='none')
-    loss['bce'] = (( yout.data > 0.5) == ygt.data ); 
+    loss['bce'] = bce(yout,ygt.data);
+    loss['acc'] = (( yout.data > 0.5) == ygt.data ); 
     loss['recon'] = torch.sum(( vgt - vout )**2,dim=1,keepdims=True);
     loss['overall'] = loss['bce'] + ygt*loss['recon'];
     return loss;

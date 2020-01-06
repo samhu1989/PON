@@ -4,10 +4,11 @@
 # Example:
 # blender --background --python mytest.py -- --views 10 /path/to/my.obj
 #
+
 import argparse, sys, os
 
 parser = argparse.ArgumentParser(description='Renders given obj file by rotation a camera around it.')
-parser.add_argument('--views', type=int, default=30,
+parser.add_argument('--views', type=int, default=1,
                     help='number of views to be rendered')
 parser.add_argument('--obj', type=str,
                     help='Path to the obj file to be rendered.')
@@ -60,54 +61,36 @@ else:
   map.offset = [-0.7]
   map.size = [args.depth_scale]
   map.use_min = True
-  map.min = [-1]
+  map.min = [0]
   #links.new(render_layers.outputs['Depth'], map.inputs[0])
 
   #links.new(map.outputs[0], depth_file_output.inputs[0])
 
-#scale_normal = tree.nodes.new(type="CompositorNodeMixRGB")
-#scale_normal.blend_type = 'MULTIPLY'
+scale_normal = tree.nodes.new(type="CompositorNodeMixRGB")
+scale_normal.blend_type = 'MULTIPLY'
 # scale_normal.use_alpha = True
-#scale_normal.inputs[2].default_value = (0.5, 0.5, 0.5, 1)
+scale_normal.inputs[2].default_value = (0.5, 0.5, 0.5, 1)
 #links.new(render_layers.outputs['Normal'], scale_normal.inputs[1])
 
-#bias_normal = tree.nodes.new(type="CompositorNodeMixRGB")
-#bias_normal.blend_type = 'ADD'
+bias_normal = tree.nodes.new(type="CompositorNodeMixRGB")
+bias_normal.blend_type = 'ADD'
 # bias_normal.use_alpha = True
-#bias_normal.inputs[2].default_value = (0.5, 0.5, 0.5, 0)
+bias_normal.inputs[2].default_value = (0.5, 0.5, 0.5, 0)
 #links.new(scale_normal.outputs[0], bias_normal.inputs[1])
 
-#normal_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
-#normal_file_output.label = 'Normal Output'
+normal_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
+normal_file_output.label = 'Normal Output'
 #links.new(bias_normal.outputs[0], normal_file_output.inputs[0])
 
-#albedo_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
-#albedo_file_output.label = 'Albedo Output'
+albedo_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
+albedo_file_output.label = 'Albedo Output'
 #links.new(render_layers.outputs['Color'], albedo_file_output.inputs[0])
 
 # Delete default cube
 bpy.data.objects['Cube'].select = True
 bpy.ops.object.delete()
 
-if args.obj.endswith('.obj'):
-    bpy.ops.import_scene.obj(filepath=args.obj);
-elif args.obj.endswith('.ply'):
-    bpy.ops.import_mesh.ply(filepath=args.obj);
-#==========================================
-print(bpy.data.objects.keys());
-if args.obj.endswith('.ply'):
-    name = os.path.basename(args.obj).split('.ply')[0];
-elif args.obj.endswith('.obj'):
-    name = os.path.basename(args.obj).split('.obj')[0];
-try:
-    obj = bpy.data.objects[name];
-    if bpy.context.object.data.vertex_colors.active is not None:
-        mat = bpy.data.materials.new('material_1');
-        obj.active_material = mat
-        mat.use_vertex_color_paint = True;
-except:
-    pass;
-#===========================================
+bpy.ops.import_scene.obj(filepath=args.obj)
 for object in bpy.context.scene.objects:
     if object.name in ['Camera', 'Lamp']:
         continue
@@ -175,15 +158,16 @@ from math import radians
 stepsize = 360.0 / args.views
 rotation_mode = 'XYZ'
 
-#for output_node in [depth_file_output, normal_file_output, albedo_file_output]:
-    #output_node.base_path = ''
+for output_node in [depth_file_output, normal_file_output, albedo_file_output]:
+    output_node.base_path = ''
+    
 import numpy as np;
 angle = int(np.random.uniform(0.0,90.0));
 print(angle);
 b_empty.rotation_euler[2] = radians(float(angle));
 
 for i in range(0, args.views):
-    print("Rotation {}, {}".format((stepsize * i), radians(stepsize * i)))
+    #print("Rotation {}, {}".format((stepsize * i), radians(stepsize * i)))
 
     scene.render.filepath = fp + "_%d.png"%int(angle);
     #depth_file_output.file_slots[0].path = scene.render.filepath + "_depth.png"
@@ -192,5 +176,4 @@ for i in range(0, args.views):
 
     bpy.ops.render.render(write_still=True)  # render still
 
-    b_empty.rotation_euler[2] += radians(stepsize)
-#running this script inside blender
+    #b_empty.rotation_euler[2] += radians(stepsize)

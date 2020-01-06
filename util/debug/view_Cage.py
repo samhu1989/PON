@@ -9,12 +9,16 @@ from matplotlib import animation
 from mpl_toolkits.mplot3d import axes3d as p3;
 from functools import partial;
 from torch.utils.data import DataLoader;
-from ..data.gen_toybox import box_face;
+from ..data.gen_toybox import box_face as bf;
 from net.g.box import Box;
 from util.dataset.ToyV import recon,mv,proj;
 from util.tools import partial_restore;
 from ..data.obb import OBB;
 import os;
+import h5py;
+from PIL import Image;
+from util.data.ply import read_ply,write_ply;
+import pandas as pd;
 
 def data2cuda(data):
     for i in range(len(data)):
@@ -22,39 +26,98 @@ def data2cuda(data):
             data[i] = data[i].cuda();
             data[i].requires_grad_(True);
                 
-def parse(x):
-    deal(x);
-    #=================
-    obba = OBB();
-    ca = x[:3];
-    ea = x[3:6];
-    ra = x[6:12];
-    ra3 = np.cross(x[6:9],x[9:12]); 
-    r = np.zeros((3,3),dtype=np.float32);
-    r[0,:] = x[6:9];
-    r[1,:] = x[9:12];
-    r[2,:] = ra3;
-    obba.rotation = r;
-    centroid = np.dot(ca,np.linalg.inv(r));
-    obba.min = centroid - ea;
-    obba.max = centroid + ea;
-    ptsa = np.stack(obba.points,axis=0).astype(np.float32);
-    #=================
-    obbb = OBB();
-    cb = x[12:15];
-    eb = x[15:18];
-    rb = x[18:24];
-    rb3 = np.cross(x[18:21],x[21:24]); 
-    r = np.zeros((3,3),dtype=np.float32);
-    r[0,:] = x[18:21];
-    r[1,:] = x[21:24];
-    r[2,:] = rb3;
-    obbb.rotation = r;
-    centroid = np.dot(cb,np.linalg.inv(r));
-    obbb.min = centroid - eb;
-    obbb.max = centroid + eb;
-    ptsb = np.stack(obbb.points,axis=0).astype(np.float32);
-    return ptsa,ptsb;
+def parse(vec):
+    coord = np.array([[1,1,-1],[-1,1,-1],[-1,1,1],[1,1,1],[1,-1,-1],[-1,-1,-1],[-1,-1,1],[1,-1,1]],dtype=np.float32);
+    ss = vec[:3];
+    coords = ss[np.newaxis,:]*coord;
+    sr1 = vec[3:6];
+    sr2 = vec[6:9]
+    srot = rot(sr1,sr2);
+    vs = np.dot(coords,srot.reshape(3,3))
+    ts = vec[9:12];
+    coordt = ts[np.newaxis,:]*coord;
+    center = vec[12:15];
+    tr1 = vec[15:18];
+    tr2 = vec[18:21]
+    trot = rot(tr1,tr2);
+    vt = np.dot(coordt,trot.reshape(3,3)) + center[np.newaxis,:];
+    return  vs,vt;
+    
+def write_box(box,path):
+    obbp = [];
+    obbf = [];
+    for i in range(box.shape[0]):
+        vec = box[i,...];
+        obbp.append( OBB.v2points(vec) );
+        obbf.append(bf + i*8);
+    obbv = np.concatenate(obbp,axis=0);
+    fidx = np.concatenate(obbf,axis=0);
+    T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
+    face = np.zeros(shape=[12*len(obbf)],dtype=T);
+    for i in range(fidx.shape[0]):
+        face[i] = (3,fidx[i,0],fidx[i,1],fidx[i,2]);
+    write_ply(path,points=pd.DataFrame(obbv.astype(np.float32)),faces=pd.DataFrame(face));  
+    
+def getr3(r1,r2):
+    rr1 = r1 / np.sqrt(np.sum(r1**2));
+    rr2 = r2 - np.sum(r2*rr1)*rr1;
+    rr2 = rr2 / np.sqrt(np.sum(rr2**2));
+    r3 = np.cross(rr1,rr2);
+    r3 = r3 / np.sqrt(np.sum(r3**2));
+    return r3;
+
+def add_box(i,touch,vec,box,lst,ilst):
+    si = touch[i,0];
+    ss = box[si,:3];
+    sc = box[si,3:6]; 
+    sr1 = box[si,6:9];
+    sr2 = box[si,9:12];
+    sr3 = getr3(sr1,sr2);
+    sv = np.stack([ss,sc,sr1,sr2,sr3],axis=0).flatten();
+    if not si in ilst:
+        ilst.append(si);
+        lst.append(sv);
+    #
+    ti = touch[i,1];
+    ts = box[ti,0:3];
+    tc = box[ti,3:6];
+    if np.random.uniform(0.0,1.0) > 0.8:
+        tr1 = box[ti,6:9];
+        tr2 = box[ti,9:12];
+    elif np.random.uniform(0.0,1.0) > 0.3:
+        tr1 = vec[15:18];
+        tr2 = box[ti,9:12];
+    else:
+        tr1 = vec[15:18];
+        tr2 = vec[18:21];
+    tr3 = getr3(tr1,tr2);
+    #
+    tv = np.stack([ts,tc,tr1,tr2,tr3],axis=0).flatten();
+    if not ti in ilst:
+        ilst.append(ti);
+        lst.append(tv);
+    
+    
+def infer_box(net,img,msk,touch,box):
+    num = touch.shape[0];
+    imgd = np.stack([img for x in range(num)],axis=0);
+    imgd = torch.from_numpy(imgd);
+    msksd = torch.from_numpy(msk[touch[:,0],:,:]);
+    mskst = torch.from_numpy(msk[touch[:,1],:,:]);
+    data = [imgd,msksd,mskst,None,None,None,None,None];
+    data2cuda(data);
+    net.eval();
+    with torch.no_grad():
+        out = net(data);
+    y = out['y'].data.cpu().numpy();
+    veco = out['vec'].data.cpu().numpy();
+    obox = [];
+    ibox = [];
+    sorti = [i[0] for i in sorted(enumerate(y.tolist()), key=lambda x:x[1],reverse = True)]
+    for i in sorti:
+        add_box(i,touch,veco[i,...],box,obox,ibox);
+    obox = np.stack(obox,axis=0);    
+    return obox;
 
 
 def run(**kwargs):
@@ -82,7 +145,7 @@ def run(**kwargs):
     #get dataset
     try:
         m = importlib.import_module('util.dataset.'+opt['dataset']);
-        train_data = m.Data(opt,True);
+        train_data = m.Data(opt,opt['user_key']);
         train_load = DataLoader(train_data,batch_size=opt['batch_size'],shuffle=False,num_workers=opt['workers']);
     except Exception as e:
         print(e);
@@ -92,81 +155,38 @@ def run(**kwargs):
     if opt['model']!='':
         partial_restore(net,opt['model']);
         print("Previous weights loaded");
-        
-    bi = int(opt['user_key']);    
+           
     if opt['model']!='':
-        outdir = os.path.dirname(opt['model'])+os.sep+'view_%d'%bi;
+        outdir = os.path.dirname(opt['model'])+os.sep+'view';
         if not os.path.exists(outdir):
             os.mkdir(outdir); 
     #
-    input_size = opt['input_size'];
-    idx = opt['part_idx'];
-    tri = box_face;
-    
-    for i, data in enumerate(train_load,0):
-        print(i,'/',len(train_data)//opt['batch_size']);
-        data2cuda(data);
-        net.eval();
-        xx = data[0][bi,idx].contiguous().view(1,-1);
-        ox = data[0][bi,:].contiguous().view(1,-1);
-        cat = data[1][bi];
-        print(cat);
-        #==================================
-        ptsa, ptsb = parse(ox.data.cpu().numpy()[0,:]);
-        #==================================
-        fig = plt.figure(figsize=(9.6,4.8));
-        ax = fig.add_subplot(1,2,1,projection='3d');
-        ax.view_init(elev=20, azim=90)
-        ax.set_aspect('equal', adjustable='box');
-        ax.set_xlim([-1,1]);
-        ax.set_ylim([-1,1]);
-        ax.set_zlim([-1,1]);
-        #
-        ax.plot_trisurf(ptsa[...,0],ptsa[...,2],tri,ptsa[...,1],color=(0,0,1,0.1));
-        ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
-        
-        ax = fig.add_subplot(1,2,2,projection='3d');
-        ax.set_aspect('equal', adjustable='box');
-        ax.set_xlim([-1,1]);
-        ax.set_ylim([-1,1]);
-        ax.set_zlim([-1,1]);
-        #
-        ax.plot_trisurf(ptsa[...,0],ptsa[...,2],tri,ptsa[...,1],color=(0,0,1,0.1));
-        ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
-        plt.savefig(os.path.join(outdir,'_%d_%s_input.png'%(i,cat)));
-        plt.close(fig);
-        outdiri = os.path.join(outdir,'_%d_%s_output'%(i,cat))
-        if not os.path.exists(outdiri):
-            os.mkdir(outdiri);
-        for ri in range(256):
-            fig = plt.figure(figsize=(9.6,4.8));
-            z = -1*np.ones([1,opt['z_size']],dtype=np.float32);
-            code = bin(ri);
-            for ci in range(len(code)-1,1,-1):
-                z[0,ci-2] = 1.0 if code[ci]=='1' else -1.0 ;
-            z = torch.from_numpy(z).cuda();
-            with torch.no_grad(): 
-                r = net.decode(xx,z);
-            x = r.data.cpu().numpy()[0,:];
-            ptsa, ptsb = parse(x);
-            #==================
-            ax = fig.add_subplot(1,2,1,projection='3d');
-            ax.view_init(elev=20, azim=90)
-            ax.set_aspect('equal', adjustable='box');
-            ax.set_xlim([-1,1]);
-            ax.set_ylim([-1,1]);
-            ax.set_zlim([-1,1]);
-            #
-            ax.plot_trisurf(ptsa[...,0],ptsa[...,2],tri,ptsa[...,1],color=(0,0,1,0.1));
-            ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
-            #
-            ax = fig.add_subplot(1,2,2,projection='3d');
-            ax.set_aspect('equal', adjustable='box');
-            ax.set_xlim([-1,1]);
-            ax.set_ylim([-1,1]);
-            ax.set_zlim([-1,1]);
-            #
-            ax.plot_trisurf(ptsa[...,0],ptsa[...,2],tri,ptsa[...,1],color=(0,0,1,0.1));
-            ax.plot_trisurf(ptsb[...,0],ptsb[...,2],tri,ptsb[...,1],color=(0,1,0,0.1));
-            plt.savefig(os.path.join(outdiri,'_%d_%s.png'%(ri,code)));
-            plt.close(fig);
+    root = os.path.join(opt['data_path'],'test');
+    cat_lst = os.listdir(root);
+    for c in cat_lst:
+        path = os.path.join(root,c);
+        cout = os.path.join(outdir,'_'+c);
+        if not os.path.exists(cout):
+            os.mkdir(cout);
+        if os.path.isdir(path):
+            f_lst = os.listdir(path);
+            cnt = 0;
+            for i,f in enumerate(f_lst):
+                if f.endswith('.h5'):
+                    fopath = os.path.join(cout,'_%04d'%cnt);
+                    h5f = h5py.File(os.path.join(path,f),'r');
+                    if not os.path.exists(fopath):
+                        os.mkdir(fopath);
+                    img = np.array(h5f['img']);
+                    Image.fromarray((img*255.0).astype(np.uint8),mode='RGB').save(os.path.join(fopath,'_input.png'));
+                    msk = np.array(h5f['msk']);
+                    touch = np.array(h5f['touch']);
+                    box = np.array(h5f['box']);
+                    write_box(box,os.path.join(fopath,'_gt.ply'));
+                    obox = infer_box(net,img,msk,touch,box);
+                    write_box(obox,os.path.join(fopath,'_out.ply'));
+                    h5f.close();
+                    cnt += 1;
+                if cnt > 10:
+                    break;
+            
