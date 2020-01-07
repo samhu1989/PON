@@ -41,7 +41,7 @@ def accuracy(data,out):
 def parameters(net):
     return net.parameters(); # train all parameters
     
-bestcnt = 1;
+bestcnt = 3;
 best = np.array([0.0]*bestcnt,dtype=np.float32);
 bestn = [""]*bestcnt;
 
