@@ -44,7 +44,8 @@ class Data(data.Dataset):
             print('loading:',c);
             if os.path.isdir(path):
                 f_lst = os.listdir(path);
-                for f in f_lst:
+                for fidx,f in enumerate(f_lst):
+                    print(fidx);
                     if f.endswith('.h5'):
                         h5f = h5py.File(os.path.join(path,f),'r');
                         self.img.append(np.array(h5f['img']));
