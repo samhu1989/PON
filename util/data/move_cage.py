@@ -23,10 +23,13 @@ def run(**kwargs):
         for f in fs:
             if f.endswith('.h5'):
                 boxpath = os.path.join(cpath,f.rstrip('.h5'),'box.ply');
-                if os.path.exists(boxpath):
+                ptspath = os.path.join(cpath,f.rstrip('.h5'),'pn_color.ply');
+                if os.path.exists(boxpath) and os.path.exists(ptspath):
                     src = os.path.join(cpath,f);
                     dst = os.path.join(copath,f);
-                    outbox = os.path.join(copath,f.rstrip('.h5')+'.ply');
+                    outbox = os.path.join(copath,f.rstrip('.h5')+'_box.ply');
+                    outpts = os.path.join(copath,f.rstrip('.h5')+'_pts.ply');
                     shutil.move(src,dst);
                     shutil.copy(boxpath,outbox);
+                    shutil.copy(ptspath,outpts);
                 
