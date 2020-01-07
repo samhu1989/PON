@@ -2,7 +2,7 @@ from numpy import ndarray, array, asarray, dot, cross, cov, array, finfo, min as
 from numpy.linalg import eigh, norm
 import numpy as np;
 try:
-import trimesh;
+    import trimesh;
 except:
     pass;
 
