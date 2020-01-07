@@ -45,8 +45,8 @@ class Data(data.Dataset):
             if os.path.isdir(path):
                 f_lst = os.listdir(path);
                 for fidx,f in enumerate(f_lst):
-                    print(fidx);
                     if f.endswith('.h5'):
+                        print(fidx);
                         h5f = h5py.File(os.path.join(path,f),'r');
                         self.img.append(np.array(h5f['img']));
                         self.msk.append(np.array(h5f['msk']));
@@ -61,7 +61,6 @@ class Data(data.Dataset):
                             for j in range(i+1,num):
                                 self.imap.append(i);
                                 self.jmap.append(j);
-                                
                         if len(self.end) == 0:
                             self.end.append(pairnum);
                         else:
