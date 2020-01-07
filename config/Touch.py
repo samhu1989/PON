@@ -89,7 +89,7 @@ def writelog(**kwargs):
             best[-1] = meter['acc'].overall_meter.avg;
             bestn[-1] = fn;
             torch.save(net.state_dict(),opt['log_tmp']+os.sep+fn);
-            idx = np.argsort(best);
+            idx = np.argsort(-best);
             best = best[idx];
             bestn = [bestn[x] for x in idx.tolist()];
             bestdict = dict(zip(bestn, best.tolist()));
