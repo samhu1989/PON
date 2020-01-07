@@ -44,7 +44,7 @@ def parameters(net):
     return net.parameters(); # train all parameters
     
 bestcnt = 2;
-best = np.array([0.0]*bestcnt,dtype=np.float32);
+best = np.array([10000]*bestcnt,dtype=np.float32);
 bestn = [""]*bestcnt;
 
 def writelog(**kwargs):
@@ -83,12 +83,12 @@ def writelog(**kwargs):
     write_tfb(tfb_dir,meter,ib+nb*iepoch,nb,optim);
     
     if not kwargs['istraining'] and ib >= nb-1:
-        if meter['acc'].overall_meter.avg > best[-1]:
+        if meter['overall'].overall_meter.avg < best[-1]:
             fn = bestn[-1];
             if fn:
                 os.remove(opt['log_tmp']+os.sep+fn);
             fn = 'net_'+str(datetime.now()).replace(' ','-').replace(':','-')+'.pth';
-            best[-1] = meter['acc'].overall_meter.avg;
+            best[-1] = meter['overall'].overall_meter.avg;
             bestn[-1] = fn;
             torch.save(net.state_dict(),opt['log_tmp']+os.sep+fn);
             idx = np.argsort(best);
