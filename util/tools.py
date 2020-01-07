@@ -193,7 +193,7 @@ f = np.array([
     
 def write_pts2sphere(path,points):
     n = points.shape[0];
-    m = pts.shape[0]
+    m = pts.shape[0];
     fidx = repeat_face(f,n,m);
     T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
     face = np.zeros(shape=[fidx.shape[0]],dtype=T);

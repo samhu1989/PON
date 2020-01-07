@@ -33,7 +33,7 @@ class Net(nn.Module):
     def __init__(self,**kwargs):
         super(Net,self).__init__();
         self.mode = kwargs['mode'];
-        self.cnet = CNet();
+        self.tnet = TouchNet();
         
     def forward(self,input):
         img = input[0];
@@ -44,7 +44,7 @@ class Net(nn.Module):
         mt = input[2].unsqueeze(1);
         #
         x1,x2 = self.add_msk(x,ms,mt);
-        y = self.cnet(x1,x2);
+        y = self.tnet(x1,x2);
         #
         out = {'y':y};
         return out;
