@@ -40,7 +40,8 @@ class Data(data.Dataset):
         if 'category' in opt.keys():
             cats = opt['category'];
         for c in cat_lst:
-            path = os.path.join(self.root,c)
+            path = os.path.join(self.root,c);
+            print('loading:',c);
             if os.path.isdir(path):
                 f_lst = os.listdir(path);
                 for f in f_lst:
