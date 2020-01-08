@@ -20,69 +20,23 @@ print_epoch = 1;
 def loss(data,out):
     vgt = data[4];
     #
-    ss_gt = vgt[:,0:3];
-    sr1_gt = vgt[:,3:6];
-    sr2_gt = vgt[:,6:9];
-    sb_gt = sr2box(ss_gt,sr1_gt,sr2_gt); 
+    t_gt = vgt[:,12:15];
     #
-    ts_gt = vgt[:,9:12];
-    tr1_gt = vgt[:,15:18];
-    tr2_gt = vgt[:,18:21];
-    tb_gt = sr2box(ts_gt,tr1_gt,tr2_gt);
-    #
-    ss = out['ss'];
-    sr1 = out['sr1'];
-    sr2 = out['sr2'];
-    sb = out['sb'];
-    #
-    ts = out['ts'];
-    tr1 = out['tr1'];
-    tr2 = out['tr2'];
-    tb = out['tb'];
-    #
+    t = out['t'];
     loss = {};
-    loss['size'] = 0.5*torch.sum( ( ss - ss_gt.data )**2 + ( ts - ts_gt.data )**2, dim = 1 );
-    erot = ( sr1 - sr1_gt.data )**2;
-    erot += ( sr2 - sr2_gt.data )**2;
-    erot += ( tr1 - tr1_gt.data )**2;
-    erot += ( tr2 - tr2_gt.data )**2;
-    loss['rot6'] = 0.5*torch.sum( erot, dim=1 );
-    loss['box'] = torch.mean( 0.5*torch.sum( ( sb - sb_gt.data )**2 + ( tb - tb_gt.data )**2, dim = 2 ),dim = 1);
-    loss['overall'] = torch.mean( loss['box'] );
+    loss['t'] = torch.sum( (t - t_gt.data)**2, dim = 1);
+    loss['overall'] = torch.mean( loss['t'] );
     return loss;
     
 def accuracy(data,out):
     vgt = data[4];
     #
-    ss_gt = vgt[:,0:3];
-    sr1_gt = vgt[:,3:6];
-    sr2_gt = vgt[:,6:9];
-    sb_gt = sr2box(ss_gt,sr1_gt,sr2_gt); 
+    t_gt = vgt[:,12:15];
     #
-    ts_gt = vgt[:,9:12];
-    tr1_gt = vgt[:,15:18];
-    tr2_gt = vgt[:,18:21];
-    tb_gt = sr2box(ts_gt,tr1_gt,tr2_gt);
-    #
-    ss = out['ss'];
-    sr1 = out['sr1'];
-    sr2 = out['sr2'];
-    sb = out['sb'];
-    #
-    ts = out['ts'];
-    tr1 = out['tr1'];
-    tr2 = out['tr2'];
-    tb = out['tb'];
-    #
+    t = out['t'];
     loss = {};
-    loss['size'] = 0.5*torch.sum( ( ss - ss_gt.data )**2 + ( ts - ts_gt.data )**2, dim = 1 );
-    erot = ( sr1 - sr1_gt.data )**2;
-    erot += ( sr2 - sr2_gt.data )**2;
-    erot += ( tr1 - tr1_gt.data )**2;
-    erot += ( tr2 - tr2_gt.data )**2;
-    loss['rot6'] = 0.5*torch.sum( erot, dim=1 );
-    loss['box'] = torch.mean( 0.5*torch.sum( ( sb - sb_gt.data )**2 + ( tb - tb_gt.data )**2, dim = 2 ), dim = 1 );
-    loss['overall'] = loss['box'];
+    loss['t'] = torch.sum( (t - t_gt.data)**2, dim = 1);
+    loss['overall'] = loss['t'];
     return loss;
     
 def parameters(net):
@@ -128,12 +82,12 @@ def writelog(**kwargs):
     write_tfb(tfb_dir,meter,ib+nb*iepoch,nb,optim);
     
     if not kwargs['istraining'] and ib >= nb-1:
-        if meter['box'].overall_meter.avg < best[-1]:
+        if meter['overall'].overall_meter.avg < best[-1]:
             fn = bestn[-1];
             if fn:
                 os.remove(opt['log_tmp']+os.sep+fn);
             fn = 'net_'+str(datetime.now()).replace(' ','-').replace(':','-')+'.pth';
-            best[-1] = meter['box'].overall_meter.avg;
+            best[-1] = meter['overall'].overall_meter.avg;
             bestn[-1] = fn;
             torch.save(net.state_dict(),opt['log_tmp']+os.sep+fn);
             idx = np.argsort(best);

@@ -3,6 +3,7 @@ import torch.nn as nn;
 import torch.nn.functional as F;
 import net.resnet as resnet;
 import numpy as np;
+from .cageutil import add_msk_dual as add_msk
         
 class TouchNet(nn.Module):
     def __init__(self,**kwargs):
@@ -43,23 +44,11 @@ class Net(nn.Module):
         ms = input[1].unsqueeze(1);
         mt = input[2].unsqueeze(1);
         #
-        x1,x2 = self.add_msk(x,ms,mt);
+        x1,x2 = add_msk(self,x,ms,mt);
         y = self.tnet(x1,x2);
         #
         out = {'y':y};
         return out;
-        
-    def add_msk(self,x,ms,mt):
-        if self.mode == 'full':
-            x1 = torch.cat([x,ms],axis=1);
-            x2 = torch.cat([x,mt],axis=1);
-        elif self.mode == 'part':
-            part = x*(ms+mt);
-            x1 = torch.cat([part,ms],axis=1);
-            x2 = torch.cat([part,mt],axis=1);
-        else:
-            assert False, "Unkown mode";
-        return x1,x2;
             
         
         

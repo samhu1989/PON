@@ -10,6 +10,9 @@ import torch.nn.functional as F;
 import net.resnet as resnet;
 import numpy as np;
 #
+from .cageutil import sr2box;
+from .cageutil import add_msk_dual as add_msk;
+
 class BoxNet(nn.Module):
     def __init__(self,**kwargs):
         super(BoxNet,self).__init__();
@@ -55,43 +58,14 @@ class Net(nn.Module):
         ms = input[1].unsqueeze(1);
         mt = input[2].unsqueeze(1);
         #
-        x1,x2 = self.add_msk(x,ms,mt);
+        x1,x2 = add_msk(self,x,ms,mt);
         #
         ss,sr1,sr2 = self.bnet(x1);
-        sb = self.sr2box(ss,sr1,sr2);
+        sb = sr2box(ss,sr1,sr2);
         #
         ts,tr1,tr2 = self.bnet(x2);
-        tb = self.sr2box(ts,tr1,tr2);
+        tb = sr2box(ts,tr1,tr2);
         #
         out = {'sb':sb,'tb':tb,'ss':ss,'sr1':sr1,'sr2':sr2,'ts':ts,'tr1':tr1,'tr2':tr2};
         return out;
         
-    def rot(self,x_raw,y_raw):
-        x = F.normalize(x_raw,dim=1,p=2);
-        z = torch.cross(x,y_raw);
-        z = F.normalize(z,dim=1,p=2);
-        y = torch.cross(z,x);
-        rot = torch.stack([x,y,z],dim=1);
-        rot = rot.view(-1,3,3);
-        return rot;
-        
-    def add_msk(self,x,ms,mt):
-        if self.mode == 'full':
-            x1 = torch.cat([x,ms],axis=1);
-            x2 = torch.cat([x,mt],axis=1);
-        elif self.mode == 'part':
-            x1 = torch.cat([x*ms,ms],axis=1);
-            x2 = torch.cat([x*mt,mt],axis=1);
-        else:
-            assert False, "Unkown mode";
-        return x1,x2;
-        
-    def sr2box(self,size,r1,r2):
-        const = np.array([[[1,1,-1],[-1,1,-1],[-1,1,1],[1,1,1],[1,-1,-1],[-1,-1,-1],[-1,-1,1],[1,-1,1]]],dtype=np.float32);
-        const = torch.from_numpy(const);
-        const = const.cuda();
-        const.requires_grad = True;
-        rot = self.rot(r1,r2);
-        box = const*( size.unsqueeze(1).contiguous() );
-        box = torch.matmul(box,rot);
-        return box;
