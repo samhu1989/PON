@@ -8,6 +8,7 @@ import json;
 import numpy as np;
 from .config import NpEncoder;
 import torch.nn as nn;
+import torch.nn.functional as F;
 
 workers = 4;
 lr = 1e-3;
@@ -16,22 +17,22 @@ nepoch = 1000;
 print_epoch = 1;
 
 def rot(x_raw,y_raw):
-        x = F.normalize(x_raw,dim=1,p=2);
-        z = torch.cross(x,y_raw);
-        z = F.normalize(z,dim=1,p=2);
-        y = torch.cross(z,x);
-        rot = torch.stack([x,y,z],dim=1);
-        rot = rot.view(-1,3,3);
+    x = F.normalize(x_raw,dim=1,p=2);
+    z = torch.cross(x,y_raw);
+    z = F.normalize(z,dim=1,p=2);
+    y = torch.cross(z,x);
+    rot = torch.stack([x,y,z],dim=1);
+    rot = rot.view(-1,3,3);
     return rot;
 
 def sr2box(size,r1,r2):
     const = np.array([[[1,1,-1],[-1,1,-1],[-1,1,1],[1,1,1],[1,-1,-1],[-1,-1,-1],[-1,-1,1],[1,-1,1]]],dtype=np.float32);
     const = torch.from_numpy(const);
     const = const.type(size.type());
-    const = const.requires_grad = True;
-    rot = self.rot(r1,r2);
+    const.requires_grad = True;
+    rot9 = rot(r1,r2);
     box = const*( size.unsqueeze(1).contiguous() );
-    box = torch.matmul(box,rot);
+    box = torch.matmul(box,rot9);
     return box;
 
 def loss(data,out):
@@ -45,7 +46,7 @@ def loss(data,out):
     ts_gt = vgt[:,9:12];
     tr1_gt = vgt[:,15:18];
     tr2_gt = vgt[:,18:21];
-    tb_gt = sr2box(ts_gt,st1_gt,tr2_gt);
+    tb_gt = sr2box(ts_gt,tr1_gt,tr2_gt);
     #
     ss = out['ss'];
     sr1 = out['sr1'];
@@ -64,7 +65,7 @@ def loss(data,out):
     rot += ( tr1 - tr1_gt.data )**2;
     rot += ( tr2 - tr2_gt.data )**2;
     loss['rot6'] = 0.5*torch.sum( rot, dim=1 );
-    loss['box'] = 0.5*torch.sum( ( sb - sb_gt.data )**2 + ( tb - tb_gt.data )**2, dim = 1 );
+    loss['box'] = torch.mean( 0.5*torch.sum( ( sb - sb_gt.data )**2 + ( tb - tb_gt.data )**2, dim = 2 ),dim = 1);
     loss['overall'] = torch.mean( loss['box'] );
     return loss;
     
@@ -98,7 +99,7 @@ def accuracy(data,out):
     erot += ( tr1 - tr1_gt.data )**2;
     erot += ( tr2 - tr2_gt.data )**2;
     loss['rot6'] = 0.5*torch.sum( erot, dim=1 );
-    loss['box'] = 0.5*torch.sum( ( sb - sb_gt.data )**2 + ( tb - tb_gt.data )**2, dim = 1 );
+    loss['box'] = torch.mean( 0.5*torch.sum( ( sb - sb_gt.data )**2 + ( tb - tb_gt.data )**2, dim = 2 ), dim = 1 );
     loss['overall'] = loss['box'];
     return loss;
     
