@@ -21,8 +21,21 @@ class TouchPtNet(nn.Module):
             nn.Conv2d(1024, 512, kernel_size=1, bias=False),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=True),
-            nn.AvgPool2d(7),
-            nn.Conv2d(512, 16, kernel_size=1, bias=True)
+            nn.AvgPool2d(7)
+        );
+        self.w1 = nn.Sequential(
+            nn.Conv1d(512+3, 256, kernel_size=1, bias=False),
+            nn.BatchNorm1d(256),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(256, 1, kernel_size=1, bias=True),
+            nn.Softmax(dim=2)
+        );
+        self.w2 = nn.Sequential(
+            nn.Conv1d(512+3, 256, kernel_size=1, bias=False),
+            nn.BatchNorm1d(256),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(256, 1, kernel_size=1, bias=True),
+            nn.Softmax(dim=2)
         );
                 
     def forward(self,x1,b1,x2,b2):
@@ -31,11 +44,16 @@ class TouchPtNet(nn.Module):
         x2 = self.enc(x2);
         x = torch.cat([x1,x2],axis=1);
         x = self.dec(x);
-        x = x.view(x.size(0),8,2);
+        x = x.view(x.size(0),512,1);
+        x = x.repeat(1,1,8);
         #
-        w = F.softmax(x,dim=1);
-        w1 = x[:,:,0].unsqueeze(2).contiguous();
-        w2 = x[:,:,1].unsqueeze(2).contiguous();
+        f1 = torch.cat([x,b1.permute(0,2,1).contiguous()],dim=1);
+        w1 = self.w1(f1);
+        w1 = w1.permute(0,2,1).contiguous();
+        #
+        f2 = torch.cat([x,b2.permute(0,2,1).contiguous()],dim=1);
+        w2 = self.w2(f2);
+        w2 = w2.permute(0,2,1).contiguous();
         #
         coords = torch.sum(w1*b1,dim=1);
         coordt = torch.sum(w2*b2,dim=1);
@@ -71,5 +89,6 @@ class Net(nn.Module):
         tb_gt = sr2box(ts_gt,tr1_gt,tr2_gt);
         #
         t = self.tpnet(x1,sb_gt,x2,tb_gt);
-        out = {'t':t};
+        tb = tb_gt + t.unsqueeze(1).contiguous();
+        out = {'t':t,'sb':sb_gt,'tb':tb};
         return out;
