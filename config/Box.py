@@ -17,6 +17,16 @@ weight_decay = 0.0;
 nepoch = 1000;
 print_epoch = 1;
 
+def chmf(b1,b2):
+    b1 = b1.unsqueeze(2).contiguous();
+    b2 = b2.unsqueeze(1).contiguous();
+    dist = torch.sum((b1 - b2)**2,dim=3);
+    d1,_ = torch.min(dist,dim=1);
+    d1 = torch.mean(d1,dim=1);
+    d2,_ = torch.min(dist,dim=2);
+    d2 = torch.mean(d2,dim=1);
+    return d1 + d2;
+
 def loss(data,out):
     vgt = data[4];
     #
@@ -47,7 +57,7 @@ def loss(data,out):
     erot += ( tr1 - tr1_gt.data )**2;
     erot += ( tr2 - tr2_gt.data )**2;
     loss['rot6'] = 0.5*torch.sum( erot, dim=1 );
-    loss['box'] = torch.mean( 0.5*torch.sum( ( sb - sb_gt.data )**2 + ( tb - tb_gt.data )**2, dim = 2 ),dim = 1);
+    loss['box'] = 0.5*( chmf(sb,sb_gt.data) + chmf(tb,tb_gt.data) );
     loss['overall'] = torch.mean( loss['box'] );
     return loss;
     
@@ -81,7 +91,7 @@ def accuracy(data,out):
     erot += ( tr1 - tr1_gt.data )**2;
     erot += ( tr2 - tr2_gt.data )**2;
     loss['rot6'] = 0.5*torch.sum( erot, dim=1 );
-    loss['box'] = torch.mean( 0.5*torch.sum( ( sb - sb_gt.data )**2 + ( tb - tb_gt.data )**2, dim = 2 ), dim = 1 );
+    loss['box'] = 0.5*( chmf(sb,sb_gt.data) + chmf(tb,tb_gt.data) );
     loss['overall'] = loss['box'];
     return loss;
     

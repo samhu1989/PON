@@ -16,26 +16,30 @@ from .cageutil import add_msk_dual as add_msk;
 class BoxNet(nn.Module):
     def __init__(self,**kwargs):
         super(BoxNet,self).__init__();
-        self.enc = resnet.resnet18(pretrained=False,input_channel=4,fc=False);
         self.dec_size = nn.Sequential(
+                resnet.resnet18(pretrained=False,input_channel=4,fc=False),
                 nn.Conv2d(512, 256, kernel_size=1, bias=False),
                 nn.BatchNorm2d(256),
                 nn.ReLU(inplace=True),
                 nn.AvgPool2d(7),
+                nn.Conv2d(256, 256, kernel_size=1, bias=True),
+                nn.ReLU(inplace=True),
                 nn.Conv2d(256, 3, kernel_size=1, bias=True),
                 nn.Sigmoid()
                 );
         self.dec_rot6 = nn.Sequential(
+                resnet.resnet18(pretrained=False,input_channel=4,fc=False),
                 nn.Conv2d(512, 256, kernel_size=1, bias=False),
                 nn.BatchNorm2d(256),
                 nn.ReLU(inplace=True),
                 nn.AvgPool2d(7),
+                nn.Conv2d(256, 256, kernel_size=1, bias=True),
+                nn.ReLU(inplace=True),
                 nn.Conv2d(256, 6, kernel_size=1, bias=True),
                 nn.Tanh()
                 );
                 
     def forward(self,x):
-        x = self.enc(x);
         size = self.dec_size(x);
         size = size.view(size.size(0),-1);
         rot6 = self.dec_rot6(x);
