@@ -5,6 +5,19 @@
 2. The network should:
    
     - do reconstruction in few shot setting 
+    
+    
+
+#### report 202020110：
+
+numeric evaluation:
+
+https://docs.google.com/spreadsheets/d/1-svV9ZOxXlCRleoh-eA4XTf2leSLhkS_aXUbJ4s-ySc/edit?usp=sharing
+
+visual result at: http://171.67.77.236:8082
+
+
+
 #### report 20200103：
 
 issue:
@@ -20,8 +33,6 @@ the table score is too low (more results needed to diagnose)
 box pair visualization.
 
 error in ground truth.
-
-
 
 
 
