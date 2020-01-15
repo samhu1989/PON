@@ -7,6 +7,20 @@
     - do reconstruction in few shot setting 
     
     
+    
+    report TF FN 
+    
+    data~res~_box_full~_Chair_0040_30
+    
+    print model id in the visualization
+    
+    occlusion ratio 
+    
+    sample multiple points to calc 
+    
+    visualization 
+
+
 
 #### report 202020110：
 
