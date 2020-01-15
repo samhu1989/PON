@@ -60,9 +60,11 @@ def run(**kwargs):
                         smsk = np.array(smsk).astype(np.float32) / 255.0;
                         smsk = smsk[:,:,2];
                         if np.sum(msk) > 9:
-                            pts = read_ply(os.path.join(partp,'p_%d_b.ply'%cnt));
+                            cpath = os.path.join(partp,'p_%d_b.ply'%cnt);
+                            pts = read_ply(cpath);
                             pv = np.array(pts['points']);
-                            pv = pv[:,:3];
+                            fvidx = np.unique(np.array(pts['mesh']).flatten());
+                            pv = pv[fvidx,:3];
                             pv = r1.apply(pv);
                             pv = r2.apply(pv);
                             ps.append(np.array(pv));
@@ -73,6 +75,7 @@ def run(**kwargs):
                             sm.save(os.path.join(partp,'self_msk',mskpb));
                             smsklst.append(smsk);
                         cnt += 1;
+                print(len(ps));
                 obblst = [];
                 obbp = [];
                 obbf = [];
@@ -84,9 +87,12 @@ def run(**kwargs):
                         obbr = obbb;
                     else:
                         obbr = obba;
+                    print('size:',obba.volume);
                     obblst.append( obbr );
                     obbf.append(bf + obbcnt*8);
                     obbcnt += 1;
+                #print('obbf:',len(obbf));
+                #print('obbcnt:',obbcnt);
                 msks = np.stack(msklst,axis=0);
                 h5fo.create_dataset("msk", data=msks,compression="gzip", compression_opts=9);
                 smsks = np.stack(smsklst,axis=0);
@@ -103,5 +109,5 @@ def run(**kwargs):
                 for i in range(fidx.shape[0]):
                     face[i] = (3,fidx[i,0],fidx[i,1],fidx[i,2]);
                 obox = os.path.join(op,sub,cat,id+'_box.ply');
-                write_ply(obox,points=pd.DataFrame(obbv.astype(np.float32)),faces=pd.DataFrame(face));  
+                write_ply(obox,points=pd.DataFrame(obbv.astype(np.float32)),faces=pd.DataFrame(face),as_text=True);  
                 #exit();
