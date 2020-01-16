@@ -75,7 +75,7 @@ def run(**kwargs):
                             sm.save(os.path.join(partp,'self_msk',mskpb));
                             smsklst.append(smsk);
                         cnt += 1;
-                print(len(ps));
+                #print(len(ps));
                 obblst = [];
                 obbp = [];
                 obbf = [];
@@ -87,7 +87,7 @@ def run(**kwargs):
                         obbr = obbb;
                     else:
                         obbr = obba;
-                    print('size:',obba.volume);
+                    #print('size:',obba.volume);
                     obblst.append( obbr );
                     obbf.append(bf + obbcnt*8);
                     obbcnt += 1;
@@ -109,5 +109,5 @@ def run(**kwargs):
                 for i in range(fidx.shape[0]):
                     face[i] = (3,fidx[i,0],fidx[i,1],fidx[i,2]);
                 obox = os.path.join(op,sub,cat,id+'_box.ply');
-                write_ply(obox,points=pd.DataFrame(obbv.astype(np.float32)),faces=pd.DataFrame(face),as_text=True);  
+                write_ply(obox,points=pd.DataFrame(obbv.astype(np.float32)),faces=pd.DataFrame(face));  
                 #exit();
