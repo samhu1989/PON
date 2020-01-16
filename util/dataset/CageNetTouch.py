@@ -23,6 +23,7 @@ class Data(data.Dataset):
             self.root = os.path.join(opt['data_path'],train);
         else:
             self.root = os.path.join(opt['data_path'],train);
+        self.rate = opt['user_rate'];
         cat_lst = os.listdir(self.root);
         self.train = train;
         self.index_map = [];
@@ -30,6 +31,7 @@ class Data(data.Dataset):
         self.jmap = [];
         self.img = [];
         self.msk = [];
+        self.smsk = [];
         self.touch = [];
         self.box = [];
         self.cat = [];
@@ -48,6 +50,7 @@ class Data(data.Dataset):
                         h5f = h5py.File(os.path.join(path,f),'r');
                         self.img.append(np.array(h5f['img']));
                         self.msk.append(np.array(h5f['msk']));
+                        self.smsk.append(np.array(h5f['smsk']));
                         self.touch.append(np.array(h5f['touch']));
                         self.box.append(np.array(h5f['box']));
                         self.cat.append(c);
@@ -71,9 +74,13 @@ class Data(data.Dataset):
         subi = touch[idx-endi,0];
         subj = touch[idx-endi,1];
         msks = msk[subi,...];
+        smsks = smsk[subi,...];
         boxs = box[subi,...];
         mskt = msk[subj,...];
+        smskt = smsk[subj,...];
         boxt = box[subj,...];
+        if (( np.sum(msks) / np.sum(smsks) ) < self.rate) or (( np.sum(mskt) / np.sum(smskt) ) < self.rate ):
+            return self.__getitem__(idx+1);
         y = 1.0 ;
         img = torch.from_numpy(img)
         msks = torch.from_numpy(msks)

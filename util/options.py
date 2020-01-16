@@ -23,6 +23,8 @@ def get_opt():
     parser.add_argument('--nepoch','-nepoch',type=int,help='epoch number');
     parser.add_argument('--lr_decay_freq','-lrd',type=int,default=1,help='decay lr every few epochs');
     parser.add_argument('--workers','-wrk',type=int,help='workers number');
+    #float flags
+    parser.add_argument('--user_rate','-rate',type=float,help='user rate');
     #int flags
     parser.add_argument('--lr','-lr',type=float,help='learning rate');
     return parser.parse_args();
