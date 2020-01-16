@@ -68,6 +68,7 @@ class Data(data.Dataset):
         index = self.index_map[idx];
         img = self.img[index];
         msk = self.msk[index];
+        smsk = self.smsk[index];
         touch = self.touch[index];
         box = self.box[index];
         endi = self.end[index];
