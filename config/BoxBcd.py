@@ -93,7 +93,7 @@ def accuracy(data,out):
     erot += ( tr2 - tr2_gt.data )**2;
     loss['rot6'] = 0.5*torch.sum( erot, dim=1 );
     loss['bcd'] = 0.5*( box_cd(ss,sr1,sr2,ss_gt,sr1_gt,sr2_gt) + box_cd(ts,tr1,tr2,ts_gt,tr1_gt,tr2_gt) );
-    loss['overall'] = loss['box'];
+    loss['overall'] = loss['bcd'];
     return loss;
     
 def parameters(net):
