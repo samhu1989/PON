@@ -79,7 +79,7 @@ def run(**kwargs):
         m = importlib.import_module('util.dataset.'+opt['dataset']);
         train_data = m.Data(opt,'train');
         val_data = m.Data(opt,opt['user_key']);
-        train_load = DataLoader(train_data,batch_size=opt['batch_size'],shuffle=True,num_workers=opt['workers']);
+        train_load = DataLoader(train_data,batch_size=opt['batch_size'],shuffle=False,num_workers=opt['workers']);
         val_load = DataLoader(val_data,batch_size=opt['batch_size'],shuffle=False,num_workers=opt['workers']);
     except Exception as e:
         print(e);
@@ -118,9 +118,12 @@ def run(**kwargs):
         with torch.no_grad():
             out = net(data);
         acc = config.accuracy(data,out);
-        print('iteri:',iteri);
-        for k,v in acc.items():
-            print(k,':',v);
+        if iteri % 100 == 0:
+            print('loss:',loss['box'].data.cpu().numpy());
+            print('iteri:',iteri);
+            print('acc:',acc['box'].data.cpu().numpy());
+        #for k,v in acc.items():
+            #print(k,':',v);
         id = data[-2];
         if not os.path.exists(debug_path):
             os.mkdir(debug_path);
@@ -128,7 +131,7 @@ def run(**kwargs):
         sb = out['sb'].data.cpu().numpy();
         #
         for tagi,tag in enumerate(id):
-            cpath = os.path.join(debug_path,tag);
+            cpath = os.path.join(debug_path,tag+'_%d'%tagi);
             if not os.path.exists(cpath):
                 os.mkdir(cpath);
             if iteri == 0:
@@ -141,8 +144,9 @@ def run(**kwargs):
                 ptsa,ptsb = parse(vgt[tagi,...]);
                 write_ply(os.path.join(cpath,'gta.ply'),points=pd.DataFrame(ptsa),faces=pd.DataFrame(face));
                 write_ply(os.path.join(cpath,'gtb.ply'),points=pd.DataFrame(ptsb),faces=pd.DataFrame(face));
-            write_ply(os.path.join(cpath,'a_%d.ply'%iteri),points=pd.DataFrame(sb[tagi,...]),faces=pd.DataFrame(face));
-            write_ply(os.path.join(cpath,'b_%d.ply'%iteri),points=pd.DataFrame(tb[tagi,...]),faces=pd.DataFrame(face));
+            if iteri % 100 == 0:
+                write_ply(os.path.join(cpath,'a_%d.ply'%iteri),points=pd.DataFrame(sb[tagi,...]),faces=pd.DataFrame(face));
+                write_ply(os.path.join(cpath,'b_%d.ply'%iteri),points=pd.DataFrame(tb[tagi,...]),faces=pd.DataFrame(face));
             
             
         
