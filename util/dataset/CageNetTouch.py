@@ -96,10 +96,12 @@ class Data(data.Dataset):
         vec[12:15] = boxt[3:6] - boxs[3:6];
         vec[15:21] = boxt[6:12];
         #
+        sgt = boxs[3:6];
         vec = torch.from_numpy(vec);
         boxs = torch.from_numpy(boxs.astype(np.float32));
         boxt = torch.from_numpy(boxt.astype(np.float32));
-        return img,msks,mskt,y,vec,boxs,boxt,self.id[index],self.cat[index];
+        sgt = torch.from_numpy(sgt.astype(np.float32));
+        return img,msks,mskt,y,vec,boxs,boxt,sgt,self.id[index],self.cat[index];
 
     def __len__(self):
         return len(self.index_map);

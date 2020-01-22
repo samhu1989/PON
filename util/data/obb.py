@@ -160,4 +160,8 @@ class OBB:
             points = array(points, dtype=float)
         assert points.shape[1] == 3, 'points have to have 3-elements'
         # no need to store the covariance matrix
-        return OBB.build_from_covariance_matrix(cov(points, y=None, rowvar=0, bias=1), points)
+        try:
+            obb = OBB.build_from_covariance_matrix(cov(points, y=None, rowvar=0, bias=1), points);
+        except:
+            return None;
+        return obb;

@@ -8,17 +8,9 @@
     
     
     
-    report TF FN 
     
-    data~res~_box_full~_Chair_0040_30
     
-    print model id in the visualization
     
-    occlusion ratio 
-    
-    sample multiple points to calc 
-    
-    visualization 
 
 
 
@@ -30,7 +22,19 @@ https://docs.google.com/spreadsheets/d/1-svV9ZOxXlCRleoh-eA4XTf2leSLhkS_aXUbJ4s-
 
 visual result at: http://171.67.77.236:8082
 
+notes:
 
+report TF FN 
+
+data re-generation for the masks
+
+print model id in the visualization
+
+occlusion ratio 
+
+sample multiple points to calc chamfer distance
+
+visualization with arbitrary
 
 #### report 20200103：
 

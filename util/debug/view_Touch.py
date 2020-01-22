@@ -143,6 +143,7 @@ def run(**kwargs):
             mkt.save(os.path.join(cpath,'_000_mskt.png'));
             #ptsa,ptsb = parse(vgt[tagi,...]);
             print('y:%f,ygt:%f'%(y[tagi,...],ygt[tagi,...]),file=open(os.path.join(cpath,'_000_log.txt'), 'w'));
+            print('id:%s'%(id[tagi]),file=open(os.path.join(cpath,'_000_meta.txt'), 'w'));
             #write_ply(os.path.join(cpath,'gta.ply'),points=pd.DataFrame(ptsa),faces=pd.DataFrame(face));
             #write_ply(os.path.join(cpath,'gtb.ply'),points=pd.DataFrame(ptsb),faces=pd.DataFrame(face));
         #write_ply(os.path.join(cpath,'a_%d.ply'%iteri),points=pd.DataFrame(sb[tagi,...]),faces=pd.DataFrame(face));

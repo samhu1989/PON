@@ -129,7 +129,7 @@ def run(**kwargs):
         sb = out['sb'].data.cpu().numpy();
         #y = out['y'].data.cpu().numpy();
         cat = data[-1];
-        err = acc['box'].data.cpu().numpy();
+        err = acc['t'].data.cpu().numpy();
     #
         for tagi,tag in enumerate(id):
             cpath = os.path.join(outdir,'_'+cat[tagi]+'_%04d'%i+'_%02d'%tagi);
@@ -149,14 +149,14 @@ def run(**kwargs):
             mkt.save(os.path.join(cpath,'_000_mskt.png'));
             ptsa,ptsb = parse(vgt[tagi,...]);
             center = vgt[tagi,12:15];
-            print('cd:%f'%(err[tagi,...]),file=open(os.path.join(cpath,'_000_log.txt'),'w'));
+            print('L2:%f'%(err[tagi,...]),file=open(os.path.join(cpath,'_000_log.txt'),'w'));
             print('id:%s'%(id[tagi]),file=open(os.path.join(cpath,'_000_meta.txt'), 'w'));
             st = sgt[tagi,:];
             st = st[np.newaxis,:];
             ptgt = np.concatenate([ptsa,ptsb],axis=0);
             ptgt += st;
             write_ply(os.path.join(cpath,'_000_gt.ply'),points=pd.DataFrame(ptgt),faces=pd.DataFrame(face));
-            ptout = np.concatenate([sb[tagi,...],tb[tagi,...]+center[np.newaxis,:]],axis=0);
+            ptout = np.concatenate([sb[tagi,...],tb[tagi,...]],axis=0);
             ptout += st;
             write_ply(os.path.join(cpath,'_000_out.ply'),points=pd.DataFrame(ptout),faces=pd.DataFrame(face));
         

@@ -7,6 +7,7 @@ from .ply import read_ply,write_ply
 from .obb import OBB;
 from .gen_toybox import box_face as bf;
 import pandas as pd;
+import scipy
 
 def run(**kwargs):
     dp = './data/cagenet';
@@ -22,13 +23,18 @@ def run(**kwargs):
                 if not os.path.exists(os.path.join(op,sub,cat)):
                     os.makedirs(os.path.join(op,sub,cat));
                 print(sub,cat,id);
+                plypath = os.path.join(sp,sub,cat,id,'pn_color.ply');
+                data = read_ply(plypath);
+                plypts = np.array(data['points']);
                 h5fs = h5py.File(os.path.join(sp,sub,cat,id,'pn.h5'),'r');
                 h5fd = h5py.File(os.path.join(dp,sub,cat,id+'.h5'),'r');
                 if os.path.exists(os.path.join(op,sub,cat,id+'.h5')):
                     continue;
                 h5fo = h5py.File(os.path.join(op,sub,cat,id+'.h5'),'w');
                 h5fo.create_dataset("img",data=h5fd['img'],compression="gzip", compression_opts=9);
-                h5fo.create_dataset("touch",data=h5fd['touch'],compression="gzip", compression_opts=9);
+                h5fo.create_dataset("msk",data=h5fd['msk'],compression="gzip", compression_opts=9);
+                h5fo.create_dataset("smsk",data=h5fd['smsk'],compression="gzip", compression_opts=9);
+                h5fo.create_dataset("box",data=h5fd['box'],compression="gzip", compression_opts=9);
                 #get angle
                 imgp = os.path.join(sp,sub,cat,id,'sp','models');
                 imgs = os.listdir(imgp);
@@ -49,7 +55,8 @@ def run(**kwargs):
                 r1 = R.from_euler('x',-90,degrees=True);
                 r2 = R.from_euler('y',-angle,degrees=True);
                 for i in range(start,end+1):
-                    num = np.sum(label == i);
+                    pv = plypts[label== i,:3].astype(np.float32);
+                    num = pv.shape[0];
                     if num > 0 :
                         mskp = 'p_%d_b_%d_msk0001.png'%(cnt,angle);
                         mskpb = 'p_%d_b_%d_mskb0001.png'%(cnt,angle);
@@ -60,22 +67,24 @@ def run(**kwargs):
                         smsk = np.array(smsk).astype(np.float32) / 255.0;
                         smsk = smsk[:,:,2];
                         if np.sum(msk) > 9:
-                            cpath = os.path.join(partp,'p_%d_b.ply'%cnt);
-                            pts = read_ply(cpath);
-                            pv = np.array(pts['points']);
-                            fvidx = np.unique(np.array(pts['mesh']).flatten());
-                            pv = pv[fvidx,:3];
-                            pv = r1.apply(pv);
-                            pv = r2.apply(pv);
-                            ps.append(np.array(pv));
-                            m = Image.fromarray(np.array(msk*255.0).astype(np.uint8),mode='L');
-                            m.save(os.path.join(partp,'all_msk',mskpb));
-                            msklst.append(msk);
-                            sm = Image.fromarray(np.array(smsk*255.0).astype(np.uint8),mode='L');
-                            sm.save(os.path.join(partp,'self_msk',mskpb));
-                            smsklst.append(smsk);
+                            #cpath = os.path.join(partp,'p_%d_b.ply'%cnt);
+                            #pts = read_ply(cpath);
+                            #pv = np.array(pts['points']);
+                            #fvidx = np.unique(np.array(pts['mesh']).flatten());
+                            #pv = pv[fvidx,:3];
+                            #pv = r1.apply(pv);
+                            #pv = r2.apply(pv);
+                            ps.append(pv);
                         cnt += 1;
                 #print(len(ps));
+                num = len(ps);
+                '''
+                if len(mm) < 1:
+                    h5f.close();
+                    h5fi.close();
+                    os.remove(opath);
+                    continue;
+                '''
                 obblst = [];
                 obbp = [];
                 obbf = [];
@@ -83,7 +92,7 @@ def run(**kwargs):
                 for pts in ps:
                     obba = OBB.build_by_trimesh(pts);
                     obbb = OBB.build_from_points(pts);
-                    if (obba is None) or (obba.volume > obbb.volume):
+                    if (obba is None) or ((obbb is not None) and (obba.volume > obbb.volume)):
                         obbr = obbb;
                     else:
                         obbr = obba;
@@ -93,6 +102,21 @@ def run(**kwargs):
                     obbcnt += 1;
                 #print('obbf:',len(obbf));
                 #print('obbcnt:',obbcnt);
+                assert num == np.array(h5fd['msk']).shape[0];
+                assert num == np.array(h5fd['smsk']).shape[0];
+                assert num == np.array(h5fd['box']).shape[0];
+                mm = [];
+                for pi in range(num-1):
+                    for pj in range(pi+1,num):
+                        da,db = ( ps[pi],ps[pj] ) if obblst[pi].volume > obblst[pj].volume else ( ps[pj], ps[pi]);
+                        tree = scipy.spatial.KDTree(da);
+                        dsta,idxa = tree.query(da,k=2);
+                        dstb,idxb = tree.query(db,k=1);
+                        if np.min(dstb) < np.mean(dsta[:,1]):
+                            mm.append(np.array([pi,pj],dtype=np.int32));
+                print('mm:',len(mm));
+                h5fo.create_dataset("touch",data=np.stack(mm,axis=0),compression="gzip", compression_opts=9);
+                '''
                 msks = np.stack(msklst,axis=0);
                 h5fo.create_dataset("msk", data=msks,compression="gzip", compression_opts=9);
                 smsks = np.stack(smsklst,axis=0);
@@ -109,5 +133,6 @@ def run(**kwargs):
                 for i in range(fidx.shape[0]):
                     face[i] = (3,fidx[i,0],fidx[i,1],fidx[i,2]);
                 obox = os.path.join(op,sub,cat,id+'_box.ply');
-                write_ply(obox,points=pd.DataFrame(obbv.astype(np.float32)),faces=pd.DataFrame(face));  
+                write_ply(obox,points=pd.DataFrame(obbv.astype(np.float32)),faces=pd.DataFrame(face));
+                '''                
                 #exit();
