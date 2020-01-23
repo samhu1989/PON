@@ -29,8 +29,7 @@ def size2w(size):
         wtmp = wtmp.repeat(1,200);
         w.append(wtmp);
     w = torch.cat(w,dim=1);
-    wm,_ = torch.max(w,dim=1,keepdim=True);
-    return w / wm;
+    return w;
     
 def sr2pts(size,r1,r2):
     pts = torch.from_numpy(bcd_pts);
@@ -49,7 +48,9 @@ def box_cd(osize,or1,or2,gtsize,gtr1,gtr2):
     w1 = torch.gather(w,1,idx1.long());
     ax1 = [x for x in range(1,dist1.dim())];
     ax2 = [x for x in range(1,dist2.dim())];
-    cd_loss = torch.mean(dist1*w1,dim=ax1)+torch.mean(dist2*w,dim=ax2);
+    bcd1 = torch.sum(dist1*w1,dim=ax1) / ( torch.sum(w1,dim=ax1) + np.finfo(np.float32).eps );
+    bcd2 = torch.sum(dist2*w,dim=ax1) / ( torch.sum(w,dim=ax1) + np.finfo(np.float32).eps );
+    cd_loss = bcd1 + bcd2;
     return cd_loss;
     
 def write_box(prefix,box):
