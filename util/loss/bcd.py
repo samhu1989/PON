@@ -49,7 +49,7 @@ def box_cd(osize,or1,or2,gtsize,gtr1,gtr2):
     ax1 = [x for x in range(1,dist1.dim())];
     ax2 = [x for x in range(1,dist2.dim())];
     bcd1 = torch.sum(dist1*w1,dim=ax1) / ( torch.sum(w1,dim=ax1) + np.finfo(np.float32).eps );
-    bcd2 = torch.sum(dist2*w,dim=ax1) / ( torch.sum(w,dim=ax1) + np.finfo(np.float32).eps );
+    bcd2 = torch.sum(dist2*w,dim=ax2) / ( torch.sum(w,dim=ax2) + np.finfo(np.float32).eps );
     cd_loss = bcd1 + bcd2;
     return cd_loss;
     

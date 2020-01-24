@@ -119,9 +119,9 @@ def run(**kwargs):
             out = net(data);
         acc = config.accuracy(data,out);
         if iteri % 100 == 0:
-            print('loss:',loss['box'].data.cpu().numpy());
+            print('loss:',loss['bcd'].data.cpu().numpy());
             print('iteri:',iteri);
-            print('acc:',acc['box'].data.cpu().numpy());
+            print('acc:',acc['bcd'].data.cpu().numpy());
         #for k,v in acc.items():
             #print(k,':',v);
         id = data[-2];
