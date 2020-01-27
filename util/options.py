@@ -9,7 +9,7 @@ def get_opt():
     parser.add_argument('--dataset','-ds',type=str,default='PON',help='dataset loader');
     parser.add_argument('--net','-net',type=str,default='AtlasNet',help='network');
     parser.add_argument('--model','-mp',type=str,default='',help='pre-trained');
-    parser.add_argument('--mode','-md',type=str,default='',help='switch mode for network/dataset so on');
+    parser.add_argument('--mode','-md',type=str,help='switch mode for network/dataset so on');
     parser.add_argument('--config','-config',type=str,default='AtlasConfig',help='network configuration');
     parser.add_argument('--log','-log',type=str,default='./log',help='log path');
     parser.add_argument('--user_key','-key',type=str,default='',help='costumized key string');
