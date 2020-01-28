@@ -19,6 +19,18 @@ from util.data.ply import write_ply;
 import pandas as pd;
 from util.tools import partial_restore;
 import h5py;
+import heapq;
+
+red_box = np.array(
+    [
+     [255,0,0],[255,0,0],[255,0,0],[255,0,0],
+     [255,0,0],[255,0,0],[255,0,0],[255,0,0]
+    ],dtype=np.uint8);
+blue_box = np.array(
+    [
+     [0,0,255],[0,0,255],[0,0,255],[0,0,255],
+     [0,0,255],[0,0,255],[0,0,255],[0,0,255]
+    ],dtype=np.uint8);
 
 
 def data2cuda(data):
@@ -27,22 +39,43 @@ def data2cuda(data):
             data[i] = data[i].cuda();
             data[i].requires_grad_(True);
             
-def parse(vec):
+def parsegt(vec):
     coord = np.array([[1,1,-1],[-1,1,-1],[-1,1,1],[1,1,1],[1,-1,-1],[-1,-1,-1],[-1,-1,1],[1,-1,1]],dtype=np.float32);
     ss = vec[:3];
     coords = ss[np.newaxis,:]*coord;
-    sr1 = vec[3:6];
-    sr2 = vec[6:9];
-    srot = rot(sr1,sr2);
-    vs = np.dot(coords,srot.reshape(3,3));
-    ts = vec[9:12];
-    coordt = ts[np.newaxis,:]*coord;
-    center = vec[12:15];
-    tr1 = vec[15:18];
-    tr2 = vec[18:21]
-    trot = rot(tr1,tr2);
-    vt = np.dot(coordt,trot.reshape(3,3)) + center[np.newaxis,:];
-    return  vs,vt;
+    center = vec[3:6];
+    srot = vec[6:15];
+    box = np.dot(coords,srot.reshape(3,3)) + center[np.newaxis,:];
+    return  box,center[np.newaxis,:];
+    
+def writebox(path,box,colors=None):
+    fidx = box_face;
+    T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
+    bn = len(box);
+    face = np.zeros(shape=[bn*fidx.shape[0]],dtype=T);
+    for i in range(bn*fidx.shape[0]):
+        nn = i // fidx.shape[0];
+        ni = i % fidx.shape[0];
+        face[i] = (3,fidx[ni,0]+nn*8,fidx[ni,1]+nn*8,fidx[ni,2]+nn*8);
+    pts = np.concatenate(box,axis=0);
+    if colors is None:
+        write_ply(path,points=pd.DataFrame(pts.astype(np.float32)),faces=pd.DataFrame(face));
+    else:
+        colors = np.concatenate(colors,axis=0);
+        pointsc = pd.concat([pd.DataFrame(pts.astype(np.float32)),pd.DataFrame(colors)],axis=1,ignore_index=True);
+        write_ply(path,points=pointsc,faces=pd.DataFrame(face),color=True);
+    
+
+def writegt(path,boxgt):
+    writebox(os.path.join(path,'_002_000_gt.ply'),boxgt);
+    
+def writeout(path,box,color,msk):
+    for i in range(1,len(box)):
+        bout = box[0:i];
+        cout = color[0:i];
+        writebox(os.path.join(path,'_002_%03d_out.ply'%i),bout,cout);
+        im = Image.fromarray((msk[i]*255).astype(np.uint8),mode='L');
+        im.save(os.path.join(path,'_001_%03d_msk.png'%i));
 
 def run(**kwargs):
     global iternum;
@@ -90,7 +123,8 @@ def run(**kwargs):
     opath = './log/join'
     if not os.path.exists(opath):
         os.makedirs(opath);
-    for cat in paths:
+    cat_lst = ['Chair','Table']
+    for cat in cat_lst:
         cpath = os.path.join(opt['data_path'],'test',cat);
         copath = os.path.join(opath,cat);
         if not os.path.exists(copath):
@@ -98,6 +132,9 @@ def run(**kwargs):
         slst = os.listdir(cpath);
         for f in slst:
             id = os.path.basename(f).split('.')[-2];
+            fopath = os.path.join(copath,'_'+id);
+            if not os.path.exists(fopath):
+                os.mkdir(fopath);
             h5f = h5py.File(os.path.join(cpath,f),'r');
             img = np.array(h5f['img']);
             msk = np.array(h5f['msk']);
@@ -108,6 +145,7 @@ def run(**kwargs):
             img_lst = [];
             smsk_lst = [];
             tmsk_lst = [];
+            box_lst = [];
             #for each part
             rate = opt['user_rate'];
             for i in range(num):
@@ -116,6 +154,7 @@ def run(**kwargs):
                     img_lst.append(img);
                     smsk_lst.append(msk[i,...]);
                     tmsk_lst.append(msk[i,...]);
+                    box_lst.append(box[i,...]);
             #
             img = np.stack(img_lst,axis=0);
             smsk = np.stack(smsk_lst,axis=0);
@@ -126,11 +165,33 @@ def run(**kwargs):
             with torch.no_grad():
                 boxout = boxnet(bdata);
             size = np.prod(boxout['ss'].data.cpu().numpy(),axis=1);
-            idx = np.argsort(-size);
-            for ci in range(idx.size):
+            undone_queue = [];
+            for idx,v in enumerate(size):
+                heapq.heappush(undone_queue,(-v,idx));
+            done_queue = [];
+            msk_in = [];
+            box_out = [];
+            box_color = [];
+            box_gt = [];
+            while len(undone_queue) > 0:
+                if len(done_queue) > 0 :
+                    itop = heapq.heappop(done_queue);
+                else:
+                    itop = heapq.heappop(undone_queue);
+                    ci = itop[1];
+                    bo = boxout['sb'].data.cpu().numpy()[ci,...];
+                    bgt,t = parsegt(box_lst[ci]);
+                    box_out.append(bo+t);
+                    box_gt.append(bgt)
+                    box_color.append(red_box);
+                    msk_in.append(bdata[1].data.cpu().numpy()[ci,...]);
+                ci = itop[1];
                 tdata = [];
                 tptdata = [];
-                for cj in range(ci+1,idx.size):
+                unfinish = [];
+                while len(undone_queue) > 0:
+                    jtop = heapq.heappop(undone_queue);
+                    cj = jtop[1];
                     tdata.append(  bdata[0][0,...].unsqueeze(0) );
                     tdata.append( (bdata[1][ci,...]).unsqueeze(0) );
                     tdata.append( (bdata[1][cj,...]).unsqueeze(0) );
@@ -151,9 +212,24 @@ def run(**kwargs):
                         tptdata.append(torch.from_numpy(vec).cuda());
                         with torch.no_grad():
                             tptout = touchptnet(tptdata);
-                        print(tptout['t'].data.cpu().numpy());
-                        
+                        heapq.heappush(done_queue,jtop);
+                        bo = boxout['sb'].data.cpu().numpy()[cj,...];
+                        bgt,_ = parsegt(box_lst[cj]);
+                        t = tptout['t'].data.cpu().numpy();
+                        box_out.append(bo+t);
+                        box_gt.append(bgt);
+                        box_color.append(blue_box);
+                        msk_in.append(bdata[1].data.cpu().numpy()[cj,...]);
+                    else:
+                        unfinish.append(jtop);
+                for p in unfinish:
+                    heapq.heappush(undone_queue,p);
+            im = Image.fromarray((bdata[0][0,...].data.cpu().numpy()*255).astype(np.uint8));
+            im.save(os.path.join(fopath,'_002_000_im.png'));
+            writegt(fopath,box_gt);
+            writeout(fopath,box_out,box_color,msk_in);
             exit();
+            
         
     '''
     print('bs:',opt['batch_size']);
