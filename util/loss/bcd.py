@@ -53,6 +53,21 @@ def box_cd(osize,or1,or2,gtsize,gtr1,gtr2):
     cd_loss = bcd1 + bcd2;
     return cd_loss;
     
+def box_cd_batch(osize,ot,or1,or2,gtsize,gtt,gtr1,gtr2):
+    opts = sr2pts(osize,or1,or2)+ot;
+    gtpts = sr2pts(gtsize,gtr1,gtr2)+gtt;
+    opts = opts.view(1,-1,3);
+    gtpts = gtpts.view(1,-1,3);
+    dist1, dist2, idx1, idx2 = distChamfer(opts,gtpts);
+    w2 = size2w(gtsize);
+    w2 = w2.view(1,-1);
+    w1 = size2w(osize);
+    w1 = w1.view(1,-1);
+    bcd1 = torch.sum(dist1*w1) / ( torch.sum(w1) + np.finfo(np.float32).eps );
+    bcd2 = torch.sum(dist2*w2) / ( torch.sum(w2) + np.finfo(np.float32).eps );
+    cd_loss = bcd1 + bcd2;
+    return cd_loss;
+    
 def write_box(prefix,box):
     T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
     fidx = box_face;

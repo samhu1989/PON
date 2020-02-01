@@ -58,7 +58,7 @@ class TouchPtNet(nn.Module):
         coords = torch.sum(w1*b1,dim=1);
         coordt = torch.sum(w2*b2,dim=1);
         #
-        return coords - coordt;
+        return coords - coordt,w1,w2;
 
 class Net(nn.Module):
     def __init__(self,**kwargs):
@@ -88,7 +88,7 @@ class Net(nn.Module):
         tr2_gt = vgt[:,18:21].contiguous();
         tb_gt = sr2box(ts_gt,tr1_gt,tr2_gt);
         #
-        t = self.tpnet(x1,sb_gt,x2,tb_gt);
+        t,w1,w2 = self.tpnet(x1,sb_gt,x2,tb_gt);
         tb = tb_gt + t.unsqueeze(1).contiguous();
-        out = {'t':t,'sb':sb_gt,'tb':tb};
+        out = {'t':t,'sb':sb_gt,'tb':tb,'w1':w1,'w2':w2};
         return out;
