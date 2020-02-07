@@ -115,14 +115,16 @@ class Net(nn.Module):
         ts_gt = vgt[:,9:12].contiguous();
         tr1_gt = vgt[:,15:18].contiguous();
         tr2_gt = vgt[:,18:21].contiguous();
-        tb_gt = sr2box(ts_gt,tr1_gt,tr2_gt);
         unit_tb_gt = sr2box(norm_size(ts_gt),tr1_gt,tr2_gt);
         #
         w1,w2 = self.tpnet(x1,unit_sb_gt,x2,unit_tb_gt);
+        scale = self.snet(x1,x2);
+        sbase, _ = torch.max(ss_gt,dim = 1,keepdim=True);
+        ts_out = norm_size(ts_gt)*scale / ( sbase + np.finfo(np.float32).eps );
+        tb_out = sr2box(ts_out,tr1_gt,tr2_gt);
         coords = torch.sum(w1*sb_gt,dim=1);
         coordt = torch.sum(w2*tb_out,dim=1);
-        scale = self.snet(x1,x2);
-        
-        tb = tb_gt + t.unsqueeze(1).contiguous();
-        out = {'t':t,'sb':sb_gt,'tb':tb,'w1':w1,'w2':w2};
+        t = coords - coordt;
+        tb = tb_out + t.unsqueeze(1).contiguous();
+        out = {'t':t,'sb':sb_gt,'tb':tb,'ts':ts_out,'tr1':tr1_gt,'tr2':tr2_gt,'w1':w1,'w2':w2,'rs':scale};
         return out;

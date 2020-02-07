@@ -10,7 +10,7 @@ from .config import NpEncoder;
 import torch.nn as nn;
 import torch.nn.functional as F;
 from net.cageutil import sr2box;
-from util.loss.bcd import box_cd;
+from util.loss.bcd import box_cd_t;
 
 workers = 4;
 lr = 1e-3;
@@ -18,90 +18,33 @@ weight_decay = 0.0;
 nepoch = 1000;
 print_epoch = 1;
 
-def norm_size(s):
-    sm, _ = torch.max(s,dim = 1,keepdim=True);
-    return s / sm;
-
-def chmf(b1,b2):
-    b1 = b1.unsqueeze(2).contiguous();
-    b2 = b2.unsqueeze(1).contiguous();
-    dist = torch.sum((b1 - b2)**2,dim=3);
-    d1,_ = torch.min(dist,dim=1);
-    d1 = torch.mean(d1,dim=1);
-    d2,_ = torch.min(dist,dim=2);
-    d2 = torch.mean(d2,dim=1);
-    return d1 + d2;
-
 def loss(data,out):
-    vgt = data[5];
-    #
-    ss_gt = vgt[:,0:3].contiguous();
-    ss_gt = norm_size(ss_gt);
-    sr1_gt = vgt[:,3:6].contiguous();
-    sr2_gt = vgt[:,6:9].contiguous();
-    sb_gt = sr2box(ss_gt,sr1_gt,sr2_gt); 
+    vgt = data[4];
     #
     ts_gt = vgt[:,9:12].contiguous();
-    ts_gt = norm_size(ts_gt);
+    tt_gt = vgt[:,12:15].contiguous();
     tr1_gt = vgt[:,15:18].contiguous();
     tr2_gt = vgt[:,18:21].contiguous();
-    tb_gt = sr2box(ts_gt,tr1_gt,tr2_gt);
     #
-    ss = out['ss'];
-    sr1 = out['sr1'];
-    sr2 = out['sr2'];
-    sb = out['sb'];
-    #
-    ts = out['ts'];
-    tr1 = out['tr1'];
-    tr2 = out['tr2'];
-    tb = out['tb'];
+    tsout = out['ts'];
+    ttout = out['t'];
+    tr1out = out['tr1'];
+    tr2out = out['tr2'];
     #
     loss = {};
-    loss['size'] = 0.5*torch.sum( ( ss - ss_gt.data )**2 + ( ts - ts_gt.data )**2, dim = 1 );
-    erot = ( sr1 - sr1_gt.data )**2;
-    erot += ( sr2 - sr2_gt.data )**2;
-    erot += ( tr1 - tr1_gt.data )**2;
-    erot += ( tr2 - tr2_gt.data )**2;
-    loss['rot6'] = 0.5*torch.sum( erot, dim=1 );
-    loss['bcd'] = 0.5*( box_cd(ss,sr1,sr2,ss_gt,sr1_gt,sr2_gt) + box_cd(ts,tr1,tr2,ts_gt,tr1_gt,tr2_gt) );
-    loss['overall'] = torch.mean( loss['bcd'] );
+    loss['box'] = box_cd_t(tsout,ttout,tr1out,tr2out,ts_gt,tt_gt,tr1_gt,tr2_gt)
+    loss['overall'] = torch.mean( loss['box'] );
     return loss;
     
 def accuracy(data,out):
-    vgt = data[5];
+    vgt = data[4];
     #
-    ss_gt = vgt[:,0:3].contiguous();
-    ss_gt = norm_size(ss_gt);
-    sr1_gt = vgt[:,3:6].contiguous();
-    sr2_gt = vgt[:,6:9].contiguous();
-    sb_gt = sr2box(ss_gt,sr1_gt,sr2_gt); 
+    t_gt = vgt[:,12:15];
     #
-    ts_gt = vgt[:,9:12].contiguous();
-    ts_gt = norm_size(ts_gt);
-    tr1_gt = vgt[:,15:18].contiguous();
-    tr2_gt = vgt[:,18:21].contiguous();
-    tb_gt = sr2box(ts_gt,tr1_gt,tr2_gt);
-    #
-    ss = out['ss'];
-    sr1 = out['sr1'];
-    sr2 = out['sr2'];
-    sb = out['sb'];
-    #
-    ts = out['ts'];
-    tr1 = out['tr1'];
-    tr2 = out['tr2'];
-    tb = out['tb'];
-    #
+    t = out['t'];
     loss = {};
-    loss['size'] = 0.5*torch.sum( ( ss - ss_gt.data )**2 + ( ts - ts_gt.data )**2, dim = 1 );
-    erot = ( sr1 - sr1_gt.data )**2;
-    erot += ( sr2 - sr2_gt.data )**2;
-    erot += ( tr1 - tr1_gt.data )**2;
-    erot += ( tr2 - tr2_gt.data )**2;
-    loss['rot6'] = 0.5*torch.sum( erot, dim=1 );
-    loss['bcd'] = 0.5*( box_cd(ss,sr1,sr2,ss_gt,sr1_gt,sr2_gt) + box_cd(ts,tr1,tr2,ts_gt,tr1_gt,tr2_gt) );
-    loss['overall'] = loss['bcd'];
+    loss['t'] = torch.sum( (t - t_gt.data)**2, dim = 1);
+    loss['overall'] = loss['t'];
     return loss;
     
 def parameters(net):
@@ -147,12 +90,12 @@ def writelog(**kwargs):
     write_tfb(tfb_dir,meter,ib+nb*iepoch,nb,optim);
     
     if not kwargs['istraining'] and ib >= nb-1:
-        if meter['bcd'].overall_meter.avg < best[-1]:
+        if meter['overall'].overall_meter.avg < best[-1]:
             fn = bestn[-1];
             if fn:
                 os.remove(opt['log_tmp']+os.sep+fn);
             fn = 'net_'+str(datetime.now()).replace(' ','-').replace(':','-')+'.pth';
-            best[-1] = meter['bcd'].overall_meter.avg;
+            best[-1] = meter['overall'].overall_meter.avg;
             bestn[-1] = fn;
             torch.save(net.state_dict(),opt['log_tmp']+os.sep+fn);
             idx = np.argsort(best);
