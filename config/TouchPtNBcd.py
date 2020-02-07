@@ -39,12 +39,19 @@ def loss(data,out):
 def accuracy(data,out):
     vgt = data[4];
     #
-    t_gt = vgt[:,12:15];
+    ts_gt = vgt[:,9:12].contiguous();
+    tt_gt = vgt[:,12:15].contiguous();
+    tr1_gt = vgt[:,15:18].contiguous();
+    tr2_gt = vgt[:,18:21].contiguous();
     #
-    t = out['t'];
+    tsout = out['ts'];
+    ttout = out['t'];
+    tr1out = out['tr1'];
+    tr2out = out['tr2'];
+    #
     loss = {};
-    loss['t'] = torch.sum( (t - t_gt.data)**2, dim = 1);
-    loss['overall'] = loss['t'];
+    loss['box'] = box_cd_t(tsout,ttout,tr1out,tr2out,ts_gt,tt_gt,tr1_gt,tr2_gt)
+    loss['overall'] = loss['box'];
     return loss;
     
 def parameters(net):
