@@ -16,6 +16,7 @@ import pandas as pd;
 from ..data.ply import write_ply;
 from scipy.special import comb, perm
 from PIL import Image;
+from ..data.npimg import msk_center
 #
 class Data(data.Dataset):
     def __init__(self, opt, train='train'):
@@ -42,13 +43,11 @@ class Data(data.Dataset):
         if 'category' in opt.keys():
             cats = opt['category'];
         for c in cat_lst:
-            path = os.path.join(self.root,c);
-            print('loading:',c);
+            path = os.path.join(self.root,c)
             if os.path.isdir(path):
                 f_lst = os.listdir(path);
-                for fidx,f in enumerate(f_lst):
+                for f in f_lst:
                     if f.endswith('.h5'):
-                        print(fidx);
                         h5f = h5py.File(os.path.join(path,f),'r');
                         self.img.append(np.array(h5f['img']));
                         self.msk.append(np.array(h5f['msk']));
@@ -58,12 +57,8 @@ class Data(data.Dataset):
                         self.cat.append(c);
                         self.id.append(os.path.basename(f).split('.')[0]);
                         num = self.box[-1].shape[0];
-                        pairnum = int(comb(num,2));
+                        pairnum = self.touch[-1].shape[0];
                         self.index_map.extend([len(self.img)-1 for x in range(pairnum)]);
-                        for i in range(num-1):
-                            for j in range(i+1,num):
-                                self.imap.append(i);
-                                self.jmap.append(j);
                         if len(self.end) == 0:
                             self.end.append(pairnum);
                         else:
@@ -71,16 +66,15 @@ class Data(data.Dataset):
                         h5f.close();
 
     def __getitem__(self, idx):
-        idx = idx % self.__len__();
         index = self.index_map[idx];
-        subi = self.imap[idx];
-        subj = self.jmap[idx];
         img = self.img[index];
         msk = self.msk[index];
         smsk = self.smsk[index];
         touch = self.touch[index];
         box = self.box[index];
         endi = self.end[index];
+        subi = touch[idx-endi,0];
+        subj = touch[idx-endi,1];
         msks = msk[subi,...];
         smsks = smsk[subi,...];
         boxs = box[subi,...];
@@ -89,13 +83,11 @@ class Data(data.Dataset):
         boxt = box[subj,...];
         if (( np.sum(msks) / np.sum(smsks) ) < self.rate) or (( np.sum(mskt) / np.sum(smskt) ) < self.rate ):
             return self.__getitem__(idx+1);
-        y = 0.0 ;
-        for xi in range(touch.shape[0]):
-            if subi == touch[xi,0] and subj == touch[xi,1]:
-                y = 1.0;
-            if subj == touch[xi,0] and subi == touch[xi,1]:
-                y = 1.0;
-        img = torch.from_numpy(img)
+        y = 1.0 ;
+        imgs,msks = msk_center(img,msks);
+        imgt,mskt = msk_center(img,mskt);
+        imgs = torch.from_numpy(imgs)
+        imgt = torch.from_numpy(imgt)
         msks = torch.from_numpy(msks)
         mskt = torch.from_numpy(mskt)
         y = torch.from_numpy(np.array([y],dtype=np.float32))
@@ -108,10 +100,12 @@ class Data(data.Dataset):
         vec[12:15] = boxt[3:6] - boxs[3:6];
         vec[15:21] = boxt[6:12];
         #
+        sgt = boxs[3:6];
         vec = torch.from_numpy(vec);
         boxs = torch.from_numpy(boxs.astype(np.float32));
         boxt = torch.from_numpy(boxt.astype(np.float32));
-        return img,msks,mskt,y,vec,boxs,boxt,self.id[index],self.cat[index];
+        sgt = torch.from_numpy(sgt.astype(np.float32));
+        return imgs,msks,imgt,mskt,y,vec,boxs,boxt,sgt,self.id[index],self.cat[index];
 
     def __len__(self):
         return len(self.index_map);
@@ -126,13 +120,13 @@ def rot(r1,r2):
         
 def parse(vec):
     coord = np.array([[1,1,-1],[-1,1,-1],[-1,1,1],[1,1,1],[1,-1,-1],[-1,-1,-1],[-1,-1,1],[1,-1,1]],dtype=np.float32);
-    print(vec);
+    #print(vec);
     ss = vec[:3];
     coords = ss[np.newaxis,:]*coord;
     sr1 = vec[3:6];
     sr2 = vec[6:9]
     srot = rot(sr1,sr2);
-    print('srot',srot)
+    #print('srot',srot)
     vs = np.dot(coords,srot.reshape(3,3))
     ts = vec[9:12];
     coordt = ts[np.newaxis,:]*coord;
@@ -140,7 +134,7 @@ def parse(vec):
     tr1 = vec[15:18];
     tr2 = vec[18:21];
     trot = rot(tr1,tr2);
-    print('trot',trot)
+    #print('trot',trot)
     vt = np.dot(coordt,trot.reshape(3,3)) + center[np.newaxis,:];
     return  vs,vt;
         
@@ -163,7 +157,9 @@ def run(**kwargs):
         vec = d[4].data.cpu().numpy()[bi,...];
         Image.fromarray((img*255).astype(np.uint8),mode='RGB').save('./log/im.png');
         Image.fromarray((msks*255).astype(np.uint8),mode='L').save('./log/mks.png');
+        Image.fromarray((img*msks[:,:,np.newaxis]*255).astype(np.uint8),mode='RGB').save('./log/mkds.png');
         Image.fromarray((mskt*255).astype(np.uint8),mode='L').save('./log/mkt.png');
+        Image.fromarray((img*mskt[:,:,np.newaxis]*255).astype(np.uint8),mode='RGB').save('./log/mkdt.png');
         Image.fromarray((img*(msks+mskt)[:,:,np.newaxis]*255).astype(np.uint8),mode='RGB').save('./log/mkd.png');
         ptsa,ptsb = parse(vec);
         write_ply('./log/pa.ply',points=pd.DataFrame(ptsa),faces=pd.DataFrame(face));
