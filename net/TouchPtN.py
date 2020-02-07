@@ -66,7 +66,7 @@ class TouchPtNet(nn.Module):
         
 class ScaleNet(nn.Module):
     def __init__(self,**kwargs):
-        super(TouchPtNet,self).__init__();
+        super(ScaleNet,self).__init__();
         self.enc = resnet.resnet18(pretrained=False,input_channel=4,fc=False);
         self.dec = nn.Sequential(
             nn.Conv2d(1024, 512, kernel_size=1, bias=False),
