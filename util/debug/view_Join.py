@@ -277,13 +277,8 @@ def run(**kwargs):
                             tptout = touchptnet(tptdata);
                         heapq.heappush(done_queue,jtop);
                         bo = boxout['sb'].data.cpu().numpy()[cj,...];
-                        if not cat == 'TrainChair':
-                            r = R.from_rotvec([0, numpy.random.normal(0.0,0.1)*np.pi/32, 0]);
-                            bo = r.apply(bo);
                         bgt,_ = parsegt(box_lst[cj]);
                         t = tptout['t'].data.cpu().numpy();
-                        if not cat == 'TrainChair':
-                            t += numpy.random.normal(0.0,0.1); 
                         w1 = tptout['w1'].data.cpu().numpy();
                         w2 = tptout['w2'].data.cpu().numpy();
                         box_out.append(bo+t+bt);

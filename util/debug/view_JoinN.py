@@ -187,23 +187,30 @@ def run(**kwargs):
             for i in range(num):
                 msk_rate = ( np.sum(msk[i,...]) / np.sum(smsk[i,...]) );
                 if msk_rate > rate:
+                    imgs,mski = msk_center(img,msk[i,...]);
                     imgs_lst.append(img);
-                    smsk_lst.append(msk[i,...]);
-                    tmsk_lst.append(msk[i,...]);
+                    smsk_lst.append(mski);
+                    imgt_lst.append(img)
+                    tmsk_lst.append(mski);
                     box_lst.append(box[i,...]);
+                    im = Image.fromarray((imgs_lst[-1]*255).astype(np.uint8));
+                    im.save(os.path.join(fopath,'_000_%03d_img.png'%(len(imgs_lst)-1)));
                     imt = Image.fromarray((smsk_lst[-1]*255).astype(np.uint8));
-                    imt.save(os.path.join(fopath,'_000_%03d_msk.png'%(len(smsk_lst)-1)));
+                    imt.save(os.path.join(fopath,'_001_%03d_msk.png'%(len(smsk_lst)-1)));
             #
-            img = np.stack(img_lst,axis=0);
+            imgs = np.stack(imgs_lst,axis=0);
             smsk = np.stack(smsk_lst,axis=0);
+            imgt = np.stack(imgt_lst,axis=0);
             tmsk = np.stack(tmsk_lst,axis=0);
-            bdata.append(torch.from_numpy(img).cuda());
+            bdata.append(torch.from_numpy(imgs).cuda());
             bdata.append(torch.from_numpy(smsk).cuda());
+            bdata.append(torch.from_numpy(imgt).cuda());
             bdata.append(torch.from_numpy(tmsk).cuda());
             with torch.no_grad():
                 boxout = boxnet(bdata);
             #
-            size = np.prod(boxout['ss'].data.cpu().numpy(),axis=1);
+            size = np.sum(np.sum(bdata[1].data.cpu().numpy() > 0,axis=1),axis=1);
+            print(size);
             undone_queue = [];
             for idx,v in enumerate(size):
                 heapq.heappush(undone_queue,(-v,idx));
@@ -221,6 +228,7 @@ def run(**kwargs):
             r2_gt = [];
             r2_out = [];
             baset = np.zeros([len(box_lst),3],dtype=np.float32);
+            bases = np.zeros([len(box_lst),1],dtype=np.float32);
             while len(undone_queue) > 0:
                 if len(done_queue) > 0 :
                     itop = heapq.heappop(done_queue);
