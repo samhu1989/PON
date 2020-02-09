@@ -120,8 +120,8 @@ class Net(nn.Module):
         w1,w2 = self.tpnet(x1,unit_sb_gt,x2,unit_tb_gt);
         scale = self.snet(x1,x2);
         sbase, _ = torch.max(ss_gt,dim = 1,keepdim=True);
-        ts_out = norm_size(ts_gt)*scale / ( sbase + np.finfo(np.float32).eps );
-        tb_out = sr2box(ts_out,tr1_gt,tr2_gt);
+        ts_out = scale / ( sbase + np.finfo(np.float32).eps );
+        tb_out = sr2box(norm_size(ts_gt)*ts_out,tr1_gt,tr2_gt);
         coords = torch.sum(w1*sb_gt,dim=1);
         coordt = torch.sum(w2*tb_out,dim=1);
         t = coords - coordt;
