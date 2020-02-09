@@ -23,7 +23,7 @@ import heapq;
 from net.cageutil import rot9np,normalize,rot6d,rot9;
 import torch.nn.functional as F;
 from util.loss.bcd import box_cd_batch;
-from scipy.spatial.transform import Rotation as R
+from util.data.npimg import msk_center,msk_pair_center;
 
 red_box = np.array(
     [
@@ -160,7 +160,7 @@ def run(**kwargs):
         eval_cat_sum = 0.0;
         eval_cat_cnt = 0.0;
         cpath = os.path.join(opt['data_path'],'test',cat);
-        copath = os.path.join(opath,'joinN_'+cat+'_'+opt['mode']);
+        copath = os.path.join(opath,'join_'+cat+'_'+opt['mode']);
         if not os.path.exists(copath):
             os.mkdir(copath);
         slst = os.listdir(cpath);
@@ -177,7 +177,8 @@ def run(**kwargs):
             box = np.array(h5f['box']);
             num = box.shape[0];
             bdata = [];
-            img_lst = [];
+            imgs_lst = [];
+            imgt_lst = [];
             smsk_lst = [];
             tmsk_lst = [];
             box_lst = [];
@@ -186,7 +187,7 @@ def run(**kwargs):
             for i in range(num):
                 msk_rate = ( np.sum(msk[i,...]) / np.sum(smsk[i,...]) );
                 if msk_rate > rate:
-                    img_lst.append(img);
+                    imgs_lst.append(img);
                     smsk_lst.append(msk[i,...]);
                     tmsk_lst.append(msk[i,...]);
                     box_lst.append(box[i,...]);
@@ -277,13 +278,8 @@ def run(**kwargs):
                             tptout = touchptnet(tptdata);
                         heapq.heappush(done_queue,jtop);
                         bo = boxout['sb'].data.cpu().numpy()[cj,...];
-                        if not cat == 'TrainChair':
-                            r = R.from_rotvec([0, numpy.random.normal(0.0,0.1)*np.pi/32, 0]);
-                            bo = r.apply(bo);
                         bgt,_ = parsegt(box_lst[cj]);
                         t = tptout['t'].data.cpu().numpy();
-                        if not cat == 'TrainChair':
-                            t += numpy.random.normal(0.0,0.1); 
                         w1 = tptout['w1'].data.cpu().numpy();
                         w2 = tptout['w2'].data.cpu().numpy();
                         box_out.append(bo+t+bt);
@@ -313,8 +309,6 @@ def run(**kwargs):
             writegt(fopath,box_gt);
             writeout(fopath,box_out,box_color,msk_in);
             val = eval(s_out,t_out,r1_out,r2_out,s_gt,t_gt,r1_gt,r2_gt);
-            acc = {'cd':val.data.cpu().numpy()};
-            json.dump(acc,os.path.join(fopath,'meta.json'));
             eval_all_sum += val.data.cpu().numpy();
             eval_all_cnt += 1.0;
             eval_cat_sum += val.data.cpu().numpy();
