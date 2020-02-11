@@ -10,7 +10,18 @@
     
     
     
-    
+
+to do:
+
+1) image rendering quality
+
+2) image input position normalization / data augment
+
+3) view on training data 
+
+4) rank the result by quality
+
+5) input image ( part colored, depth, normal  all together ) and try it again, it should be much easier.
 
 
 

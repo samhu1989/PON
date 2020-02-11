@@ -41,6 +41,15 @@ def rot9np(x_raw,y_raw):
     rot = np.stack([x,y,z]);
     return rot;
     
+def add_msk_sep(obj,x,m):
+    if obj.mode == 'full':
+        x = torch.cat([x,m],axis=1);
+    elif obj.mode == 'part':
+        x = torch.cat([x*m,m],axis=1);
+    else:
+        assert False, "Unkown mode";
+    return x;
+    
 def add_msk_inst(obj,x,ms,mt):
     if obj.mode == 'full':
         x1 = torch.cat([x,ms],axis=1);

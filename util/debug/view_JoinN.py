@@ -23,8 +23,8 @@ import heapq;
 from net.cageutil import rot9np,normalize,rot6d,rot9;
 import torch.nn.functional as F;
 from util.loss.bcd import box_cd_batch;
-from scipy.spatial.transform import Rotation as R
-
+from util.data.npimg import msk_center,msk_pair_center;
+import json;
 red_box = np.array(
     [
      [255,0,0],[255,0,0],[255,0,0],[255,0,0],
@@ -47,11 +47,12 @@ def parsegt(vec):
     vec = vec.copy();
     coord = np.array([[1,1,-1],[-1,1,-1],[-1,1,1],[1,1,1],[1,-1,-1],[-1,-1,-1],[-1,-1,1],[1,-1,1]],dtype=np.float32);
     ss = vec[:3];
+    rs = np.max(ss);
     coords = ss[np.newaxis,:]*coord;
     center = vec[3:6];
     srot = vec[6:15];
     box = np.dot(coords,srot.reshape(3,3)) + center[np.newaxis,:];
-    return  box,center[np.newaxis,:];
+    return  box,rs,center[np.newaxis,:];
     
 def writebox(path,box,colors=None):
     fidx = box_face;
@@ -160,7 +161,7 @@ def run(**kwargs):
         eval_cat_sum = 0.0;
         eval_cat_cnt = 0.0;
         cpath = os.path.join(opt['data_path'],'test',cat);
-        copath = os.path.join(opath,'joinN_'+cat+'_'+opt['mode']);
+        copath = os.path.join(opath,'join_'+cat+'_'+opt['mode']);
         if not os.path.exists(copath):
             os.mkdir(copath);
         slst = os.listdir(cpath);
@@ -177,7 +178,9 @@ def run(**kwargs):
             box = np.array(h5f['box']);
             num = box.shape[0];
             bdata = [];
-            img_lst = [];
+            msk_lst = [];
+            imgs_lst = [];
+            imgt_lst = [];
             smsk_lst = [];
             tmsk_lst = [];
             box_lst = [];
@@ -186,23 +189,31 @@ def run(**kwargs):
             for i in range(num):
                 msk_rate = ( np.sum(msk[i,...]) / np.sum(smsk[i,...]) );
                 if msk_rate > rate:
-                    img_lst.append(img);
-                    smsk_lst.append(msk[i,...]);
-                    tmsk_lst.append(msk[i,...]);
+                    msk_lst.append(msk[i,...])
+                    imgs,mski = msk_center(img,msk[i,...]);
+                    imgs_lst.append(imgs);
+                    smsk_lst.append(mski);
+                    imgt_lst.append(imgs)
+                    tmsk_lst.append(mski);
                     box_lst.append(box[i,...]);
+                    im = Image.fromarray((imgs_lst[-1]*255).astype(np.uint8));
+                    im.save(os.path.join(fopath,'_000_%03d_img.png'%(len(imgs_lst)-1)));
                     imt = Image.fromarray((smsk_lst[-1]*255).astype(np.uint8));
-                    imt.save(os.path.join(fopath,'_000_%03d_msk.png'%(len(smsk_lst)-1)));
+                    imt.save(os.path.join(fopath,'_001_%03d_msk.png'%(len(smsk_lst)-1)));
             #
-            img = np.stack(img_lst,axis=0);
+            imgs = np.stack(imgs_lst,axis=0);
             smsk = np.stack(smsk_lst,axis=0);
+            imgt = np.stack(imgt_lst,axis=0);
             tmsk = np.stack(tmsk_lst,axis=0);
-            bdata.append(torch.from_numpy(img).cuda());
+            bdata.append(torch.from_numpy(imgs).cuda());
             bdata.append(torch.from_numpy(smsk).cuda());
+            bdata.append(torch.from_numpy(imgt).cuda());
             bdata.append(torch.from_numpy(tmsk).cuda());
             with torch.no_grad():
                 boxout = boxnet(bdata);
             #
-            size = np.prod(boxout['ss'].data.cpu().numpy(),axis=1);
+            size = np.sum(np.sum(bdata[1].data.cpu().numpy() > 0,axis=1),axis=1);
+            print(size);
             undone_queue = [];
             for idx,v in enumerate(size):
                 heapq.heappush(undone_queue,(-v,idx));
@@ -220,6 +231,7 @@ def run(**kwargs):
             r2_gt = [];
             r2_out = [];
             baset = np.zeros([len(box_lst),3],dtype=np.float32);
+            bases = np.zeros([len(box_lst),1],dtype=np.float32);
             while len(undone_queue) > 0:
                 if len(done_queue) > 0 :
                     itop = heapq.heappop(done_queue);
@@ -230,10 +242,10 @@ def run(**kwargs):
                     itop = heapq.heappop(undone_queue);
                     ci = itop[1];
                     bo = boxout['sb'].data.cpu().numpy()[ci,...];
-                    bgt,t = parsegt(box_lst[ci]);
+                    bgt,rs,t = parsegt(box_lst[ci]);
                     add_gt_for_eval(box_lst[ci],s_gt,t_gt,r1_gt,r2_gt);
                     add_out_for_eval(
-                        boxout['ss'].data[ci,...],
+                        boxout['ss'].data[ci,...]*rs,
                         torch.from_numpy(t.astype(np.float32)).cuda(),
                         boxout['sr1'].data[ci,...],
                         boxout['sr2'].data[ci,...],
@@ -243,11 +255,12 @@ def run(**kwargs):
                         r2_out
                         );
                     baset[ci,:] = t[0,:];
+                    bases[ci,:] = rs;
                     bt = t;
-                    box_out.append(bo+bt);
+                    box_out.append(bo*rs+bt);
                     box_gt.append(bgt)
                     box_color.append(red_box);
-                    msk_in.append(bdata[1].data.cpu().numpy()[ci,...]);
+                    msk_in.append(msk_lst[ci]);
                     print('[undone:%d'%ci,file=logf,end='');
                 unfinish = [];
                 while len(undone_queue) > 0:
@@ -255,40 +268,45 @@ def run(**kwargs):
                     tptdata = [];
                     jtop = heapq.heappop(undone_queue);
                     cj = jtop[1];
-                    tdata.append(  bdata[0][0,...].unsqueeze(0) );
-                    tdata.append( (bdata[1][ci,...]).unsqueeze(0) );
-                    tdata.append( (bdata[1][cj,...]).unsqueeze(0) );
+                    pimg,psmsk,ptmsk = msk_pair_center(img,msk_lst[ci],msk_lst[cj]);
+                    pimg = torch.from_numpy(pimg).cuda().unsqueeze(0);
+                    psmsk = torch.from_numpy(psmsk).cuda().unsqueeze(0);
+                    ptmsk = torch.from_numpy(ptmsk).cuda().unsqueeze(0);
+                    tdata.append(  pimg );
+                    tdata.append( psmsk );
+                    tdata.append( ptmsk );
                     with torch.no_grad():
                         touchout = touchnet(tdata);
                     if touchout['y'].data.cpu().numpy()[0][0] > 0.5:
-                        tptdata.append(bdata[0][0,...].unsqueeze(0));
-                        tptdata.append((bdata[1][ci,...]).unsqueeze(0));
-                        tptdata.append((bdata[1][cj,...]).unsqueeze(0));
+                        bgt,rsgt,_ = parsegt(box_lst[cj]);
+                        tptdata.append(pimg);
+                        tptdata.append(psmsk);
+                        tptdata.append(ptmsk);
                         tptdata.append(None);
                         vec = np.zeros([1,21],dtype=np.float32);
-                        vec[0,:3] = boxout['ss'].data.cpu().numpy()[ci,...];
+                        rs = bases[ci,:];
+                        vec[0,:3] = rs*boxout['ss'].data.cpu().numpy()[ci,...];
                         vec[0,3:6] = boxout['sr1'].data.cpu().numpy()[ci,...];
                         vec[0,6:9] = boxout['sr2'].data.cpu().numpy()[ci,...];
-                        vec[0,9:12] = boxout['ss'].data.cpu().numpy()[cj,...];
+                        vec[0,9:12] = rs*boxout['ss'].data.cpu().numpy()[cj,...];
                         vec[0,15:18] = boxout['sr1'].data.cpu().numpy()[cj,...];
                         vec[0,18:21] = boxout['sr2'].data.cpu().numpy()[cj,...];
                         tptdata.append(torch.from_numpy(vec).cuda());
                         with torch.no_grad():
                             tptout = touchptnet(tptdata);
                         heapq.heappush(done_queue,jtop);
-                        bo = boxout['sb'].data.cpu().numpy()[cj,...];
-                        bgt,_ = parsegt(box_lst[cj]);
                         t = tptout['t'].data.cpu().numpy();
-                        w1 = tptout['w1'].data.cpu().numpy();
-                        w2 = tptout['w2'].data.cpu().numpy();
-                        box_out.append(bo+t+bt);
+                        bo = tptout['tb'].data.cpu().numpy()[0,...];
+                        box_out.append(bo+bt);
                         baset[cj,:] = (t+bt)[0,:];
+                        sout = boxout['ss'].data.cpu().numpy()[cj,...]*tptout['ts'].data.cpu().numpy()[0,...];
+                        bases[cj,:] = np.max(np.abs(sout));
                         box_gt.append(bgt);
                         box_color.append(blue_box);
                         msk_in.append(bdata[1].data.cpu().numpy()[cj,...]);
                         add_gt_for_eval(box_lst[cj],s_gt,t_gt,r1_gt,r2_gt);
                         add_out_for_eval(
-                            boxout['ss'].data[cj,...],
+                            boxout['ss'].data[cj,...]*tptout['ts'].data[0,...],
                             torch.from_numpy((t+bt).astype(np.float32)).cuda(),
                             boxout['sr1'].data[cj,...],
                             boxout['sr2'].data[cj,...],
@@ -308,8 +326,8 @@ def run(**kwargs):
             writegt(fopath,box_gt);
             writeout(fopath,box_out,box_color,msk_in);
             val = eval(s_out,t_out,r1_out,r2_out,s_gt,t_gt,r1_gt,r2_gt);
-            acc = {'cd':val.data.cpu().numpy()};
-            json.dump(acc,os.path.join(fopath,'meta.json'));
+            v = float(val.data.cpu().numpy());
+            json.dump({'bcd':v},open(os.path.join(fopath,'meta.json'),'w'));
             eval_all_sum += val.data.cpu().numpy();
             eval_all_cnt += 1.0;
             eval_cat_sum += val.data.cpu().numpy();

@@ -53,6 +53,19 @@ def box_cd(osize,or1,or2,gtsize,gtr1,gtr2):
     cd_loss = bcd1 + bcd2;
     return cd_loss;
     
+def box_cd_t(osize,ot,or1,or2,gtsize,gtt,gtr1,gtr2):
+    opts = sr2pts(osize,or1,or2) + ot.unsqueeze(1).contiguous();
+    gtpts = sr2pts(gtsize,gtr1,gtr2) + gtt.unsqueeze(1).contiguous();
+    dist1, dist2, idx1, idx2 = distChamfer(opts,gtpts);
+    w = size2w(gtsize);
+    w1 = torch.gather(w,1,idx1.long());
+    ax1 = [x for x in range(1,dist1.dim())];
+    ax2 = [x for x in range(1,dist2.dim())];
+    bcd1 = torch.sum(dist1*w1,dim=ax1) / ( torch.sum(w1,dim=ax1) + np.finfo(np.float32).eps );
+    bcd2 = torch.sum(dist2*w,dim=ax2) / ( torch.sum(w,dim=ax2) + np.finfo(np.float32).eps );
+    cd_loss = bcd1 + bcd2;
+    return cd_loss;
+    
 def box_cd_batch(osize,ot,or1,or2,gtsize,gtt,gtr1,gtr2):
     opts = sr2pts(osize,or1,or2)+ot;
     gtpts = sr2pts(gtsize,gtr1,gtr2)+gtt;

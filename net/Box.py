@@ -11,7 +11,7 @@ import net.resnet as resnet;
 import numpy as np;
 #
 from .cageutil import sr2box;
-from .cageutil import add_msk_dual as add_msk;
+from .cageutil import add_msk_inst as add_msk;
 
 class BoxNet(nn.Module):
     def __init__(self,**kwargs):
