@@ -53,14 +53,6 @@ render_layers = tree.nodes.new('CompositorNodeRLayers')
 depth_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
 depth_file_output.label = 'Depth Output'
 if args.format == 'OPEN_EXR':
-  map = tree.nodes.new(type="CompositorNodeMapValue")
-  # Size is chosen kind of arbitrarily, try out until you're satisfied with resulting depth map.
-  map.offset = [0.0]
-  map.size = [1.0]
-  map.use_min = False;
-  map.min = [-100.0]
-  links.new(render_layers.outputs['Depth'], map.inputs[0])
-  links.new(map.outputs[0], depth_file_output.inputs[0])
   links.new(render_layers.outputs['Depth'], depth_file_output.inputs[0])
 else:
   # Remap as other types can not represent the full range of depth.

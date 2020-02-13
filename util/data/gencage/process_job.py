@@ -51,22 +51,17 @@ def add_edge(objpath):
     #get depth img
     pt = Imath.PixelType(Imath.PixelType.FLOAT)
     dimg = OpenEXR.InputFile(depth);
-    dw = dimg.header()['dataWindow'];
-    print(dimg.header()['channels'].keys());
-    size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1);   
-    ddata = dimg.channel('A',pt)
-    dimg = cv.CreateMat(size[1], size[0], cv.CV_32FC1)
-    cv.SetData(dimg,ddata);
-    normdimg = np.zeros((size[1], size[0]))
-    cv.normalize(dimg,normdimg,0,255,cv.NORM_MINMAX);
+    rCh = dimg.extract_channels();
+    ddata = np.asarray(rCh);
+    normdimg = np.zeros((448,448))
+    cv.normalize(ddata,normdimg,0,255,cv.NORM_MINMAX);
     dedge = auto_canny(normdimg.astype(np.uint8));
     #get normal img
-    pt = Imath.PixelType(Imath.PixelType.FLOAT)
     nimg = OpenEXR.InputFile(norm);
     rCh = nimg.extract_channels();
     ndata = np.asarray(rCh);
-    normnimg = np.zeros((size[1], size[0]));
-    cv.normalize(np.mean(dimg,axis=2),normnimg,0,255,cv.NORM_MINMAX);
+    normnimg = np.zeros((448, 448));
+    cv.normalize(np.mean(ndata,axis=2),normnimg,0,255,cv.NORM_MINMAX);
     nedge = auto_canny(normnimg.astype(np.uint8));
     #
     edge = np.bitwise_or(dedge,nedge);
