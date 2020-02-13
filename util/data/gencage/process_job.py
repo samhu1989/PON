@@ -29,6 +29,7 @@ def do_one(job):
     align_obj_with_N_random_rot(objpath);
     render_obj(objpath);
     render_depth_normal(objpath);
+    highlight_edge(objpath);
     
 def render_obj(objpath):
     path = os.path.dirname(objpath);
