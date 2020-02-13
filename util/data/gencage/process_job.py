@@ -48,6 +48,7 @@ def add_edge(objpath):
     depth = objpath.replace('.obj','_depth.exr0001.exr');
     norm = objpath.replace('.obj','_normal.exr0001.exr');
     rgbo = objpath.replace('.obj','_e.png');
+    rgbimg = cv.imread(rgb);
     #get depth img
     pt = Imath.PixelType(Imath.PixelType.FLOAT)
     dimg = OpenEXR.InputFile(depth);
@@ -55,8 +56,10 @@ def add_edge(objpath):
     ddata = 0.2989 * np.fromstring(dr,dtype=np.float32) + 0.5870 * np.fromstring(dg,dtype=np.float32) + 0.1140 * np.fromstring(db,dtype=np.float32);
     print(ddata.shape);
     print('ddata:',np.min(ddata),np.max(ddata));
+    ddata = ddata.reshape((448,448));
+    ddata[rgbimg[:,:,3]==0] = 0.0;
     normdimg = np.zeros((448,448))
-    cv.normalize(ddata,normdimg,0,255,cv.NORM_MINMAX);
+    normdimg = cv.normalize(ddata,normdimg,0,255,cv.NORM_MINMAX);
     dedge = auto_canny(normdimg.astype(np.uint8));
     #get normal img
     nimg = OpenEXR.InputFile(norm);
@@ -64,14 +67,13 @@ def add_edge(objpath):
     ndata = 0.2989 * np.fromstring(nr,dtype=np.float32) + 0.5870 * np.fromstring(ng,dtype=np.float32) + 0.1140 * np.fromstring(nb,dtype=np.float32);
     print('ndata:',np.min(ndata),np.max(ndata));
     normnimg = np.zeros((448, 448));
-    cv.normalize(ndata,normnimg,0,255,cv.NORM_MINMAX);
+    normnimg = cv.normalize(ndata,normnimg,0,255,cv.NORM_MINMAX);
     nedge = auto_canny(normnimg.astype(np.uint8));
     #
     cv.imwrite(objpath.replace('.obj','_dedge.png'),dedge);
     cv.imwrite(objpath.replace('.obj','_nedge.png'),nedge);
     edge = np.bitwise_or(dedge,nedge);
     cv.imwrite(objpath.replace('.obj','_edge.png'),edge);
-    rgbimg = cv.imread(rgb);
     out = rgbimg.copy();
     out[edge>0,0] = 0.0;
     out[edge>0,1] = 0.0;
