@@ -24,7 +24,7 @@ parser.add_argument('--depth_scale', type=float, default=0.4,
                     help='Scaling that is applied to depth. Depends on size of mesh. Try out various values until you get a good result. Ignored if format is OPEN_EXR.')
 parser.add_argument('--color_depth', type=str, default='8',
                     help='Number of bit per channel used for output. Either 8 or 16.')
-parser.add_argument('--format', type=str, default='PNG',
+parser.add_argument('--format', type=str, default='OPEN_EXR',
                     help='Format of files generated. Either PNG or OPEN_EXR')
 
 argv = sys.argv[sys.argv.index("--") + 1:]
@@ -64,22 +64,6 @@ else:
   map.min = [-1]
   links.new(render_layers.outputs['Depth'], map.inputs[0])
   links.new(map.outputs[0], depth_file_output.inputs[0])
-
-scale_normal = tree.nodes.new(type="CompositorNodeMixRGB")
-scale_normal.blend_type = 'MULTIPLY'
-scale_normal.use_alpha = True
-scale_normal.inputs[2].default_value = (0.5, 0.5, 0.5, 1)
-links.new(render_layers.outputs['Normal'], scale_normal.inputs[1])
-
-bias_normal = tree.nodes.new(type="CompositorNodeMixRGB")
-bias_normal.blend_type = 'ADD'
-bias_normal.use_alpha = True
-bias_normal.inputs[2].default_value = (0.5, 0.5, 0.5, 0)
-links.new(scale_normal.outputs[0], bias_normal.inputs[1])
-
-normal_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
-normal_file_output.label = 'Normal Output'
-links.new(bias_normal.outputs[0], normal_file_output.inputs[0])
 
 #albedo_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
 #albedo_file_output.label = 'Albedo Output'
@@ -167,20 +151,11 @@ cam_constraint.up_axis = 'UP_Y'
 b_empty = parent_obj_to_camera(cam)
 cam_constraint.target = b_empty
 
-model_identifier = os.path.split(os.path.basename(args.obj))[1]
-fp = os.path.join(args.output_folder, model_identifier)
-scene.render.image_settings.file_format = 'PNG'  # set output format to .png
-
-from math import radians
-
-stepsize = 360.0 / args.views
-rotation_mode = 'XYZ'
-
 for output_node in [depth_file_output, normal_file_output]:
     output_node.base_path = ''
-import numpy as np;
-depth_file_output.file_slots[0].path = args.obj.replace(".obj","_depth.png");
-normal_file_output.file_slots[0].path = args.obj.replace(".obj","_normal.png");
+    
+depth_file_output.file_slots[0].path = args.obj.replace(".obj","_depth.exr");
+normal_file_output.file_slots[0].path = args.obj.replace(".obj","_normal.exr");
 #albedo_file_output.file_slots[0].path = scene.render.filepath + "_albedo.png"
 
 bpy.ops.render.render(write_still=True)  # render still
