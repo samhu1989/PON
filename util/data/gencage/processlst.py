@@ -23,6 +23,7 @@ if __name__ == '__main__':
     lst = sys.argv[1];
     with open(os.path.join(dataroot,lst) ,'r') as joblst:
         for job in joblst:
+            job = job.rstrip('\n');
             extract_job_data(job);
             exit();
             
