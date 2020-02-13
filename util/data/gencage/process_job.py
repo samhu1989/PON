@@ -54,8 +54,8 @@ def add_edge(objpath):
     dimg = OpenEXR.InputFile(depth);
     dr,dg,db = dimg.channels("RGB");
     ddata = 0.2989 * np.fromstring(dr,dtype=np.float32) + 0.5870 * np.fromstring(dg,dtype=np.float32) + 0.1140 * np.fromstring(db,dtype=np.float32);
-    print(ddata.shape);
-    print('ddata:',np.min(ddata),np.max(ddata));
+    #print(ddata.shape);
+    #print('ddata:',np.min(ddata),np.max(ddata));
     ddata = ddata.reshape((448,448));
     ddata[rgbimg[:,:,3]==0] = 0.0;
     normdimg = np.zeros((448,448))
@@ -65,20 +65,20 @@ def add_edge(objpath):
     nimg = OpenEXR.InputFile(norm);
     nr,ng,nb = nimg.channels("RGB");
     ndata = 0.2989 * np.fromstring(nr,dtype=np.float32) + 0.5870 * np.fromstring(ng,dtype=np.float32) + 0.1140 * np.fromstring(nb,dtype=np.float32);
-    print('ndata:',np.min(ndata),np.max(ndata));
+    #print('ndata:',np.min(ndata),np.max(ndata));
     ndata = ndata.reshape((448,448));
     normnimg = np.zeros((448, 448));
     normnimg = cv.normalize(ndata,normnimg,0,255,cv.NORM_MINMAX);
     nedge = auto_canny(normnimg.astype(np.uint8));
-    #
-    cv.imwrite(objpath.replace('.obj','_dedge.png'),dedge);
-    cv.imwrite(objpath.replace('.obj','_nedge.png'),nedge);
+    #cv.imwrite(objpath.replace('.obj','_dedge.png'),dedge);
+    #cv.imwrite(objpath.replace('.obj','_nedge.png'),nedge);
     edge = np.bitwise_or(dedge,nedge);
-    cv.imwrite(objpath.replace('.obj','_edge.png'),edge);
+    #cv.imwrite(objpath.replace('.obj','_edge.png'),edge);
     out = rgbimg.copy();
     out[edge>0,0] = 0.0;
     out[edge>0,1] = 0.0;
     out[edge>0,2] = 0.0;
+    out = cv2.resize(out, (224,224), interpolation = cv.INTER_CUBIC)
     cv.imwrite(rgbo,out);
 
             
