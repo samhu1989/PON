@@ -53,6 +53,7 @@ def add_edge(objpath):
     dimg = OpenEXR.InputFile(depth);
     rCh = dimg.extract_channels();
     ddata = np.asarray(rCh);
+    print('ddata:',np.min(ddata),np.max(ddata));
     normdimg = np.zeros((448,448))
     cv.normalize(ddata,normdimg,0,255,cv.NORM_MINMAX);
     dedge = auto_canny(normdimg.astype(np.uint8));
@@ -60,6 +61,7 @@ def add_edge(objpath):
     nimg = OpenEXR.InputFile(norm);
     rCh = nimg.extract_channels();
     ndata = np.asarray(rCh);
+    print('ndata:',np.min(ndata),np.max(ndata));
     normnimg = np.zeros((448, 448));
     cv.normalize(np.mean(ndata,axis=2),normnimg,0,255,cv.NORM_MINMAX);
     nedge = auto_canny(normnimg.astype(np.uint8));
