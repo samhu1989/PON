@@ -12,12 +12,14 @@ if __name__ == '__main__':
         casecnt = 0;
         jobcnt = 0;
         current_lst = None;
+        newlst = True;
         for info in spnzip.infolist():
-            if casecnt == 0:
+            if casecnt == 0 and newlst:
                 if current_lst is not None:
                     current_lst.flush();
                     current_lst.close();
-                current_lst = open(os.path.join(dataroot,'job_%02d.txt'%jobcnt),'w');
+                current_lst = open(os.path.join(dataroot,'job_%03d.txt'%jobcnt),'w');
+                newlst = False;
                 print(jobcnt);
                 jobcnt += 1;
             if len(info.filename.split(os.sep)) == 4:
@@ -25,5 +27,6 @@ if __name__ == '__main__':
                 casecnt += 1;
                 if casecnt >= caseperjob:
                     casecnt = 0;
+                    newlst = True;
                
     
