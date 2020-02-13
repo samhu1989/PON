@@ -23,7 +23,6 @@ def render_obj(objpath):
             usesstk.render(os.path.join(path,f),os.path.abspath('./sstk.json'));
     
 def align_obj_with_N_random_rot(inobj,N=4):
-    print(inobj);
     pv = [];
     with open(inobj,'r') as fin:
         for line in fin:
