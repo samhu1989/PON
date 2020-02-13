@@ -5,7 +5,8 @@ import sys;
 from scipy.spatial.transform import Rotation as R;
 import usesstk;
 import useblender;
-import OpenEXR, Imath, cv;
+import OpenEXR, Imath;
+import cv2 as cv;
 
 dataroot = '/cephfs/siyu/cage';
 pndata = 'partnet.zip';
