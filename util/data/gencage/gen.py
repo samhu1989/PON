@@ -7,6 +7,6 @@ spndata = 'shapenet.zip';
 if __name__ == '__main__':
     with zpf.ZipFile(os.path.join(dataroot,pndata),'r') as pnzip:
         with zpf.ZipFile(os.path.join(dataroot,spndata),'r') as spnzip:
-            for name in pndata.namelist():
+            for name in pnzip.namelist():
                 print(name);
     
