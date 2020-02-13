@@ -16,10 +16,11 @@ if __name__ == '__main__':
             if casecnt == 0:
                 if current_lst is not None:
                     current_lst.close();
-                current_lst = open(os.path.join(dataroot,'job_%02d.txt'%jobcnt));
+                current_lst = open(os.path.join(dataroot,'job_%02d.txt'%jobcnt),'w');
                 jobcnt += 1;
+                print(jobcnt);
             if info.is_dir() and len(info.filename.split(os.sep)) == 2:
-                print(info.filename,file=current_lst);
+                print(info.filename,file = current_lst );
                 casecnt += 1;
                 if casecnt >= caseperjob:
                     casecnt = 0;
