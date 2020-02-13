@@ -11,7 +11,7 @@
   },
   "view": {
     "coordinate_frame": "scene",
-    "position": [0, 1.26, -2.1],
+    "position": [0, 0.84, -1.4],
     "target": [0, 0, 0],
     "up": [0, 1, 0],
     "near": 0.1,
