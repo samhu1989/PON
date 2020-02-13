@@ -17,7 +17,7 @@ def extract_job_data(job):
     with zpf.ZipFile(os.path.join(dataroot,spndata),'r') as spnzip:
         spnzip.extract(job,path=workpath);
     with zpf.ZipFile(os.path.join(dataroot,pndata),'r') as pnzip:
-        pnzip.extract('partnet/'+id,path=workpath);
+        pnzip.extract('partnet/'+id+'/',path=workpath);
     
 if __name__ == '__main__':
     lst = sys.argv[1];
