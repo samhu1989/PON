@@ -174,8 +174,8 @@ from math import radians
 stepsize = 360.0 / args.views
 rotation_mode = 'XYZ'
 
-#for output_node in [depth_file_output, normal_file_output, albedo_file_output]:
-    #output_node.base_path = ''
+for output_node in [depth_file_output, normal_file_output]:
+    output_node.base_path = ''
 import numpy as np;
 depth_file_output.file_slots[0].path = args.obj.replace(".obj","_depth.png");
 normal_file_output.file_slots[0].path = args.obj.replace(".obj","_normal.png");
