@@ -52,7 +52,7 @@ def add_edge(objpath):
     pt = Imath.PixelType(Imath.PixelType.FLOAT)
     dimg = OpenEXR.InputFile(depth);
     dr,dg,db = dimg.channels("RGB");
-    ddata = 0.2989 * np.fromstring((dr,dtype=np.float32) + 0.5870 * np.fromstring((dg,dtype=np.float32) + 0.1140 * np.fromstring((db,dtype=np.float32);
+    ddata = 0.2989 * np.fromstring(dr,dtype=np.float32) + 0.5870 * np.fromstring(dg,dtype=np.float32) + 0.1140 * np.fromstring(db,dtype=np.float32);
     print(ddata.shape);
     print('ddata:',np.min(ddata),np.max(ddata));
     normdimg = np.zeros((448,448))
@@ -61,7 +61,7 @@ def add_edge(objpath):
     #get normal img
     nimg = OpenEXR.InputFile(norm);
     nr,ng,nb = dimg.channels("RGB");
-    ndata = 0.2989 * np.fromstring(nr,dtype=np.float32) + 0.5870 * np.fromstring((ng,dtype=np.float32) + 0.1140 * np.fromstring((nb,dtype=np.float32);
+    ndata = 0.2989 * np.fromstring(nr,dtype=np.float32) + 0.5870 * np.fromstring(ng,dtype=np.float32) + 0.1140 * np.fromstring(nb,dtype=np.float32);
     print('ndata:',np.min(ndata),np.max(ndata));
     normnimg = np.zeros((448, 448));
     cv.normalize(np.mean(ndata,axis=2),normnimg,0,255,cv.NORM_MINMAX);
