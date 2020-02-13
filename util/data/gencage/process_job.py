@@ -52,6 +52,7 @@ def add_edge(objpath):
     pt = Imath.PixelType(Imath.PixelType.FLOAT)
     dimg = OpenEXR.InputFile(depth);
     dw = dimg.header()['dataWindow'];
+    print(dimg.header()['channels'].keys());
     size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1);   
     ddata = dimg.channel('A',pt)
     dimg = cv.CreateMat(size[1], size[0], cv.CV_32FC1)
