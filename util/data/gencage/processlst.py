@@ -15,10 +15,15 @@ def extract_job_data(job):
         os.makedirs(workpath);
     print(job);
     with zpf.ZipFile(os.path.join(dataroot,spndata),'r') as spnzip:
-        spnzip.extract(job,path=workpath);
+        for name in spnzip.namelist():
+            if name.startswith(job):
+                spnzip.extract(name,path=workpath);
     with zpf.ZipFile(os.path.join(dataroot,pndata),'r') as pnzip:
-        pnzip.extract('partnet/'+id+'/',path=workpath);
-    
+        partdata = 'partnet/'+id+'/'
+        for name in pnzip.namelist():
+            if name.startswith(partdata):
+                pnzip.extract(name,path=workpath);
+
 if __name__ == '__main__':
     lst = sys.argv[1];
     with open(os.path.join(dataroot,lst) ,'r') as joblst:
