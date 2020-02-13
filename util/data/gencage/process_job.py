@@ -21,7 +21,7 @@ def do_one(job):
 def render_obj(objpath):
     path = os.path.dirname(objpath);
     for f in os.listdir(path):
-        if 'model_normalized_r' in f:
+        if 'model_normalized_r' in f and f.endswith('.obj'):
             usesstk.render(os.path.join(path,f),os.path.abspath('./sstk.json'));
             
 def render_depth_normal(objpath):
