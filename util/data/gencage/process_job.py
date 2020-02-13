@@ -67,7 +67,10 @@ def add_edge(objpath):
     cv.normalize(ndata,normnimg,0,255,cv.NORM_MINMAX);
     nedge = auto_canny(normnimg.astype(np.uint8));
     #
+    cv.imwrite(objpath.replace('.obj','_dedge.png'),dedge);
+    cv.imwrite(objpath.replace('.obj','_nedge.png'),nedge);
     edge = np.bitwise_or(dedge,nedge);
+    cv.imwrite(objpath.replace('.obj','_edge.png'),edge);
     rgbimg = cv.imread(rgb);
     out = rgbimg.copy();
     out[edge>0,0] = 0.0;
