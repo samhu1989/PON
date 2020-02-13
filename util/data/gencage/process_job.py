@@ -4,6 +4,7 @@ import numpy as np;
 import sys;
 from scipy.spatial.transform import Rotation as R;
 import usesstk;
+import useblender;
 
 dataroot = '/cephfs/siyu/cage';
 pndata = 'partnet.zip';
@@ -15,13 +16,20 @@ def do_one(job):
     objpath = os.path.join(tmproot,id,job,'sp/models/model_normalized.obj');
     align_obj_with_N_random_rot(objpath);
     render_obj(objpath);
+    render_depth_normal(objpath);
     
 def render_obj(objpath):
     path = os.path.dirname(objpath);
     for f in os.listdir(path):
         if 'model_normalized_r' in f:
             usesstk.render(os.path.join(path,f),os.path.abspath('./sstk.json'));
-    
+            
+def render_depth_normal(objpath):
+    path = os.path.dirname(objpath);
+    for f in os.listdir(path):
+        if 'model_normalized_r' in f:
+            useblender.render(os.path.join(path,f));
+            
 def align_obj_with_N_random_rot(inobj,N=4):
     pv = [];
     with open(inobj,'r') as fin:
