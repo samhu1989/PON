@@ -65,6 +65,22 @@ else:
   links.new(render_layers.outputs['Depth'], map.inputs[0])
   links.new(map.outputs[0], depth_file_output.inputs[0])
 
+scale_normal = tree.nodes.new(type="CompositorNodeMixRGB")
+scale_normal.blend_type = 'MULTIPLY'
+scale_normal.use_alpha = True
+scale_normal.inputs[2].default_value = (0.5, 0.5, 0.5, 1)
+links.new(render_layers.outputs['Normal'], scale_normal.inputs[1])
+
+bias_normal = tree.nodes.new(type="CompositorNodeMixRGB")
+bias_normal.blend_type = 'ADD'
+bias_normal.use_alpha = True
+bias_normal.inputs[2].default_value = (0.5, 0.5, 0.5, 0)
+links.new(scale_normal.outputs[0], bias_normal.inputs[1])
+
+normal_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
+normal_file_output.label = 'Normal Output'
+links.new(bias_normal.outputs[0], normal_file_output.inputs[0])
+
 #albedo_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
 #albedo_file_output.label = 'Albedo Output'
 #links.new(render_layers.outputs['Color'], albedo_file_output.inputs[0])
