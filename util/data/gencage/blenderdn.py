@@ -22,7 +22,7 @@ parser.add_argument('--edge_split', type=bool, default=True,
                     help='Adds edge split filter.')
 parser.add_argument('--depth_scale', type=float, default=0.4,
                     help='Scaling that is applied to depth. Depends on size of mesh. Try out various values until you get a good result. Ignored if format is OPEN_EXR.')
-parser.add_argument('--color_depth', type=str, default='8',
+parser.add_argument('--color_depth', type=str, default='32',
                     help='Number of bit per channel used for output. Either 8 or 16.')
 parser.add_argument('--format', type=str, default='OPEN_EXR',
                     help='Format of files generated. Either PNG or OPEN_EXR')
