@@ -73,15 +73,15 @@ def writebox(path,box,colors=None):
     
 
 def writegt(path,boxgt):
-    writebox(os.path.join(path,'_002_000_gt.ply'),boxgt);
+    writebox(os.path.join(path,'_005_000_gt.ply'),boxgt);
     
 def writeout(path,box,color,msk):
     for i in range(1,len(box)+1):
         bout = box[0:i];
         cout = color[0:i];
-        writebox(os.path.join(path,'_002_%03d_out.ply'%i),bout,cout);
-        im = Image.fromarray((msk[i-1]*255).astype(np.uint8),mode='L');
-        im.save(os.path.join(path,'_001_%03d_msk.png'%i));
+        writebox(os.path.join(path,'_005_%03d_out.ply'%i),bout,cout);
+        #im = Image.fromarray((msk[i-1]*255).astype(np.uint8),mode='L');
+        #im.save(os.path.join(path,'_001_%03d_msk.png'%i));
         
 def add_gt_for_eval(vec,s_gt,t_gt,r1_gt,r2_gt):
     vec = vec.astype(np.float32);
@@ -149,19 +149,19 @@ def run(**kwargs):
         exit();
     #get dataset
     dpath = os.path.join(opt['data_path'],'test')
-    opath = './log/join'
+    opath = './log/joinN'
     if not os.path.exists(opath):
         os.makedirs(opath);
     cat_lst = os.listdir(dpath);
     #cat_lst = ['Chair','Table'];
-    eval_log = open('./log/join/'+opt['mode']+'_eval.csv','w');
+    eval_log = open('./log/joinN/'+opt['mode']+'_eval.csv','w');
     eval_all_sum = 0.0;
     eval_all_cnt = 0.0;
     for cat in cat_lst:
         eval_cat_sum = 0.0;
         eval_cat_cnt = 0.0;
         cpath = os.path.join(opt['data_path'],'test',cat);
-        copath = os.path.join(opath,'join_'+cat+'_'+opt['mode']);
+        copath = os.path.join(opath,'joinN_'+cat+'_'+opt['mode']);
         if not os.path.exists(copath):
             os.mkdir(copath);
         slst = os.listdir(cpath);
@@ -196,10 +196,10 @@ def run(**kwargs):
                     imgt_lst.append(imgs)
                     tmsk_lst.append(mski);
                     box_lst.append(box[i,...]);
-                    im = Image.fromarray((imgs_lst[-1]*255).astype(np.uint8));
-                    im.save(os.path.join(fopath,'_000_%03d_img.png'%(len(imgs_lst)-1)));
-                    imt = Image.fromarray((smsk_lst[-1]*255).astype(np.uint8));
-                    imt.save(os.path.join(fopath,'_001_%03d_msk.png'%(len(smsk_lst)-1)));
+                    im = Image.fromarray((imgs_lst[-1]*255).astype(np.uint8),'RGB');
+                    im.save(os.path.join(fopath,'_000_%03d_img.png'%(len(imgs_lst))));
+                    imt = Image.fromarray((smsk_lst[-1]*255).astype(np.uint8),'L');
+                    imt.save(os.path.join(fopath,'_001_%03d_msk.png'%(len(smsk_lst))));
             #
             imgs = np.stack(imgs_lst,axis=0);
             smsk = np.stack(smsk_lst,axis=0);
@@ -278,6 +278,11 @@ def run(**kwargs):
                     with torch.no_grad():
                         touchout = touchnet(tdata);
                     if touchout['y'].data.cpu().numpy()[0][0] > 0.5:
+                        im = Image.fromarray((pimg.data.cpu().numpy()[0,...]*255).astype(np.uint8));
+                        im.save(os.path.join(fopath,'_003_%03d_img.png'%(len(box_out))));
+                        allmsk = (psmsk+ptmsk).data.cpu().numpy()[0,...];
+                        imt = Image.fromarray((allmsk*255).astype(np.uint8));
+                        imt.save(os.path.join(fopath,'_004_%03d_msk.png'%(len(box_out))));
                         bgt,rsgt,_ = parsegt(box_lst[cj]);
                         tptdata.append(pimg);
                         tptdata.append(psmsk);
@@ -321,19 +326,21 @@ def run(**kwargs):
                 for p in unfinish:
                     heapq.heappush(undone_queue,p);
                 print(']',file=logf);
-            im = Image.fromarray((bdata[0][0,...].data.cpu().numpy()*255).astype(np.uint8));
+            im = Image.fromarray((img*255).astype(np.uint8));
             im.save(os.path.join(fopath,'_001_000_im.png'));
             writegt(fopath,box_gt);
             writeout(fopath,box_out,box_color,msk_in);
             val = eval(s_out,t_out,r1_out,r2_out,s_gt,t_gt,r1_gt,r2_gt);
             v = float(val.data.cpu().numpy());
             json.dump({'bcd':v},open(os.path.join(fopath,'meta.json'),'w'));
-            eval_all_sum += val.data.cpu().numpy();
-            eval_all_cnt += 1.0;
-            eval_cat_sum += val.data.cpu().numpy();
-            eval_cat_cnt += 1.0;
-        print(cat+',%f'%(eval_cat_sum/eval_cat_cnt),file=eval_log);
-        eval_log.flush();
+            if cat != 'TrainChair':
+                eval_all_sum += val.data.cpu().numpy();
+                eval_all_cnt += 1.0;
+                eval_cat_sum += val.data.cpu().numpy();
+                eval_cat_cnt += 1.0;
+        if cat != 'TrainChair':
+            print(cat+',%f'%(eval_cat_sum/eval_cat_cnt),file=eval_log);
+            eval_log.flush();
     print('inst mean,%f'%(eval_all_sum/eval_all_cnt),file=eval_log);
     eval_log.close();
             

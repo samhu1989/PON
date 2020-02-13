@@ -1,7 +1,10 @@
 import numpy as np;
 import os;
+import scipy
 from scipy.spatial import ConvexHull as ConvH;
 from PIL import Image;
+import scipy.signal as signal;
+
 def get_grid(x, y, homogenous=False):
     coords = np.indices((x, y)).reshape(2, -1)
     return np.vstack((coords, np.ones(coords.shape[1]))) if homogenous else coords
@@ -52,11 +55,60 @@ def apply_transform(img,A):
         for im in img:
             r.append( np.zeros_like(im) );
             r[-1][ypix2, xpix2] = im[yy, xx];
+            if len(im.shape) > 2:
+                r[-1][:,:,0] = interp(r[-1][:,:,0]);
+                r[-1][:,:,1] = interp(r[-1][:,:,1]);
+                r[-1][:,:,2] = interp(r[-1][:,:,2]);
+            else:
+                r[-1] = interp(r[-1]);
         return r;
     else:
         canvas = np.zeros_like(img)
         canvas[ypix2, xpix2] = img[yy, xx];
-        return canvas;
+        return canvas.astype(np.float32);
+        
+def apply_trans(img,A):
+    if isinstance(img,list):
+        r = [];
+        for im in img:
+            if len(im.shape) > 2:
+                tmp = im.copy();
+                tmp[:,:,0] = scipy.ndimage.affine_transform(im[:,:,0],A).astype(np.float32);
+                tmp[:,:,1] = scipy.ndimage.affine_transform(im[:,:,1],A).astype(np.float32);
+                tmp[:,:,2] = scipy.ndimage.affine_transform(im[:,:,2],A).astype(np.float32);
+                r.append(tmp)
+            else:
+                r.append( scipy.ndimage.affine_transform(im,A).astype(np.float32) );
+        return r;
+    else:
+        return scipy.ndimage.affine_transform(img,A).astype(np.float32);
+        
+def interp(imgin):
+    img = imgin.copy()
+    a = scipy.ndimage.shift(img,[-1,0]);
+    b = scipy.ndimage.shift(img,[0,-1]);
+    c = scipy.ndimage.shift(img,[1,0]);
+    d = scipy.ndimage.shift(img,[0,1]);
+    img = np.max(np.stack([img,a,b,c,d],axis=2),axis=2);
+    return img;
+                
+    
+        
+def shift(img,ty,tx):
+    if isinstance(img,list):
+        r = [];
+        for im in img:
+            if len(im.shape) > 2:
+                tmp = im.copy();
+                tmp[:,:,0] = scipy.ndimage.shift(im[:,:,0],[tx,ty]).astype(np.float32);
+                tmp[:,:,1] = scipy.ndimage.shift(im[:,:,1],[tx,ty]).astype(np.float32);
+                tmp[:,:,2] = scipy.ndimage.shift(im[:,:,2],[tx,ty]).astype(np.float32);
+                r.append(tmp)
+            else:
+                r.append( scipy.ndimage.shift(im,[tx,ty]).astype(np.float32) );
+        return r;
+    else:
+        return scipy.ndimage.shift(img,[tx,ty]).astype(np.float32);
         
 def msk2t(msk):
     w = msk.shape[1];
