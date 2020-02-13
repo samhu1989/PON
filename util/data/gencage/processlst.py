@@ -2,6 +2,7 @@ import zipfile as zpf;
 import os;
 import numpy as np;
 import sys;
+import .process_job;
 
 dataroot = '/cephfs/siyu/cage';
 pndata = 'partnet.zip';
@@ -30,5 +31,6 @@ if __name__ == '__main__':
         for job in joblst:
             job = job.rstrip('\n');
             extract_job_data(job);
+            process_job.do_one(job);
             exit();
             
