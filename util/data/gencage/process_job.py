@@ -12,7 +12,7 @@ tmproot = '/cephfs/siyu/cage/tmp';
 def do_one(job):
     id = job.split('/')[2];
     objpath = os.path.join(tmproot,id,job,'sp/models/model_normalized.obj');
-    align_obj_with_N_random_rot(inobj);
+    align_obj_with_N_random_rot(objpath);
     
 def align_obj_with_N_random_rot(inobj,N=4):
     print(inobj);
