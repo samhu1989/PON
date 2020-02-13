@@ -66,6 +66,7 @@ def add_edge(objpath):
     nr,ng,nb = nimg.channels("RGB");
     ndata = 0.2989 * np.fromstring(nr,dtype=np.float32) + 0.5870 * np.fromstring(ng,dtype=np.float32) + 0.1140 * np.fromstring(nb,dtype=np.float32);
     print('ndata:',np.min(ndata),np.max(ndata));
+    ndata = ndata.reshape((448,448));
     normnimg = np.zeros((448, 448));
     normnimg = cv.normalize(ndata,normnimg,0,255,cv.NORM_MINMAX);
     nedge = auto_canny(normnimg.astype(np.uint8));
