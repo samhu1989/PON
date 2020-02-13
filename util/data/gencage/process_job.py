@@ -78,7 +78,7 @@ def add_edge(objpath):
     out[edge>0,0] = 0.0;
     out[edge>0,1] = 0.0;
     out[edge>0,2] = 0.0;
-    out = cv2.resize(out, (224,224), interpolation = cv.INTER_CUBIC)
+    out = cv.resize(out, (224,224), interpolation = cv.INTER_CUBIC)
     cv.imwrite(rgbo,out);
 
             
