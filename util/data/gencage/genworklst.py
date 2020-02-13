@@ -19,7 +19,7 @@ if __name__ == '__main__':
                 current_lst = open(os.path.join(dataroot,'job_%02d.txt'%jobcnt),'w');
                 jobcnt += 1;
                 print(jobcnt);
-            if info.is_dir() and len(info.filename.split(os.sep)) == 2:
+            if len(info.filename.split(os.sep)) == 2:
                 print(info.filename,file = current_lst );
                 casecnt += 1;
                 if casecnt >= caseperjob:
