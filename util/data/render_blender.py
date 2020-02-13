@@ -32,7 +32,7 @@ args = parser.parse_args(argv)
 import bpy
 
 # Set up rendering of depth map.
-bpy.context.scene.use_nodes = True
+bpy.context.scene.use_nodes = True;
 tree = bpy.context.scene.node_tree
 links = tree.links
 
