@@ -2,7 +2,7 @@ import zipfile as zpf;
 import os;
 import numpy as np;
 import sys;
-import .process_job as pj;
+import process_job as pj;
 
 dataroot = '/cephfs/siyu/cage';
 pndata = 'partnet.zip';
