@@ -1,6 +1,6 @@
 {
-  "width": 224,
-  "height": 224,
+  "width": 448,
+  "height": 448,
   "assetInfo": {
     "defaultUp": [ 0, 1, 0 ],
     "defaultFront": [ 0, 0, -1],
@@ -11,7 +11,7 @@
   },
   "view": {
     "coordinate_frame": "scene",
-    "position": [0, 0.84, -1.4],
+    "position": [0, 1.134, -1.89],
     "target": [0, 0, 0],
     "up": [0, 1, 0],
     "near": 0.1,
