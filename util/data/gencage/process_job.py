@@ -3,6 +3,7 @@ import os;
 import numpy as np;
 import sys;
 from scipy.spatial.transform import Rotation as R;
+import usesstk;
 
 dataroot = '/cephfs/siyu/cage';
 pndata = 'partnet.zip';
@@ -13,6 +14,13 @@ def do_one(job):
     id = job.split('/')[2];
     objpath = os.path.join(tmproot,id,job,'sp/models/model_normalized.obj');
     align_obj_with_N_random_rot(objpath);
+    render_obj(objpath);
+    
+def render_obj(objpath):
+    path = os.path.dirname(objpath);
+    for f in os.listdir(path):
+        if 'model_normalized_r' in f:
+            usesstk.render(os.path.join(path,f),os.path.abspath('./sstk.json'));
     
 def align_obj_with_N_random_rot(inobj,N=4):
     print(inobj);
