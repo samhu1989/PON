@@ -12,7 +12,7 @@ def extract_job_data(job):
     
 
 if __name__ == '__main__':
-    lst = sys.args[1];
+    lst = sys.argv[1];
     with open(os.path.join(dataroot,lst) ,'r') as joblst:
         for job in joblst:
             extract_job_data(job);
