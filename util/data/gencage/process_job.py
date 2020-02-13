@@ -53,6 +53,7 @@ def add_edge(objpath):
     dimg = OpenEXR.InputFile(depth);
     dr,dg,db = dimg.channels("RGB");
     ddata = 0.2989 * np.asarray(dr,dtype=np.float32) + 0.5870 * np.asarray(dg,dtype=np.float32) + 0.1140 * np.asarray(db,dtype=np.float32);
+    print(ddata.shape);
     print('ddata:',np.min(ddata),np.max(ddata));
     normdimg = np.zeros((448,448))
     cv.normalize(ddata,normdimg,0,255,cv.NORM_MINMAX);
@@ -72,7 +73,7 @@ def add_edge(objpath):
     out[edge>0,0] = 0.0;
     out[edge>0,1] = 0.0;
     out[edge>0,2] = 0.0;
-    cv2.imwrite(rgbo,out);
+    cv.imwrite(rgbo,out);
 
             
 def highlight_edge(objpath):
