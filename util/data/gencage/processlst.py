@@ -12,6 +12,7 @@ def extract_job_data(job):
     #create tmp workspace
     workpath = os.path.join(dataroot,'tmp',id);
     os.makedirs(os.path.join(dataroot,'tmp',id));
+    print(job);
     with zpf.ZipFile(os.path.join(dataroot,spndata),'r') as spnzip:
         spnzip.extract(job,path=workpath);
     with zpf.ZipFile(os.path.join(dataroot,pndata),'r') as pnzip:
