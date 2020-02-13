@@ -24,5 +24,7 @@ if __name__ == '__main__':
                 casecnt += 1;
                 if casecnt >= caseperjob:
                     casecnt = 0;
+            else:
+                print(info.filename);
                
     
