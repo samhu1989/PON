@@ -48,7 +48,7 @@ def add_edge(objpath):
     depth = objpath.replace('.obj','_depth.exr0001.exr');
     norm = objpath.replace('.obj','_normal.exr0001.exr');
     rgbo = objpath.replace('.obj','_e.png');
-    rgbimg = cv.imread(rgb);
+    rgbimg = cv.imread(rgb,cv.IMREAD_UNCHANGED);
     #get depth img
     pt = Imath.PixelType(Imath.PixelType.FLOAT)
     dimg = OpenEXR.InputFile(depth);
