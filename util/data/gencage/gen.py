@@ -1,4 +1,3 @@
-import numpy as np;
 import zipfile as zpf;
 import os;
 dataroot = '/cephfs/siyu/cage'
