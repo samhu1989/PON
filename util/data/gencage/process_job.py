@@ -51,16 +51,16 @@ def add_edge(objpath):
     #get depth img
     pt = Imath.PixelType(Imath.PixelType.FLOAT)
     dimg = OpenEXR.InputFile(depth);
-    rCh = dimg.extract_channels();
-    ddata = np.asarray(rCh);
+    dr,dg,db = dimg.channels("RGB");
+    ddata = 0.2989 * dr + 0.5870 * dg + 0.1140 * db;
     print('ddata:',np.min(ddata),np.max(ddata));
     normdimg = np.zeros((448,448))
     cv.normalize(ddata,normdimg,0,255,cv.NORM_MINMAX);
     dedge = auto_canny(normdimg.astype(np.uint8));
     #get normal img
     nimg = OpenEXR.InputFile(norm);
-    rCh = nimg.extract_channels();
-    ndata = np.asarray(rCh);
+    nr,ng,nb = dimg.channels("RGB");
+    ndata = 0.2989 * nr + 0.5870 * ng + 0.1140 * nb;
     print('ndata:',np.min(ndata),np.max(ndata));
     normnimg = np.zeros((448, 448));
     cv.normalize(np.mean(ndata,axis=2),normnimg,0,255,cv.NORM_MINMAX);
