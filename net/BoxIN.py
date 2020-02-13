@@ -17,25 +17,23 @@ class BoxNet(nn.Module):
     def __init__(self,**kwargs):
         super(BoxNet,self).__init__();
         self.dec_size = nn.Sequential(
-                resnet.resnet18(pretrained=False,input_channel=4,fc=False),
+                resnet.resnet18(pretrained=False,input_channel=4,fc=False,norm=nn.InstanceNorm2d),
                 nn.Conv2d(512, 256, kernel_size=1, bias=False),
-                nn.BatchNorm2d(256),
+                nn.InstanceNorm2d(256,affine=True),
                 nn.ReLU(inplace=True),
                 nn.AvgPool2d(7),
-                nn.Conv2d(256, 256, kernel_size=1, bias=False),
-                nn.BatchNorm2d(256),
+                nn.Conv2d(256, 256, kernel_size=1, bias=True),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(256, 3, kernel_size=1, bias=True),
                 nn.Sigmoid()
                 );
         self.dec_rot6 = nn.Sequential(
-                resnet.resnet18(pretrained=False,input_channel=4,fc=False),
+                resnet.resnet18(pretrained=False,input_channel=4,fc=False,norm=nn.InstanceNorm2d),
                 nn.Conv2d(512, 256, kernel_size=1, bias=False),
-                nn.BatchNorm2d(256),
+                nn.InstanceNorm2d(256,affine=True),
                 nn.ReLU(inplace=True),
                 nn.AvgPool2d(7),
-                nn.Conv2d(256, 256, kernel_size=1, bias=False),
-                nn.BatchNorm2d(256),
+                nn.Conv2d(256, 256, kernel_size=1, bias=True),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(256, 6, kernel_size=1, bias=True),
                 nn.Tanh()
