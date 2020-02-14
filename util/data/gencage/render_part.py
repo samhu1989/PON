@@ -153,12 +153,13 @@ def parent_obj_to_camera(b_camera):
 
 
 scene = bpy.context.scene
-scene.render.resolution_x = 224
-scene.render.resolution_y = 224
-scene.render.resolution_percentage = 100
+scene.render.resolution_x = 224;
+scene.render.resolution_y = 224;
+scene.render.resolution_percentage = 100;
 scene.render.alpha_mode = 'TRANSPARENT'
 cam = scene.objects['Camera']
-cam.location = (0, 1.4, 0.84)
+cam.location = (0, 2.1, 1.26)
+bpy.data.cameras.values()[0].angle = np.radians(35);
 cam_constraint = cam.constraints.new(type='TRACK_TO')
 cam_constraint.track_axis = 'TRACK_NEGATIVE_Z'
 cam_constraint.up_axis = 'UP_Y'
@@ -181,13 +182,12 @@ albedo_file_output.base_path = ''
 
 import numpy as np;
 angle = args.angle
-print(angle);
 b_empty.rotation_euler[2] = radians(float(angle));
 
 for i in range(0, args.views):
     print("Rotation {}, {}".format((stepsize * i), radians(stepsize * i)))
 
-    scene.render.filepath = fp + "_%d.png"%int(angle);
+    scene.render.filepath = fp + ".png";
     #depth_file_output.file_slots[0].path = scene.render.filepath + "_depth.png"
     #normal_file_output.file_slots[0].path = scene.render.filepath + "_normal.png"
     albedo_file_output.file_slots[0].path = scene.render.filepath.replace('.png','_msk');

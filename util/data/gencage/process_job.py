@@ -130,6 +130,7 @@ def gen_parts(partnetpath,angles,pout):
         if not os.path.exists(copath):
             os.makedirs(copath);
         partply(partnetpath,angle,copath);
+        useblender.render_msk(copath);
         
 def auto_canny(image, sigma=0.33):
 	# compute the median of the single channel pixel intensities
