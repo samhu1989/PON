@@ -48,7 +48,7 @@ def pack(pnpath,partpath,spnobjpath,opath,id,angle):
         pv = plypts[label== i,:3].astype(np.float32);
         num = pv.shape[0];
         if num > 0 :
-            mskp = 'p_%d_b_msk0001.png'%(cnt,angle);
+            mskp = 'p_%d_b_msk0001.png'%(cnt);
             msk = Image.open(os.path.join(partpath,'all_msk',mskp));
             msk = np.array(msk).astype(np.float32) / 255.0;
             msk = msk[:,:,2];
