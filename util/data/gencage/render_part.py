@@ -5,7 +5,7 @@
 # blender --background --python mytest.py -- --views 10 /path/to/my.obj
 #
 import argparse, sys, os
-
+import numpy as np;
 parser = argparse.ArgumentParser(description='Renders given obj file by rotation a camera around it.')
 parser.add_argument('--views', type=int, default=30,
                     help='number of views to be rendered')
