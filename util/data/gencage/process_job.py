@@ -88,7 +88,7 @@ def partply(partpath,rot,opath):
             pf = [];
             pvn = 0;
             for name in part_map['%d'%i]['objs']:
-                pvi,pfi = read_obj(os.path.join(objpath,'objs',name+'.obj'));
+                pvi,pfi = read_obj(os.path.join(partpath,'objs',name+'.obj'));
                 pv.append(pvi);
                 pf.append(pfi+pvn);
                 pvn += pvi.shape[0];
