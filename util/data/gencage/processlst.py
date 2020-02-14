@@ -32,5 +32,4 @@ if __name__ == '__main__':
             job = job.rstrip('\n');
             extract_job_data(job);
             pj.do_one(job);
-            exit();
             
