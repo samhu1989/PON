@@ -10,6 +10,7 @@ import cv2 as cv;
 from functools import partial
 from ply import read_ply, write_ply;
 import pandas as pd;
+import json;
 
 dataroot = '/cephfs/siyu/cage';
 pndata = 'partnet.zip';
