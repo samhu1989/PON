@@ -11,14 +11,17 @@ from functools import partial
 from ply import read_ply, write_ply;
 import pandas as pd;
 import json;
+from packone import pack; 
 
 dataroot = '/cephfs/siyu/cage';
 pndata = 'partnet.zip';
 spndata = 'shapenet.zip';
 tmproot = '/cephfs/siyu/cage/tmp';
+oroot = '/cephfs/siyu/cagenet';
 
 def do_one(job):
-    id = job.split('/')[2];
+    info = job.split('/');
+    id = info[2];
     objpath = os.path.join(tmproot,id,job,'sp/models/model_normalized.obj');
     #
     angles = align_obj_with_N_random_rot(objpath);
@@ -29,6 +32,12 @@ def do_one(job):
     partnetpath = os.path.join(tmproot,id,'partnet',id);
     partoutpath = os.path.join(tmproot,id,'part');
     gen_parts(partnetpath,angles,partoutpath);
+    #
+    outpath = os.path.join(oroot,info[0],info[1]);
+    if not os.path.exists(outpath):
+        os.makedirs(outpath);
+    for angle in angles:
+        pack(partnetpath,partpath,objpath,outpath,id,angle);
     
 def func(a,vidx):
     idx = np.argwhere(vidx==a);
