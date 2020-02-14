@@ -9,6 +9,7 @@ import os;
 import os;
 import numpy as np;
 import sys;
+import scipy;
 from scipy.spatial.transform import Rotation as R;
 from functools import partial
 import pandas as pd;
