@@ -34,7 +34,7 @@ def packorigin(imgp,angle,h5fo):
 
 def pack(pnpath,partpath,spnobjpath,opath,id,angle):
     partp = os.path.join(partpath,'part_r%d'%angle);
-    imgp = spnobjpath;
+    imgp = os.path.dirname(spnobjpath);
     data = read_ply(os.path.join(pnpath,'point_sample','ply-10000.ply'));
     label = np.loadtxt(os.path.join(pnpath,'point_sample','label-10000.txt'),dtype=np.int32);
     plypts = np.array(data['points'])[:,:3];
