@@ -126,7 +126,10 @@ def partply(partpath,rot,opath):
     
 def gen_parts(partnetpath,angles,pout):
     for angle in angles:
-        partply(partnetpath,angle,os.path.join(pout,'part_r%d'%angle));
+        copath = os.path.join(pout,'part_r%d'%angle);
+        if not os.path.exists(copath):
+            os.makedirs(copath);
+        partply(partnetpath,angle,copath);
         
 def auto_canny(image, sigma=0.33):
 	# compute the median of the single channel pixel intensities
