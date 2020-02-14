@@ -5,6 +5,7 @@ import h5py;
 from PIL import Image;
 from obb import OBB;
 import OpenEXR, Imath;
+import os;
 
 def packorigin(imgp,angle,h5fo):
     img = Image.open(os.path.join(imgp,'model_normalized_r%d.png'%angle));
