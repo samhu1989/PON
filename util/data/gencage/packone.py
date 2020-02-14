@@ -3,7 +3,7 @@ import json;
 from ply import read_ply, write_ply;
 import h5py;
 from PIL import Image;
-from OBB import obb;
+from obb import OBB;
 import OpenEXR, Imath;
 
 def packorigin(imgp,angle,h5fo):
