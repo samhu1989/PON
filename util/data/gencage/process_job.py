@@ -61,7 +61,7 @@ def read_obj(obj):
     return vout,fout;
     
 def tounit_param(input_pts):
-    r = R.from_euler('y', 180, degrees=True);
+    r = R.from_euler('y', 0, degrees=True);
     pts = r.apply(input_pts);
     mmx = np.max(pts,axis=0);
     mmn = np.min(pts,axis=0);
