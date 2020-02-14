@@ -54,11 +54,11 @@ def read_obj(obj):
     objpv = np.array(pv).astype(np.float32);
     objpf = np.array(pf).astype(np.int32);
     #load only face referenced pv:
-    vidx = np.unique(objf.flatten());
+    vidx = np.unique(objpf.flatten());
     vout = objpv[vidx,:];
-    res = map(partial(func,vidx=vidx),objf.flatten().tolist());
-    objpf = np.array(list(res)).reshape(-1,3);
-    return objpv,objpf;
+    res = map(partial(func,vidx=vidx),objpf.flatten().tolist());
+    fout = np.array(list(res)).reshape(-1,3);
+    return vout,fout;
     
 def tounit_param(input_pts):
     r = R.from_euler('y', 180, degrees=True);
