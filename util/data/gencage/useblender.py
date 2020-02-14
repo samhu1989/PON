@@ -18,7 +18,7 @@ def render_msk(path,angle=0):
     if not os.path.exists(allpath):
         os.mkdir(allpath);
     for bf in blst:
-        cmd = '/home/blender/blender-2.79/blender --background --python render_part.py'
+        cmd = '/home/blender/blender-2.79/blender --background --python render_part.py '
         cmd += '-- --output_folder %s --views 1'%os.path.abspath(allpath)
         cmd += ' --objp %s'%os.path.abspath(path);
         lst = bf;
@@ -31,7 +31,7 @@ def render_msk(path,angle=0):
         cmd += ' --angle %d'%angle;
         os.system(cmd);
     for bf in blst:
-        cmd = '/home/blender/blender-2.79/blender --background --python render_part.py'
+        cmd = '/home/blender/blender-2.79/blender --background --python render_part.py '
         cmd += '-- --output_folder %s --views 1'%os.path.abspath(selfpath)
         cmd += ' --objp %s'%os.path.abspath(path);
         lst = bf;
