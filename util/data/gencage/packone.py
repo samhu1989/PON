@@ -59,7 +59,7 @@ def pack(pnpath,partpath,spnobjpath,opath,id,angle):
                 pstouch.append(pv);
                 cpath = os.path.join(partp,'p_%d_b.ply'%cnt);
                 pts = read_ply(cpath);
-                pvp = np.array(pts['points'])[:,3].astype(np.float32);
+                pvp = np.array(pts['points'])[:,:3].astype(np.float32);
                 pvp = r1.apply(pvp);
                 ps.append(pvp);
             cnt += 1;
