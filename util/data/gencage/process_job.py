@@ -25,7 +25,7 @@ def do_one(job):
     render_depth_normal(objpath);
     highlight_edge(objpath);
     #
-    partnetpath = os.path.join(tmproot,id,job,partnet,id);
+    partnetpath = os.path.join(tmproot,id,job,'partnet',id);
     partoutpath = os.path.join(tmproot,id,'part');
     gen_parts(partnetpath,angles,partoutpath);
     
