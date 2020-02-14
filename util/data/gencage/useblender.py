@@ -41,7 +41,7 @@ def render_msk(path,angle=0):
     return;
     
 if __name__ == "__main__":
-    path = 'E:\WorkSpace\PONData\checkpart\part_r195'
+    path = 'E:\WorkSpace\PONData\checkpart\part_r15'
     alst = [];
     blst = [];
     for f in os.listdir(path):

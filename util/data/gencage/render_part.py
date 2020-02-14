@@ -103,6 +103,17 @@ for fs in lst:
     obj = bpy.data.objects[name];
     bpy.context.scene.objects.active = obj
     obj.select = True;
+    if obj.data.vertex_colors:
+        pass;
+    else:
+        obj.data.vertex_colors.new();
+    vc = obj.data.vertex_colors[0].data;
+    if '_a' in fs:
+        for i in range(len(vc)):
+            vc[i].color = (1,0,0);
+    else:
+        for i in range(len(vc)):
+            vc[i].color = (0,0,1);
     mat = bpy.data.materials.new('material_%d'%cnt);
     cnt += 1;
     obj.active_material = mat
