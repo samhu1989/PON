@@ -12,6 +12,7 @@ import sys;
 from scipy.spatial.transform import Rotation as R;
 from functools import partial
 import pandas as pd;
+from gen_toybox import box_face as bf;
 
 def packorigin(imgp,angle,h5fo):
     img = Image.open(os.path.join(imgp,'model_normalized_r%d.png'%angle));
