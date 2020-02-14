@@ -64,6 +64,8 @@ def pack(pnpath,partpath,spnobjpath,opath,id,angle):
                 pvp = np.array(pts['points'])[:,:3].astype(np.float32);
                 pvp = r1.apply(pvp);
                 ps.append(pvp);
+                smsklst.append(smsk);
+                msklst.append(msk);
             cnt += 1;
     print(len(ps));
     num = len(ps);
