@@ -25,7 +25,7 @@ def do_one(job):
     render_depth_normal(objpath);
     highlight_edge(objpath);
     #
-    partnetpath = os.path.join(tmproot,id,job,'partnet',id);
+    partnetpath = os.path.join(tmproot,id,'partnet',id);
     partoutpath = os.path.join(tmproot,id,'part');
     gen_parts(partnetpath,angles,partoutpath);
     
@@ -74,7 +74,7 @@ def partply(partpath,rot,opath):
     T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
     data = read_ply(os.path.join(partpath,'point_sample','ply-10000.ply'));
     label = np.loadtxt(os.path.join(partpath,'point_sample','label-10000.txt'));
-    plypts = np.array(data['points'])[:,:3];
+    plypts = np.array(data['points'][:,:3]);
     start = np.min(label);
     end = np.max(label);
     part_map = json.load(open(os.path.join(partpath,'result_map.json'),'r'));
