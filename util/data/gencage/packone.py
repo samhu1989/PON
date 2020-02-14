@@ -6,6 +6,12 @@ from PIL import Image;
 from obb import OBB;
 import OpenEXR, Imath;
 import os;
+import os;
+import numpy as np;
+import sys;
+from scipy.spatial.transform import Rotation as R;
+from functools import partial
+import pandas as pd;
 
 def packorigin(imgp,angle,h5fo):
     img = Image.open(os.path.join(imgp,'model_normalized_r%d.png'%angle));
