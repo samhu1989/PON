@@ -65,7 +65,7 @@ def pack(pnpath,partpath,spnobjpath,opath,id,angle):
                 pvp = r1.apply(pvp);
                 ps.append(pvp);
             cnt += 1;
-    #print(len(ps));
+    print(len(ps));
     num = len(ps);
 
     obblst = [];
