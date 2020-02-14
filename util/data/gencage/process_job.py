@@ -37,7 +37,7 @@ def do_one(job):
     if not os.path.exists(outpath):
         os.makedirs(outpath);
     for angle in angles:
-        pack(partnetpath,partpath,objpath,outpath,id,angle);
+        pack(partnetpath,partoutpath,objpath,outpath,id,angle);
     
 def func(a,vidx):
     idx = np.argwhere(vidx==a);
