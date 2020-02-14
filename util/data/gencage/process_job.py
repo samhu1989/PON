@@ -104,7 +104,7 @@ def partply(partpath,rot,opath):
     for parti in range(len(partv_lst)):
         partptsi = partv_lst[parti];
         partface = partf_lst[parti];
-        r = R.from_euler('y',180,degrees=True);
+        r = R.from_euler('y',0,degrees=True);
         pc = r.apply(partptsi).astype(np.float32);
         pc -= center;
         pc /= scale;

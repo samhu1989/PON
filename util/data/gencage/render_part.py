@@ -101,11 +101,10 @@ for fs in lst:
     bpy.ops.import_mesh.ply(filepath=os.path.join(root,fs));
     name = os.path.basename(fs).split('.ply')[0];
     obj = bpy.data.objects[name];
-    if bpy.context.object.data.vertex_colors.active is not None:
-        mat = bpy.data.materials.new('material_%d'%cnt);
-        cnt += 1;
-        obj.active_material = mat
-        mat.use_vertex_color_paint = True;
+    mat = bpy.data.materials.new('material_%d'%cnt);
+    cnt += 1;
+    obj.active_material = mat
+    mat.use_vertex_color_paint = True;
 #===========================================
 for object in bpy.context.scene.objects:
     if object.name in ['Camera', 'Lamp']:
