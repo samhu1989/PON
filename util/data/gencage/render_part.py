@@ -110,10 +110,10 @@ for fs in lst:
     vc = obj.data.vertex_colors[0].data;
     if '_a' in fs:
         for i in range(len(vc)):
-            vc[i].color = (1,0,0);
+            vc[i].color = (1,0,0,1);
     else:
         for i in range(len(vc)):
-            vc[i].color = (0,0,1);
+            vc[i].color = (0,0,1,1);
     mat = bpy.data.materials.new('material_%d'%cnt);
     cnt += 1;
     obj.active_material = mat
