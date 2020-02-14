@@ -49,7 +49,7 @@ def pack(pnpath,partpath,spnobjpath,opath,id,angle):
         num = pv.shape[0];
         if num > 0 :
             mskp = 'p_%d_b_msk0001.png'%(cnt);
-            msk = Image.open(os.path.join(partpath,'all_msk',mskp));
+            msk = Image.open(os.path.join(partp,'all_msk',mskp));
             msk = np.array(msk).astype(np.float32) / 255.0;
             msk = msk[:,:,2];
             smsk = Image.open(os.path.join(partp,'self_msk',mskp));
