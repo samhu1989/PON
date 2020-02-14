@@ -56,7 +56,7 @@ render_layers = tree.nodes.new('CompositorNodeRLayers')
 depth_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
 depth_file_output.label = 'Depth Output'
 if args.format == 'OPEN_EXR':
-  links.new(render_layers.outputs['Depth'], depth_file_output.inputs[0])
+  pass
 else:
   # Remap as other types can not represent the full range of depth.
   map = tree.nodes.new(type="CompositorNodeMapValue")
@@ -101,6 +101,8 @@ for fs in lst:
     bpy.ops.import_mesh.ply(filepath=os.path.join(root,fs));
     name = os.path.basename(fs).split('.ply')[0];
     obj = bpy.data.objects[name];
+    bpy.context.scene.objects.active = obj
+    obj.select = True;
     mat = bpy.data.materials.new('material_%d'%cnt);
     cnt += 1;
     obj.active_material = mat

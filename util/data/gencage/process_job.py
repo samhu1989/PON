@@ -61,7 +61,7 @@ def read_obj(obj):
     return vout,fout;
     
 def tounit_param(input_pts):
-    r = R.from_euler('y', 0, degrees=True);
+    r = R.from_euler('y', 180, degrees=True);
     pts = r.apply(input_pts);
     mmx = np.max(pts,axis=0);
     mmn = np.min(pts,axis=0);
@@ -104,12 +104,12 @@ def partply(partpath,rot,opath):
     for parti in range(len(partv_lst)):
         partptsi = partv_lst[parti];
         partface = partf_lst[parti];
-        r = R.from_euler('y',0,degrees=True);
+        r = R.from_euler('y',180,degrees=True);
         pc = r.apply(partptsi).astype(np.float32);
         pc -= center;
         pc /= scale;
         r = R.from_euler('y',rot,degrees=True);
-        pc = r.apply(pc);
+        pc = r.apply(pc).astype(np.float32);
         face = np.zeros(shape=[len(partface)],dtype=T);
         for i in range(len(partface)):
             face[i] = (3,int(partface[i][0]),int(partface[i][1]),int(partface[i][2]));
