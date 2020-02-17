@@ -49,7 +49,7 @@ class Data(data.Dataset):
                 for f in f_lst:
                     if f.endswith('.h5'):
                         h5f = h5py.File(os.path.join(path,f),'r');
-                        self.img.append(np.array(h5f['img']));
+                        self.img.append(np.array(h5f['img448']));
                         self.msk.append(np.array(h5f['msk']));
                         self.smsk.append(np.array(h5f['smsk']));
                         self.touch.append(np.array(h5f['touch']));
@@ -67,7 +67,10 @@ class Data(data.Dataset):
 
     def __getitem__(self, idx):
         index = self.index_map[idx];
-        img = self.img[index];
+        imtmp = self.img[index];
+        imtmp = Image.fromarray(imtmp);
+        imtmp = np.array(imtmp.resize((224,224))).astype(np.float32)/255.0;
+        img = imtmp;
         msk = self.msk[index];
         smsk = self.smsk[index];
         touch = self.touch[index];

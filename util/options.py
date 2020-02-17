@@ -25,8 +25,8 @@ def get_opt():
     parser.add_argument('--workers','-wrk',type=int,help='workers number');
     #float flags
     parser.add_argument('--user_rate','-rate',type=float,help='user rate');
-    #int flags
     parser.add_argument('--lr','-lr',type=float,help='learning rate');
+    parser.add_argument('--lrdr','-lrdr',type=float,default=0.9,help='learning rate decay rate');
     return parser.parse_args();
 
 def usage():

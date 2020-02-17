@@ -50,7 +50,7 @@ def run(**kwargs):
     
     #run the code
     optimizer = eval('optim.'+opt['optim'])(config.parameters(net),lr=opt['lr'],weight_decay=opt['weight_decay']);
-    sheduler = lr_scheduler.ExponentialLR(optimizer,0.9);
+    sheduler = lr_scheduler.ExponentialLR(optimizer,opt['lrdr']);
     #load pre-trained
     if opt['model']!='':
         partial_restore(net,opt['model']);

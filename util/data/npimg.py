@@ -55,10 +55,9 @@ def apply_transform(img,A):
         for im in img:
             r.append( np.zeros_like(im) );
             r[-1][ypix2, xpix2] = im[yy, xx];
-            if len(im.shape) > 2:
-                r[-1][:,:,0] = interp(r[-1][:,:,0]);
-                r[-1][:,:,1] = interp(r[-1][:,:,1]);
-                r[-1][:,:,2] = interp(r[-1][:,:,2]);
+            if len(im.shape) ==3 :
+                for ci in range(r[-1].shape[-1]):
+                    r[-1][:,:,ci] = interp(r[-1][:,:,ci]);
             else:
                 r[-1] = interp(r[-1]);
         return r;
@@ -66,7 +65,7 @@ def apply_transform(img,A):
         canvas = np.zeros_like(img)
         canvas[ypix2, xpix2] = img[yy, xx];
         return canvas.astype(np.float32);
-        
+'''      
 def apply_trans(img,A):
     if isinstance(img,list):
         r = [];
@@ -82,7 +81,7 @@ def apply_trans(img,A):
         return r;
     else:
         return scipy.ndimage.affine_transform(img,A).astype(np.float32);
-        
+'''       
 def interp(imgin):
     img = imgin.copy()
     a = scipy.ndimage.shift(img,[-1,0]);
@@ -91,8 +90,6 @@ def interp(imgin):
     d = scipy.ndimage.shift(img,[0,1]);
     img = np.max(np.stack([img,a,b,c,d],axis=2),axis=2);
     return img;
-                
-    
         
 def shift(img,ty,tx):
     if isinstance(img,list):
