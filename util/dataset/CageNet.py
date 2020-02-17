@@ -51,7 +51,7 @@ class Data(data.Dataset):
                         print(fidx);
                         h5f = h5py.File(os.path.join(path,f),'r');
                         imtmp = Image.fromarray(np.array(h5f['img448']));
-                        imtmp = np.array(imtmp.resize(224,224)).astype(np.float32)/255.0;
+                        imtmp = np.array(imtmp.resize(size=[224,224])).astype(np.float32)/255.0;
                         self.img.append(imtmp);
                         self.msk.append(np.array(h5f['msk']));
                         self.smsk.append(np.array(h5f['smsk']));
