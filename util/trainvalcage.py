@@ -39,9 +39,10 @@ def run(**kwargs):
     #get dataset
     try:
         m = importlib.import_module('util.dataset.'+opt['dataset']);
-        train_data = m.Data(opt,'train');
+        if opt['nepoch'] > 0: #only do test if nepoch == 0
+            train_data = m.Data(opt,'train');
+            train_load = DataLoader(train_data,batch_size=opt['batch_size'],shuffle=True,num_workers=opt['workers']);
         val_data = m.Data(opt,opt['user_key']);
-        train_load = DataLoader(train_data,batch_size=opt['batch_size'],shuffle=True,num_workers=opt['workers']);
         val_load = DataLoader(val_data,batch_size=opt['batch_size'],shuffle=False,num_workers=opt['workers']);
     except Exception as e:
         print(e);
@@ -55,6 +56,23 @@ def run(**kwargs):
     if opt['model']!='':
         partial_restore(net,opt['model']);
         print("Previous weights loaded");
+        
+    if opt['nepoch'] == 0:#only doing one test
+        net.eval();
+        #validation
+        val_meters = {};
+        for i, data in enumerate(val_load,0):
+            with torch.no_grad():
+                data2cuda(data);
+                out = net(data);
+                acc = config.accuracy(data,out);
+            for k,v in acc.items():
+                if k in val_meters.keys():
+                    val_meters[k].update(v,data[-1]);
+                else:
+                    val_meters[k] = AvgMeterGroup(k);
+                    val_meters[k].update(v,data[-1]);
+            config.writelog(net=net,data=data,out=out,meter=val_meters,opt=opt,iepoch=iepoch,idata=i,ndata=len(val_data),optim=optimizer,istraining=False);
     
     for iepoch in range(opt['nepoch']):
         if iepoch % opt['print_epoch'] == 0:
