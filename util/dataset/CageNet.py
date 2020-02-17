@@ -50,7 +50,9 @@ class Data(data.Dataset):
                     if f.endswith('.h5'):
                         print(fidx);
                         h5f = h5py.File(os.path.join(path,f),'r');
-                        self.img.append(np.array(h5f['img448']));
+                        imtmp = Image.fromarray(np.array(h5f['img448']));
+                        imtmp = np.array(imtmp.resize(224,224)).astype(np.float32)/255.0;
+                        self.img.append(imtmp);
                         self.msk.append(np.array(h5f['msk']));
                         self.smsk.append(np.array(h5f['smsk']));
                         self.touch.append(np.array(h5f['touch']));
@@ -75,10 +77,7 @@ class Data(data.Dataset):
         index = self.index_map[idx];
         subi = self.imap[idx];
         subj = self.jmap[idx];
-        imtmp = self.img[index];
-        imtmp = Image.fromarray(imtmp);
-        imtmp = np.array(imtmp.resize((224,224))).astype(np.float32)/255.0;
-        img = imtmp;
+        img = self.img[index];
         msk = self.msk[index];
         smsk = self.smsk[index];
         touch = self.touch[index];
