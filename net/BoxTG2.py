@@ -44,7 +44,7 @@ class BoxNet(nn.Module):
                 
     def forward(self,x):
         size = self.conv_size(x);
-        size = size.view(size.size(0),3);
+        size = size.view(size.size(0),2);
         size = self.fc_size(size);
         size = torch.abs(size);
         consts = torch.ones([size.size(0),1],requires_grad=True);
