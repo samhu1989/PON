@@ -30,11 +30,7 @@ class Data(data.Dataset):
         self.index_map = [];
         self.imap = [];
         self.jmap = [];
-        self.img = [];
-        self.msk = [];
-        self.smsk = [];
-        self.touch = [];
-        self.box = [];
+        self.files = [];
         self.cat = [];
         self.id = [];
         self.end = [];
@@ -49,33 +45,41 @@ class Data(data.Dataset):
                 for f in f_lst:
                     if f.endswith('.h5'):
                         h5f = h5py.File(os.path.join(path,f),'r');
-                        self.img.append(np.array(h5f['img448']));
-                        self.msk.append(np.array(h5f['msk']));
-                        self.smsk.append(np.array(h5f['smsk']));
-                        self.touch.append(np.array(h5f['touch']));
-                        self.box.append(np.array(h5f['box']));
+                        self.files.append(os.path.join(path,f));
                         self.cat.append(c);
                         self.id.append(os.path.basename(f).split('.')[0]);
-                        num = self.box[-1].shape[0];
+                        num = np.array(h5f['box']).shape[0];
                         pairnum = self.touch[-1].shape[0];
-                        self.index_map.extend([len(self.img)-1 for x in range(pairnum)]);
+                        self.index_map.extend([len(self.files)-1 for x in range(pairnum)]);
                         if len(self.end) == 0:
                             self.end.append(pairnum);
                         else:
                             self.end.append(self.end[-1]+pairnum);
                         h5f.close();
+                        
+    def __load__(self,path):
+        h5f = h5py.File(path,'r');
+        imtmp = Image.fromarray(np.array(h5f['img448']));
+        imtmp = np.array(imtmp.resize(size=[224,224])).astype(np.float32)/255.0;
+        out = {
+            'img':imtmp,
+            'msk':np.array(h5f['msk']),
+            'smsk':np.array(h5f['smsk']),
+            'touch':np.array(h5f['touch']),
+            'box':np.array(h5f['box'])
+        };
+        h5f.close();
+        return out;
 
     def __getitem__(self, idx):
         idx = idx % self.__len__();
         index = self.index_map[idx];
-        imtmp = self.img[index];
-        imtmp = Image.fromarray(imtmp);
-        imtmp = np.array(imtmp.resize((224,224))).astype(np.float32)/255.0;
-        img = imtmp;
-        msk = self.msk[index];
-        smsk = self.smsk[index];
-        touch = self.touch[index];
-        box = self.box[index];
+        data = self.__load__(self.files[index]);
+        img = data['img'];
+        msk = data['msk'];
+        smsk = data['smsk'];
+        touch = data['touch'];
+        box = data['box'];
         endi = self.end[index];
         subi = touch[idx-endi,0];
         subj = touch[idx-endi,1];
