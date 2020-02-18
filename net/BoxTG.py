@@ -44,12 +44,12 @@ class BoxNet(nn.Module):
                 
     def forward(self,x):
         size = self.conv_size(x);
-        size = size.view(size.size(0),3);
         size = self.fc_size(size);
+        size = size.view(size.size(0),3);
         size = torch.abs(size);
         rot6 = self.dec_rot6(x);
-        rot6 = rot6.view(rot6.size(0),6);
         rot6 = self.fc_rot6(rot6);
+        rot6 = rot6.view(rot6.size(0),6);
         r1 = rot6[:,0:3].contiguous();
         r2 = rot6[:,3:6].contiguous();
         return size,r1,r2;
