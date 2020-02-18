@@ -49,7 +49,7 @@ class Data(data.Dataset):
                         self.cat.append(c);
                         self.id.append(os.path.basename(f).split('.')[0]);
                         num = np.array(h5f['box']).shape[0];
-                        pairnum = self.touch[-1].shape[0];
+                        pairnum = np.array(h5f['touch']).shape[0];
                         self.index_map.extend([len(self.files)-1 for x in range(pairnum)]);
                         if len(self.end) == 0:
                             self.end.append(pairnum);
