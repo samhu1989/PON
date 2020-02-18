@@ -66,6 +66,7 @@ class Data(data.Dataset):
                         h5f.close();
 
     def __getitem__(self, idx):
+        idx = idx % self.__len__();
         index = self.index_map[idx];
         imtmp = self.img[index];
         imtmp = Image.fromarray(imtmp);
