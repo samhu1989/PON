@@ -38,7 +38,7 @@ class BoxNet(nn.Module):
         self.fc_rot6 = nn.Sequential(
                 nn.Linear(512, 256),
                 nn.ReLU(inplace=True),
-                nn.Linear(256, 6)
+                nn.Linear(256, 6),
                 nn.Tanh()
                 )
                 
