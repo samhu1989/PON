@@ -24,8 +24,7 @@ class BoxNet(nn.Module):
                 nn.AvgPool2d(7),
                 nn.Conv2d(256, 256, kernel_size=1, bias=True),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(256, 3, kernel_size=1, bias=True),
-                nn.Sigmoid()
+                nn.Conv2d(256, 3, kernel_size=1, bias=True)
                 );
         self.dec_rot6 = nn.Sequential(
                 resnet.resnet18(pretrained=False,input_channel=4,fc=False,norm=nn.InstanceNorm2d),
@@ -42,6 +41,7 @@ class BoxNet(nn.Module):
     def forward(self,x):
         size = self.dec_size(x);
         size = size.view(size.size(0),-1);
+        size = torch.abs(size);
         rot6 = self.dec_rot6(x);
         rot6 = rot6.view(rot6.size(0),6);
         r1 = rot6[:,0:3].contiguous();
