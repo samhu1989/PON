@@ -47,7 +47,7 @@ class BoxNet(nn.Module):
         size = size.view(size.size(0),-1);
         size = self.fc_size(size);
         size = torch.abs(size);
-        rot6 = self.dec_rot6(x);
+        rot6 = self.conv_rot6(x);
         rot6 = rot6.view(rot6.size(0),-1);
         rot6 = self.fc_rot6(rot6);
         r1 = rot6[:,0:3].contiguous();
