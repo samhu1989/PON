@@ -15,7 +15,8 @@ def get_opt():
     parser.add_argument('--input','-i',type=str,default='',help='input filename');
     parser.add_argument('--output','-o',type=str,default='',help='output filename');
     parser.add_argument('--optim','-opt',type=str,default='Adam',help='optimizer');
-    parser.add_argument('--log_tmp','-log',type=str,default='log dir',help='log path');
+    parser.add_argument('--log','-log',type=str,default='./log',help='log root path');
+    parser.add_argument('--log_tmp','-logt',type=str,help='log specific path for each run');
     #binary flags:
     parser.add_argument('--ply',action='store_true');
     #int flags
