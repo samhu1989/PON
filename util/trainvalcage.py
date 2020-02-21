@@ -58,6 +58,7 @@ def run(**kwargs):
         print("Previous weights loaded");
         
     if opt['nepoch'] == 0:#only doing one test
+        iepoch = 0;
         net.eval();
         #validation
         val_meters = {};
