@@ -25,14 +25,12 @@ class TouchPtNet(nn.Module):
         );
         self.w1 = nn.Sequential(
             nn.Conv1d(512+3, 256, kernel_size=1, bias=False),
-            nn.InstanceNorm1d(256,affine=True),
             nn.ReLU(inplace=True),
             nn.Conv1d(256, 1, kernel_size=1, bias=True),
             nn.Softmax(dim=2)
         );
         self.w2 = nn.Sequential(
             nn.Conv1d(512+3, 256, kernel_size=1, bias=False),
-            nn.InstanceNorm1d(256,affine=True),
             nn.ReLU(inplace=True),
             nn.Conv1d(256, 1, kernel_size=1, bias=True),
             nn.Softmax(dim=2)
