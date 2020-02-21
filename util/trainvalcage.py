@@ -57,6 +57,10 @@ def run(**kwargs):
         partial_restore(net,opt['model']);
         print("Previous weights loaded");
         
+    if 'log_tmp' in opt.keys():
+        if not os.path.exists(opt['log_tmp']):
+            os.mkdir(opt['log_tmp']);
+        
     if opt['nepoch'] == 0:#only doing one test
         iepoch = 0;
         net.eval();
