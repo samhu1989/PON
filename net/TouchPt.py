@@ -90,5 +90,5 @@ class Net(nn.Module):
         #
         t,w1,w2 = self.tpnet(x1,sb_gt,x2,tb_gt);
         tb = tb_gt + t.unsqueeze(1).contiguous();
-        out = {'t':t,'sb':sb_gt,'tb':tb,'w1':w1,'w2':w2};
+        out = {'t':t,'sb':sb_gt,'tb':tb,'ts':ts_gt,'tr1':tr1_gt,'tr2':tr2_gt,'w1':w1,'w2':w2};
         return out;
