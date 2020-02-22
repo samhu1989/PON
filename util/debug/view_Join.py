@@ -160,7 +160,7 @@ def run(**kwargs):
         eval_cat_sum = 0.0;
         eval_cat_cnt = 0.0;
         cpath = os.path.join(opt['data_path'],'test',cat);
-        copath = os.path.join(opath,'joinN_'+cat+'_'+opt['mode']);
+        copath = os.path.join(opath,'new_'+cat+'_'+opt['mode']);
         if not os.path.exists(copath):
             os.mkdir(copath);
         slst = os.listdir(cpath);
