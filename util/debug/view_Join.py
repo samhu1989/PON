@@ -172,7 +172,9 @@ def run(**kwargs):
                 os.mkdir(fopath);
             logf = open(os.path.join(fopath,'_000_000_log.txt'),'w');
             h5f = h5py.File(os.path.join(cpath,f),'r');
-            img = np.array(h5f['img']);
+            imtmp = Image.fromarray(np.array(h5f['img448']));
+            imtmp = np.array(imtmp.resize(size=[224,224])).astype(np.float32)/255.0;
+            img = imtmp;
             msk = np.array(h5f['msk']);
             smsk = np.array(h5f['smsk']);
             box = np.array(h5f['box']);
