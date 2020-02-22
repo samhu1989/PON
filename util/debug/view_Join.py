@@ -309,7 +309,8 @@ def run(**kwargs):
             writegt(fopath,box_gt);
             writeout(fopath,box_out,box_color,msk_in);
             val = eval(s_out,t_out,r1_out,r2_out,s_gt,t_gt,r1_gt,r2_gt);
-            acc = {'cd':val.data.cpu().numpy()};
+            v = float(val.data.cpu().numpy());
+            acc = {'bcd':v};
             json.dump(acc,open(os.path.join(fopath,'meta.json'),'w'));
             eval_all_sum += val.data.cpu().numpy();
             eval_all_cnt += 1.0;
