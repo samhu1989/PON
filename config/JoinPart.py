@@ -1,7 +1,7 @@
 touch_net = 'Touch'
-touch_model = './log/Touch_Touch_part_2020-02-18-11-10-54.730457/net_2020-02-19-05-03-07.613001.pth'
+touch_model = './log/siyu-job-tpart-test/net_2020-02-21-01-46-06.087999.pth'
 box_net = 'Box'
-box_model = './log/Box_BoxBcd_part_2020-02-18-12-12-10.863662/net_2020-02-19-20-54-25.228785.pth'
+box_model = './log/siyu-job-boxpart-test/net_2020-02-21-04-55-03.833936.pth'
 touchpt_net = 'TouchPt'
-touchpt_model = './log/TouchPt_TouchPt_part_2020-02-18-11-12-10.033312/net_2020-02-19-06-07-43.024840.pth'
+touchpt_model = './log/siyu-job-tptpart-test/net_2020-02-21-02-19-45.919227.pth'
 mode = 'part';
