@@ -14,4 +14,4 @@ run.py  ---global main function, mainly define the running options
 
 ## Dataset
 
-the dataset for training and test can be downloaded [here](http://171.67.77.236:8082/cagenet.tar.gz)
+the dataset for training and testing can be downloaded [here](http://171.67.77.236:8082/cagenet.tar.gz)
