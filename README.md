@@ -28,15 +28,29 @@ as
 pip install chamferdist
 ```
 
-## Training 
+## Training & Testing
 
 The pipeline in this repo contains three networks that needed to be independently trained.
 
+Training ``Touch Net", this network is used to tell if two parts are connected in 3D connected in 3D space
+
 ```
-python run.py -X util.trainvalcage -net Touch -config BoxBcd -bs 64 -ds CageNet -dp </path to dataset> -nepoch 400 -lrd 40 -key val -md part -rate 0.3
+python run.py -X util.trainvalcage -net Touch -config Touch -bs 64 -ds CageNet -dp </path to dataset> -nepoch 50 -lrd 10 -lrdr 0.5 -key val -md full -rate 0.3
 ```
 
+Training ``Box Net", this network is used to generate bounding box for each part
 
+```
+python run.py -X util.trainvalcage -net Box -config BoxBcd -bs 64 -ds CageNetTouch -dp </path to dataset> -nepoch 50 -lrd 10 -lrdr 0.5 -key val -md full -rate 0.3
+```
+
+Training ``Touch Point Net", this network is used to predict the relative translation in 3D space for two 
+
+```
+python run.py -X util.trainvalcage -net TouchPt -config TouchPt -bs 64 -ds CageNetTouch -dp </path to dataset> -nepoch 50 -lrd 10 -lrdr 0.5 -key val -md full -rate 0.3
+```
+
+Testing
 
 
 
