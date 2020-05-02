@@ -4,6 +4,8 @@ import sys
 import numpy as np
 import pandas as pd
 from collections import defaultdict
+import collections;
+import io;
 
 ply_dtypes = dict([
     (b'int8', 'i1'),
@@ -29,6 +31,19 @@ valid_formats = {'ascii': '', 'binary_big_endian': '>',
                  'binary_little_endian': '<'}
 
 
+def isfilelike_r(f):
+    """
+    Check if object 'f' is readable file-like 
+    that it has callable attributes 'read' and 'close'
+    """
+    try:
+        if isinstance(getattr(f, "read"), collections.Callable) and isinstance(getattr(f, "close"), collections.Callable):
+            return True;
+    except AttributeError:
+        pass;
+    return False
+
+
 def read_ply(filename):
     """ Read a .ply (binary or ascii) file and store the elements in pandas DataFrame
     Parameters
@@ -40,9 +55,13 @@ def read_ply(filename):
     data: dict
         Elements as pandas DataFrames; comments and ob_info as list of string
     """
-
-    with open(filename, 'rb') as ply:
-
+    if isfilelike_r(filename):
+        fp = filename;
+    else:
+        fp = open(filename, 'rb');
+    ply = None;
+    if ply is None:
+        ply = fp;
         if b'ply' not in ply.readline():
             raise ValueError('The file does not start whith the word ply')
         # get binary_little/big or ascii
@@ -99,17 +118,17 @@ def read_ply(filename):
 
         # for bin
         end_header = ply.tell()
-
+    if not isfilelike_r(filename):
+        ply.close();
     data = {}
-
     if fmt == 'ascii':
         top = count
         bottom = 0 if mesh_size is None else mesh_size
-
         names = [x[0] for x in dtypes["vertex"]]
-
-        data["points"] = pd.read_csv(filename, sep=" ", header=None, engine="python",
-                                     skiprows=top, skipfooter=bottom, usecols=names, names=names)
+        if isfilelike_r(filename):
+            data["points"] = pd.read_csv(io.BytesIO(filename.read()),encoding='utf8', sep=" ", header=None, engine="python",skiprows=0, skipfooter=bottom, usecols=names, names=names)
+        else: 
+            data["points"] = pd.read_csv(filename, sep=" ", header=None, engine="python",skiprows=top, skipfooter=bottom, usecols=names, names=names)
 
         for n, col in enumerate(data["points"].columns):
             data["points"][col] = data["points"][col].astype(
@@ -120,16 +139,22 @@ def read_ply(filename):
 
             names = [x[0] for x in dtypes["face"]][1:]
             usecols = [1, 2, 3]
-
-            data["mesh"] = pd.read_csv(
-                filename, sep=" ", header=None, engine="python", skiprows=top, usecols=usecols, names=names)
+            if isfilelike_r(filename):
+                filename.seek(end_header)
+                data["mesh"] = pd.read_csv(io.BytesIO(filename.read()),encoding='utf8', sep=" ", header=None, engine="python",skiprows=points_size, usecols=usecols, names=names)
+            else: 
+                data["mesh"] = pd.read_csv(filename, sep=" ", header=None, engine="python", skiprows=top, usecols=usecols, names=names)
 
             for n, col in enumerate(data["mesh"].columns):
                 data["mesh"][col] = data["mesh"][col].astype(
                     dtypes["face"][n + 1][1])
 
     else:
-        with open(filename, 'rb') as ply:
+        if isfilelike_r(filename):
+            pass;
+        else:
+            fp = open(filename, 'rb');
+        with fp as ply:
             ply.seek(end_header)
             data["points"] = pd.DataFrame(np.fromfile(
                 ply, dtype=dtypes["vertex"], count=points_size))
@@ -137,7 +162,7 @@ def read_ply(filename):
                 data["mesh"] = pd.DataFrame(np.fromfile(
                     ply, dtype=dtypes["face"], count=mesh_size))
                 data["mesh"].drop('n_points', axis=1, inplace=True)
-
+        fp.close();
     return data
 
 

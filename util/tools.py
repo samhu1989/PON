@@ -267,5 +267,38 @@ def label_pts(path,pts,label):
     pointsc = pd.concat([pd.DataFrame(pts),pd.DataFrame(colors)],axis=1,ignore_index=True);
     write_ply(path,points = pointsc,color=True);
     
-    
+box_face = np.array(
+[
+[1,3,0],
+[2,3,1],
+[7,5,4],
+[7,6,5],
+[4,5,0],
+[5,1,0],
+[1,5,2],
+[2,5,6],
+[6,3,2],
+[6,7,3],
+[4,0,3],
+[3,7,4]
+],
+dtype=np.int32
+);
+
+def writebox(path,box,colors=None):
+    fidx = box_face;
+    T=np.dtype([("n",np.uint8),("i0",np.int32),('i1',np.int32),('i2',np.int32)]);
+    bn = len(box);
+    face = np.zeros(shape=[bn*fidx.shape[0]],dtype=T);
+    for i in range(bn*fidx.shape[0]):
+        nn = i // fidx.shape[0];
+        ni = i % fidx.shape[0];
+        face[i] = (3,fidx[ni,0]+nn*8,fidx[ni,1]+nn*8,fidx[ni,2]+nn*8);
+    pts = np.concatenate(box,axis=0);
+    if colors is None:
+        write_ply(path,points=pd.DataFrame(pts.astype(np.float32)),faces=pd.DataFrame(face));
+    else:
+        colors = np.concatenate(colors,axis=0);
+        pointsc = pd.concat([pd.DataFrame(pts.astype(np.float32)),pd.DataFrame(colors)],axis=1,ignore_index=True);
+        write_ply(path,points=pointsc,faces=pd.DataFrame(face),color=True);
     

@@ -12,6 +12,7 @@ from ply import read_ply, write_ply;
 import pandas as pd;
 import json;
 from packone import pack; 
+import io;
 
 dataroot = '/cephfs/siyu/cage';
 pndata = 'partnet.zip';
