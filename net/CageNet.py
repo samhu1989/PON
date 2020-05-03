@@ -4,24 +4,19 @@ import torch.nn.functional as F;
 from net.resnet import *;
 import numpy as np;
 
-class ResNoDown(nn.Module):
-    def __init__(self, block, layers,input_channel=3 ,num_classes=1000, fc=True, norm = nn.BatchNorm2d):
+class BackBone(nn.Module):#
+    def __init__(self,block,layers,input_channel=3):
         self.inplanes = 64
-        self.norm = norm;
+        self.norm = nn.BatchNorm2d;
         super(ResNet, self).__init__()
-        self.conv1 = nn.Conv2d(input_channel, 64, kernel_size=7, stride=2, padding=3,
-                               bias=False)
-        self.bn1 = self.norm(64,affine=True)
+        self.conv1 = nn.Conv2d(input_channel, 64, kernel_size=7, stride=2, padding=3,bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 256, layers[3], stride=1)
-        self.dofc = fc;
-        if fc:
-            self.avgpool = nn.AvgPool2d(7)
-            self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -55,14 +50,54 @@ class ResNoDown(nn.Module):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
-        x = self.maxpool(x)
+        x0 = self.maxpool(x);#56x56x64
         #
-        x = self.layer1(x);
-        x = self.layer2(x);
-        x = self.layer3(x);
-        x = self.layer4(x);
-        return x
-
+        x1 = self.layer1(x0); #56x56x64
+        x2 = self.layer2(x1);#28x28x128
+        x3 = self.layer3(x2);#14x14x256
+        x4 = self.layer4(x3);#14x14x256
+        return [x0,x1,x2,x3,x4];
+        
+    
+class ZXNet(nn.Module):#Z Axis Prediction
+    def __init__(self):
+        self.layer1 = self._make_layer(512,128,stride=2);
+        self.layer2 = self._make_layer(256,64,stride=2);
+        self.layer3 = self._make_layer(128,64);
+        self.layer3 = self._make_layer(128,64,stride=2);
+        self.dconv = nn.ConvTranspose2d(64,32,3,stride=2);
+        self.relu = nn.ReLU(inplace=True);
+        self.conv = nn.Conv2d(32,2,kernel_size=3,padding=1);
+    
+    def _make_layer(self,inc,outc,stride=1):
+        layers = [];
+        layers.append(nn.Conv2d(inc, outc, kernel_size=1,bias=False));
+        layers.append(nn.BatchNorm2d(outc));
+        layers.append(nn.ReLU(inplace=True));
+        if stride > 1:
+            layers.append(nn.ConvTranspose2d(outc, outc, stride+1, stride=stride));
+            layers.append(nn.ReLU(inplace=True));
+        return nn.Sequential(*layers);
+    
+    def forward(self,xs):
+        y1 = torch.cat([xs[3],xs[4]],dim=1);
+        y1 = self.layer1(y1); #28x28x128
+        y2 = torch.cat([y1,xs[2]],dim=1);
+        y2 = self.layer2(y2); #56x56x64
+        y3 = torch.cat([y2,xs[1]],dim=1);
+        y3 = self.layer3(y3); #56x56x64
+        y4 = torch.cat([y3,xs[0]],dim=1);
+        y4 = self.layer4(y4); #112x112x64
+        #
+        y5 = self.dconv(y4); #224x224x32
+        y5 = self.relu(y5);
+        y5 = self.conv(y5); #224x224x2
+        y5 = self.relu(y5);
+        return y5;
+        
+class RPN(nn.Module):#Region Proposal Network
+        
+    def forward(self, x):
 
 def resnetNoDown(**kwargs):
     model = ResNoDown(BasicBlock,[2, 2, 2, 2],**kwargs);
