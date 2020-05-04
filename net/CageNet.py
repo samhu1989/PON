@@ -8,7 +8,7 @@ class BackBone(nn.Module):#
     def __init__(self,block,layers,input_channel=3):
         self.inplanes = 64
         self.norm = nn.BatchNorm2d;
-        super(ResNet, self).__init__()
+        super(BackBone, self).__init__()
         self.conv1 = nn.Conv2d(input_channel, 64, kernel_size=7, stride=2, padding=3,bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
@@ -61,6 +61,7 @@ class BackBone(nn.Module):#
     
 class ZXNet(nn.Module):#Z Axis Prediction
     def __init__(self):
+        super(ZXNet,self).__init__();
         self.layer1 = self._make_layer(512,128,stride=2);
         self.layer2 = self._make_layer(256,64,stride=2);
         self.layer3 = self._make_layer(128,64);
@@ -96,12 +97,25 @@ class ZXNet(nn.Module):#Z Axis Prediction
         return y5;
         
 class RPN(nn.Module):#Region Proposal Network
+    def __init__(self):
+        super(RPN,self).__init__();
+        self.conv1 = nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1,bias=True);
+        self.relu = nn.ReLU(inplace=True);
+        self.conv2 = nn.Conv2d(256, 22, kernel_size=1, bias=True);
+        self.conv3 = nn.Conv2d(256, 44, kernel_size=1, bias=True);
+        self.act1 = nn.Softmax(dim=-1);
         
-    def forward(self, x):
+        
+    def forward(self,feat):
+        x = self.conv1(feat);
+        x = self.bn1(x);
+        x = self.relu(x);
+        ybin = self.conv2(x);
+        ybin = self.act1(ybin.view(-1,11,2));
+        yreg = self.conv3(x); 
+        return ybin,yreg;
 
-def resnetNoDown(**kwargs):
-    model = ResNoDown(BasicBlock,[2, 2, 2, 2],**kwargs);
-    return model;
+class CageNet(nn.Module):#CageNet
 
         
         
