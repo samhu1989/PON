@@ -1,7 +1,7 @@
 import torch;
 import torch.nn as nn;
 import torch.nn.functional as F;
-from net.resnet import *;
+from net.resnet import BasicBlock;
 import numpy as np;
 
 class BackBone(nn.Module):#
@@ -59,9 +59,9 @@ class BackBone(nn.Module):#
         return [x0,x1,x2,x3,x4];
         
     
-class ZXNet(nn.Module):#Z Axis Prediction
+class ZNet(nn.Module):#Z Axis Prediction
     def __init__(self):
-        super(ZXNet,self).__init__();
+        super(ZNet,self).__init__();
         self.layer1 = self._make_layer(512,128,stride=2);
         self.layer2 = self._make_layer(256,64,stride=2);
         self.layer3 = self._make_layer(128,64);
@@ -93,7 +93,7 @@ class ZXNet(nn.Module):#Z Axis Prediction
         y5 = self.dconv(y4); #224x224x32
         y5 = self.relu(y5);
         y5 = self.conv(y5); #224x224x2
-        y5 = self.relu(y5);
+        y5 = torch.exp(y5);
         return y5;
         
 class RPN(nn.Module):#Region Proposal Network
@@ -114,8 +114,77 @@ class RPN(nn.Module):#Region Proposal Network
         ybin = self.act1(ybin.view(-1,11,2));
         yreg = self.conv3(x); 
         return ybin,yreg;
+        
+class FoldNet(nn.Module):
+    def __init__(self):
+        super(FoldNet,self).__init__();
+        self.f1 = nn.Sequential(
+            [
+            nn.Conv1d(512+3, 512, kernel_size=1),
+            nn.BatchNorm1d(512),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(512, 3, kernel_size=1),
+            nn.Tanh()
+            ]
+        );
+        
+        self.f2 = nn.Sequential(
+            [
+            nn.Conv1d(512+3, 512, kernel_size=1),
+            nn.BatchNorm1d(512),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(512, 8, kernel_size=1),
+            nn.Softmax(dim=1)
+            ]
+        );
+        
+        self.inv1 = nn.Sequential(
+            [
+            nn.Conv1d(512+3, 512, kernel_size=1),
+            nn.BatchNorm1d(512),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(512, 3, kernel_size=1),
+            nn.Tanh()
+            ]
+        );
+        
+        self.inv2 = nn.Sequential(
+            [
+            nn.Conv1d(512+3, 512, kernel_size=1),
+            nn.BatchNorm1d(512),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(512, 3, kernel_size=1),
+            nn.Tanh()
+            ]
+        );
+        
+    def forward(self,x,f,cage):
+        expf = f.view(-1,1,f.size(1)).repeat(1,x.size(1),1);
+        
+        y = torch.cat([x,expf],dim=1);
+        self.f1(x);
+        y = torch.cat([y,expf],dim=1);
+        yw = self.f2(y);
+        y = torch.sum(yw*cage,dim=1);#dim is not correct here
+        #
+        yinv = torch.cat([y,expf],dim=1);
+        self.inv1(yinv);
+        yinv = torch.cat([yinv,expf],dim=1);
+        self.inv2(yinv);
+        #
+        return yw,y,yinv;
+    
 
 class CageNet(nn.Module):#CageNet
+    def __init__(self):
+        self.backbone = BackBone(BasicBlock, [2, 2, 2, 2]);
+        self.rpn = RPN();
+        self.zaxis = ZNet();
+        self.foldnet = FoldNet();
+        
+    def forward(self,x):
+        
+        return 
 
         
         
