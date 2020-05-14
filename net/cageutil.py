@@ -82,3 +82,21 @@ def sr2box(size,r1,r2):
     box = const*( size.unsqueeze(1).contiguous() );
     box = torch.matmul(box,rot);
     return box;
+    
+    
+#in 14x14
+#1x7
+#3x3,3x7,3x9
+#5x5,5x9
+#7x1,7x3,7x7
+#9x3,9x5
+
+def rpn2anchors(bin,reg):
+    #bin 14x14x11x2
+    #reg 14x14x11x4
+    #nms
+    return anchors;
+
+def roi(feat,anchors):
+    return crop;
+    

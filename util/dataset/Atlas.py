@@ -6,10 +6,20 @@ import torchvision.transforms as transforms
 import numpy as np
 import os
 from PIL import Image
-from .utils import *
+from util.data.ply import read_ply;
+#from .utils import *
 
 class Data(data.Dataset):
-    def __init__(self, rootimg = "./data/ShapeNet/ShapeNetRendering", rootpc = "./data/customShapeNet" , class_choice = "chair", train = True, npoints = 2500, normal = False, balanced = False, gen_view=False, SVR=False, idx=0):
+    def __init__(self, opt, train ):
+        class_choice = opt['category'];
+        npoints = 2500; 
+        normal = False; 
+        balanced = False; 
+        gen_view=False; 
+        SVR= ('SVR' in opt['mode']);
+        idx=0;
+        rootimg = os.path.join(opt['data_path'],"ShapeNet","ShapeNetRendering")
+        rootpc = os.path.join(opt['data_path'],"customShapeNet");
         self.balanced = balanced
         self.normal = normal
         self.train = train
@@ -17,19 +27,21 @@ class Data(data.Dataset):
         self.rootpc = rootpc
         self.npoints = npoints
         self.datapath = []
-        self.catfile = os.path.join('./data/synsetoffset2category.txt')
+        self.catfile = os.path.join(opt['data_path'],'synsetoffset2category.txt')
         self.cat = {}
+        self.invcat = {};
         self.meta = {}
         self.SVR = SVR
         self.gen_view = gen_view
-        self.idx=idx
+        self.idx = idx;
         with open(self.catfile, 'r') as f:
             for line in f:
                 ls = line.strip().split()
                 self.cat[ls[0]] = ls[1]
-        if not class_choice is  None:
+                self.invcat[ls[1]] = ls[0];
+        if class_choice is not None:
             self.cat = {k:v for k,v in self.cat.items() if k in class_choice}
-        print(self.cat)
+        
         empty = []
         for item in self.cat:
             dir_img  = os.path.join(self.rootimg, self.cat[item])
@@ -47,11 +59,10 @@ class Data(data.Dataset):
             else:
                 fns = fns[int(len(fns) * 0.8):]
 
-
             if len(fns) != 0:
                 self.meta[item] = []
                 for fn in fns:
-                    objpath = "/home/thibault/Downloads/data/ssd/ShapeNetCorev2/" +  self.cat[item] + "/" + fn + "/models/model_normalized.ply"
+                    objpath = self.cat[item] + "/" + fn + "/models/model_normalized.ply"
                     self.meta[item].append( ( os.path.join(dir_img, fn, "rendering"), os.path.join(dir_point, fn + '.points.ply'), item, objpath, fn ) )
             else:
                 empty.append(item)
@@ -85,36 +96,16 @@ class Data(data.Dataset):
                         transforms.CenterCrop(127),
                         ])
 
-        self.perCatValueMeter = {}
-        for item in self.cat:
-            self.perCatValueMeter[item] = AverageValueMeter()
-        self.perCatValueMeter_metro = {}
-        for item in self.cat:
-            self.perCatValueMeter_metro[item] = AverageValueMeter()
         self.transformsb = transforms.Compose([
                              transforms.Resize(size =  224, interpolation = 2),
                         ])
 
     def __getitem__(self, index):
-        fn = self.datapath[index]
-        with open(fn[1]) as fp:
-            for i, line in enumerate(fp):
-                if i == 2:
-                    try:
-                        lenght = int(line.split()[2])
-                    except ValueError:
-                        print(fn)
-                        print(line)
-                    break
-        for i in range(15): #this for loop is because of some weird error that happens sometime during loading I didn't track it down and brute force the solution like this.
-            try:
-                mystring = my_get_n_random_lines(fn[1], n = self.npoints)
-                point_set = np.loadtxt(mystring).astype(np.float32)
-                break
-            except ValueError as excep:
-                print(fn)
-                print(excep)
-
+        fn = self.datapath[index];
+        pts_data = read_ply(fn[1]);
+        pts_all = np.array(pts_data['points']);
+        pidx = np.random.choice(pts_all.shape[0], self.npoints);
+        point_set = pts_all[pidx,:];
         # centroid = np.expand_dims(np.mean(point_set[:,0:3], axis = 0), 0) #Useless because dataset has been normalised already
         # point_set[:,0:3] = point_set[:,0:3] - centroid
         if not self.normal:
@@ -149,7 +140,8 @@ class Data(data.Dataset):
             data = data[:3,:,:]
         else:
             data = 0
-        return data, point_set.contiguous(), fn[2], fn[3], fn[4]
+        catid = fn[3].split('/')[0]
+        return data, point_set.contiguous(), fn[2], self.invcat[catid], fn[4]
 
     def __len__(self):
         return len(self.datapath)

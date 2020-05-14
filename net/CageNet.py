@@ -3,6 +3,7 @@ import torch.nn as nn;
 import torch.nn.functional as F;
 from net.resnet import BasicBlock;
 import numpy as np;
+from .rcnn.rpn.rpn import _RPN;
 
 class BackBone(nn.Module):#
     def __init__(self,block,layers,input_channel=3):
@@ -16,7 +17,7 @@ class BackBone(nn.Module):#
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
-        self.layer4 = self._make_layer(block, 256, layers[3], stride=1)
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=1)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -62,7 +63,7 @@ class BackBone(nn.Module):#
 class ZNet(nn.Module):#Z Axis Prediction
     def __init__(self):
         super(ZNet,self).__init__();
-        self.layer1 = self._make_layer(512,128,stride=2);
+        self.layer1 = self._make_layer(768,128,stride=2);
         self.layer2 = self._make_layer(256,64,stride=2);
         self.layer3 = self._make_layer(128,64);
         self.layer3 = self._make_layer(128,64,stride=2);
@@ -96,25 +97,6 @@ class ZNet(nn.Module):#Z Axis Prediction
         y5 = torch.exp(y5);
         return y5;
         
-class RPN(nn.Module):#Region Proposal Network
-    def __init__(self):
-        super(RPN,self).__init__();
-        self.conv1 = nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1,bias=True);
-        self.relu = nn.ReLU(inplace=True);
-        self.conv2 = nn.Conv2d(256, 22, kernel_size=1, bias=True);
-        self.conv3 = nn.Conv2d(256, 44, kernel_size=1, bias=True);
-        self.act1 = nn.Softmax(dim=-1);
-        
-        
-    def forward(self,feat):
-        x = self.conv1(feat);
-        x = self.bn1(x);
-        x = self.relu(x);
-        ybin = self.conv2(x);
-        ybin = self.act1(ybin.view(-1,11,2));
-        yreg = self.conv3(x); 
-        return ybin,yreg;
-        
 class FoldNet(nn.Module):
     def __init__(self):
         super(FoldNet,self).__init__();
@@ -133,7 +115,7 @@ class FoldNet(nn.Module):
             nn.Conv1d(512+3, 512, kernel_size=1),
             nn.BatchNorm1d(512),
             nn.ReLU(inplace=True),
-            nn.Conv1d(512, 8, kernel_size=1),
+            nn.Conv1d(512, 6, kernel_size=1),
             nn.Softmax(dim=1)
             ]
         );
@@ -178,11 +160,14 @@ class FoldNet(nn.Module):
 class CageNet(nn.Module):#CageNet
     def __init__(self):
         self.backbone = BackBone(BasicBlock, [2, 2, 2, 2]);
-        self.rpn = RPN();
+        self.rpn = _RPN();
         self.zaxis = ZNet();
         self.foldnet = FoldNet();
         
-    def forward(self,x):
+    def forward(self,*input):
+        x = input[0];
+        if x.dim() == 4:
+            x = x[:,:3,:,:].contiguous();
         
         return 
 

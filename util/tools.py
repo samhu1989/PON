@@ -199,7 +199,7 @@ def write_pts2sphere(path,points):
     face = np.zeros(shape=[fidx.shape[0]],dtype=T);
     for i in range(fidx.shape[0]):
         face[i] = (3,fidx[i,0],fidx[i,1],fidx[i,2]);
-    y = 0.005*pts.reshape((1,pts.shape[0],pts.shape[-1])) + points.reshape((points.shape[0],1,points.shape[-1]));
+    y = 0.01*pts.reshape((1,pts.shape[0],pts.shape[-1])) + points.reshape((points.shape[0],1,points.shape[-1]));
     write_ply(path,points = pd.DataFrame(y.reshape((-1,points.shape[-1]))),faces=pd.DataFrame(face));
     return;
     

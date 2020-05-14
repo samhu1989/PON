@@ -1,5 +1,39 @@
 import numpy as np;
 import torch;
+from scipy.spatial import ConvexHull;
+
+def triangulateSphere(pts):
+    hull_list = [];
+    for i in range(pts.shape[0]):
+        pt = pts[i,...];
+        hull = ConvexHull(pt.transpose(1,0));
+        for j in range(hull.simplices.shape[0]):
+            simplex = hull.simplices[j,:];
+            triangle = pt[:,simplex];
+            m = triangle[:,0];
+            p0p1 = triangle[:,1] -  triangle[:,0];
+            p1p2 = triangle[:,2] -  triangle[:,1];
+            k = np.cross(p0p1,p1p2);
+            if np.dot(m,k) < 0:
+                tmp = hull.simplices[j,1];
+                hull.simplices[j,1] = hull.simplices[j,2];
+                hull.simplices[j,2] = tmp;
+        hull_list.append(hull);
+    return hull_list;
+
+def randsphere2(m=None):
+    pts = np.zeros([3,m],np.float32);
+    n = np.linspace(1,m,m);
+    n += np.random.normal();
+    tmp = 0.5*(np.sqrt(5)-1)*n;
+    theta = 2.0*np.pi*(tmp - np.floor(tmp));
+    pts[0,:] = np.cos(theta);
+    pts[1,:] = np.sin(theta);
+    pts[2,:] = 2.0*(n - n.min()) / (n.max()-n.min()) - 1.0;
+    scale = np.sqrt(1 - np.square(pts[2,:]));
+    pts[0,:] *= scale;
+    pts[1,:] *= scale;
+    return pts;
 
 def area(fv):
     a = np.sqrt(np.sum((fv[:,:,0,:] -  fv[:,:,1,:])**2,axis=2));

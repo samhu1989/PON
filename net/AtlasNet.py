@@ -188,12 +188,15 @@ class Net(nn.Module):
             self.inv_decoder = nn.ModuleList([PointGenCon(bottleneck_size=3+self.bottleneck_size,odim=self.grid_dim,bn=self.bn)]);
         self._init_layers();
 
-    def forward(self,input):
+    def forward(self,*input):
         x = input[0];
         if x.dim() == 4:
             x = x[:,:3,:,:].contiguous();
         f = self.encoder(x);
-        grid = self.rand_grid(f);
+        if len(input) > 1:
+            grid = input[1];
+        else:
+            grid = self.rand_grid(f);
         expf = f.unsqueeze(2).expand(f.size(0),f.size(1),grid.size(2)).contiguous();
         outs = [];
         for i in range(0,self.grid_num):
@@ -216,6 +219,36 @@ class Net(nn.Module):
         else:
             out['grid_x'] = grid.transpose(2,1).contiguous();
         #print(out['grid_x'].shape);
+        return out;
+        
+    def interp(self,x0,x1,w,grid):
+        if x0.dim() == 4:
+            x0 = x0[:,:3,:,:].contiguous();
+            x1 = x1[:,:3,:,:].contiguous();
+        f0 = self.encoder(x0);
+        f1 = self.encoder(x1);
+        f = f0*w + f1*(1.0 - w);
+        expf = f.unsqueeze(2).expand(f.size(0),f.size(1),grid.size(2)).contiguous();
+        outs = [];
+        for i in range(0,self.grid_num):
+            y = torch.cat((grid,expf),1).contiguous();
+            y = self.decoder[i](y);
+            outs.append(y);
+        yout = torch.cat(outs,2).contiguous();
+        yout = yout.transpose(2,1).contiguous();
+        if grid.size(2) != y.size(2):
+            expf = f.unsqueeze(2).expand(f.size(0),f.size(1),y.size(2)).contiguous();
+        out = {}
+        out['y'] = yout
+        if self.mode.startswith('Inv'):
+            inv_y = torch.cat((y,expf),1).contiguous();
+            inv_y = self.inv_decoder[0](inv_y);
+            inv_y = inv_y.transpose(2,1).contiguous();
+            out['inv_x'] = inv_y;
+        if self.grid_num > 1:
+            out['grid_x'] = torch.cat([grid  for i in range(0,self.grid_num)],2).contiguous().transpose(2,1).contiguous(); 
+        else:
+            out['grid_x'] = grid.transpose(2,1).contiguous();
         return out;
     
     def rand_grid(self,x):

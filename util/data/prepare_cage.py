@@ -28,28 +28,39 @@ def run(**kwargs):
         with zpf.ZipFile(os.path.join(data_path,partnet),'r') as partzip:
             for h5name in cagezip.namelist():
                 if h5name.endswith('.h5'):
-                    id = os.path.basename(h5name).split('_')[0];
+                    print(h5name);
+                    cat = os.path.basename(os.path.dirname(h5name));
+                    set = os.path.basename(os.path.dirname(os.path.dirname(h5name)));
+                    opath = os.path.join(data_path,set,cat);
+                    if not os.path.exists(opath):
+                        os.makedirs(opath);
+                    name = os.path.basename(h5name);
+                    h5out = h5py.File(os.path.join(opath,name),'w');
+                    id = name.split('_')[0];
                     rd = int(os.path.basename(h5name).rstrip('.h5').split('_r')[1]);
                     with cagezip.open(h5name) as cagef:
                         cageh5 = h5py.File(cagef,'r');
-                        cagebox = np.array(cageh5['box']);
-                        box = [];
-                        for i in range(cagebox.shape[0]):
-                            box.append(OBB.v2points(cagebox[i,...]));
-                        writebox('./log/debug_box.ply',box); 
+                        h5out.create_dataset("box3d", data=cageh5['box'],chunks=True,compression="gzip", compression_opts=9);
+                        h5out.create_dataset("img", data=cageh5['img448'],chunks=True,compression="gzip", compression_opts=9);
+                        h5out.create_dataset("dmap", data=cageh5['depth448'],chunks=True,compression="gzip", compression_opts=9);
+                        h5out.create_dataset("nmap", data=cageh5['norm448'],chunks=True,compression="gzip", compression_opts=9);
+                        h5out.create_dataset("msk", data=cageh5['msk'],chunks=True,compression="gzip", compression_opts=9);
+                        h5out.create_dataset("smsk", data=cageh5['smsk'],chunks=True,compression="gzip", compression_opts=9);
+                        h5out.create_dataset("touch", data=cageh5['touch'],chunks=True,compression="gzip", compression_opts=9);
+
+                        
                     with partzip.open('partnet/'+id+'/point_sample/pts-10000.txt','r') as ptsf:
                         points = np.loadtxt(io.BytesIO(ptsf.read()),dtype=np.float32,delimiter=' ');
                         
                     _,_,points = tounit_param(points);
                     r = R.from_euler('y', rd, degrees=True);
                     points = r.apply(points).astype(np.float32);
+                    
+                    h5out.create_dataset("pts", data=points,chunks=True,compression="gzip", compression_opts=9);
                         
                     with partzip.open('partnet/'+id+'/point_sample/label-10000.txt','r') as labelf:
                         label = np.loadtxt(io.BytesIO(labelf.read()),dtype=np.int32);
-                    
-                    write_ply('./log/debug.ply',points=pd.DataFrame(points));
-                    print(points.shape,points.dtype);
-                    print(label.shape,label.dtype);
-                    exit();
+                        
+                    h5out.create_dataset("lbl", data=label,chunks=True,compression="gzip", compression_opts=9);
     
 
