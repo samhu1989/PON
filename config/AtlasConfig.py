@@ -6,13 +6,13 @@ nepoch = 4
 #net
 pts_num = 2500
 pts_num_gt = 10000
-grid_num = 25
-grid_dim = 2
+grid_num = 1
+grid_dim = 3
 mode = 'SVR'
 #data
-dataset = 'PON'
-category = ['augment','Chair','StorageFurniture','Table'];
-workers = 2
+dataset = 'atlas'
+category = None;
+workers = 1
 
 from .config import accuracy,loss,parameters,writelog;
         
