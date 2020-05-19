@@ -38,12 +38,14 @@ def run(**kwargs):
                     h5out = h5py.File(os.path.join(opath,name),'w');
                     id = name.split('_')[0];
                     rd = int(os.path.basename(h5name).split('_r')[1].split('.')[0]);
+                    print(id);
+                    print(rd);
                     with cagezip.open(h5name) as cagef:
                         cageh5 = h5py.File(cagef,'r');
-                        h5out.create_dataset("box3d", data=cageh5['box'],chunks=True,compression="gzip", compression_opts=9);
-                        h5out.create_dataset("img", data=cageh5['img448'],chunks=True,compression="gzip", compression_opts=9);
-                        h5out.create_dataset("dmap", data=cageh5['depth448'],chunks=True,compression="gzip", compression_opts=9);
-                        h5out.create_dataset("nmap", data=cageh5['norm448'],chunks=True,compression="gzip", compression_opts=9);
+                        h5out.create_dataset("box3d", data=cageh5['box3d'],chunks=True,compression="gzip", compression_opts=9);
+                        h5out.create_dataset("img", data=cageh5['img'],chunks=True,compression="gzip", compression_opts=9);
+                        h5out.create_dataset("dmap", data=cageh5['dmap'],chunks=True,compression="gzip", compression_opts=9);
+                        h5out.create_dataset("nmap", data=cageh5['nmap'],chunks=True,compression="gzip", compression_opts=9);
                         h5out.create_dataset("msk", data=cageh5['msk'],chunks=True,compression="gzip", compression_opts=9);
                         h5out.create_dataset("smsk", data=cageh5['smsk'],chunks=True,compression="gzip", compression_opts=9);
                         h5out.create_dataset("touch", data=cageh5['touch'],chunks=True,compression="gzip", compression_opts=9);
@@ -62,5 +64,3 @@ def run(**kwargs):
                         label = np.loadtxt(io.BytesIO(labelf.read()),dtype=np.int32);
                         
                     h5out.create_dataset("lbl", data=label,chunks=True,compression="gzip", compression_opts=9);
-    
-

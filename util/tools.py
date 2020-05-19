@@ -10,6 +10,10 @@ from scipy.spatial import ConvexHull;
 from scipy.spatial import Delaunay
 import pandas as pd;
 from .cmap import color;
+import PIL.Image as Image
+import PIL.ImageColor as ImageColor
+import PIL.ImageDraw as ImageDraw
+import PIL.ImageFont as ImageFont
 
 def partial_restore(net,path,keymap={}):
     if torch.cuda.is_available():
@@ -301,4 +305,52 @@ def writebox(path,box,colors=None):
         colors = np.concatenate(colors,axis=0);
         pointsc = pd.concat([pd.DataFrame(pts.astype(np.float32)),pd.DataFrame(colors)],axis=1,ignore_index=True);
         write_ply(path,points=pointsc,faces=pd.DataFrame(face),color=True);
+        
+def func(a):
+    idx = np.where(a.flatten() > 0.5 );
+    if idx[0].size < 1:
+        pix = np.zeros(3).astype(np.uint8);
+    else:
+        pix = color[idx[0][0],:];
+    return pix.flatten();
+        
+def msk2img(msk):
+    return np.apply_along_axis(func, 0, msk);
+    
+def draw_bounding_box_on_image(image,box,color='red',thickness=1,display_str_list=(),use_normalized_coordinates=False):
+    ymin = box[0];
+    xmin = box[1];
+    ymax = box[2];
+    xmax = box[3];
+    
+    draw = ImageDraw.Draw(image);
+    im_width, im_height = image.size;
+    if use_normalized_coordinates:
+        (left, right, top, bottom) = (xmin * im_width, xmax * im_width, ymin * im_height, ymax * im_height)
+    else:
+        (left, right, top, bottom) = (xmin, xmax, ymin, ymax)
+    draw.line([(left, top), (left, bottom), (right, bottom), (right, top), (left, top)], width=thickness, fill=color)
+    try:
+        font = ImageFont.truetype('arial.ttf', 24);
+    except IOError:
+        font = ImageFont.load_default();
+
+  # If the total height of the display strings added to the top of the bounding
+  # box exceeds the top of the image, stack the strings below the bounding box
+  # instead of above.
+    display_str_heights = [font.getsize(ds)[1] for ds in display_str_list]
+  # Each display_str has a top and bottom margin of 0.05x.
+    total_display_str_height = (1 + 2 * 0.05) * np.sum(display_str_heights)
+
+    if top > total_display_str_height:
+        text_bottom = top
+    else:
+        text_bottom = bottom + total_display_str_height
+  # Reverse list and print from bottom to top.
+    for display_str in display_str_list[::-1]:
+        text_width, text_height = font.getsize(display_str)
+        margin = np.ceil(0.05 * text_height)
+        draw.rectangle( [(left, text_bottom - text_height - 2 * margin), (left + text_width, text_bottom)],fill=color)
+        draw.text( (left + margin, text_bottom - text_height - margin), display_str, fill='black', font=font)
+        text_bottom -= text_height - 2 * margin
     

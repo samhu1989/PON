@@ -48,7 +48,7 @@ def run(**kwargs):
         train_data = m.Data(opt,True);
         val_data = m.Data(opt,False);
         train_load = DataLoader(train_data,batch_size=opt['batch_size'],shuffle=True,num_workers=opt['workers']);
-        val_load = DataLoader(val_data,batch_size=opt['batch_size'],shuffle=False,num_workers=opt['workers']);
+        val_load = DataLoader(val_data,batch_size=opt['batch_size']*2,shuffle=False,num_workers=opt['workers']);
     except Exception as e:
         print(e);
         traceback.print_exc();
@@ -70,31 +70,72 @@ def run(**kwargs):
     face = np.zeros(shape=[fidx.shape[0]],dtype=T);
     for i in range(fidx.shape[0]):
         face[i] = (3,fidx[i,0],fidx[i,1],fidx[i,2]);
-    
     #
-    [1.0,0.8,0.6,0.4,0.2,0.0];
-    done_cat = [];
+    ws = [1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1,0.0];
+    done_cat = {};
     for i, data in enumerate(val_load,0):
-        if data[3][0] in done_cat:
+        if data[3][0] in done_cat.keys():
             continue;
         else:
-            done_cat.append(data[3][0]);
-        net.eval();
-        with torch.no_grad():
-            data2cuda(data);
-            out = net.interp(data[0][0:16,...],data[0][16:32,...],w,grid);
-        
+            done_cat[data[3][0]]=data;
         img = data[0].data.cpu().numpy();
-        ygt = data[1].data.cpu().numpy();
-        yout = out['y'].data.cpu().numpy();
         img = img.transpose((0,2,3,1));
-        for j in range(opt['batch_size']):
-            cat = data[3][j]
-            opath = './log/debug/'+cat;
+        ygt = data[1].data.cpu().numpy();
+        for j in range(opt['batch_size']*2):
+                cat = data[3][j];
+                opath = './log/interp/'+cat;
+                if not os.path.exists(opath):
+                    os.mkdir(opath);
+                Image.fromarray((img[j,...]*255).astype(np.uint8)).save(opath+'/%s.png'%(data[4][j]));
+                write_pts2sphere(opath+'/%s_gt.ply'%(data[4][j]),ygt[j,:,:]);
+                
+        net.eval();
+        for w in ws:
+            with torch.no_grad():
+                data2cuda(data);
+                out = net.interp(data[0][0:opt['batch_size'],...],data[0][opt['batch_size']:2*opt['batch_size'],...],w,grid);
+        
+            yout = out['y'].data.cpu().numpy();
+            img = img.transpose((0,2,3,1));
+            for j in range(opt['batch_size']):
+                cat = data[3][j]
+                opath = './log/interp/'+cat;
+                if not os.path.exists(opath):
+                    os.mkdir(opath);
+                write_ply(opath+'/%s_%s_%f.ply'%(data[4][j],data[4][j+opt['batch_size']],w),points=pd.DataFrame(yout[j,:,:]),faces=pd.DataFrame(face));
+    klst = list(done_cat.keys());
+    for ni,ci in enumerate(klst):
+        datai = done_cat[ci];
+        for nj in range(ni+1,len(klst)):
+            cj = klst[nj];
+            dataj = done_cat[cj];
+            imgi = datai[0].data.cpu().numpy();
+            imgi = imgi.transpose((0,2,3,1));
+            ygti = datai[1].data.cpu().numpy();
+            #
+            imgj = dataj[0].data.cpu().numpy();
+            imgj = imgj.transpose((0,2,3,1));
+            ygtj = dataj[1].data.cpu().numpy();
+            opath = './log/interp/'+ci+'_'+cj;
+            #
             if not os.path.exists(opath):
                 os.mkdir(opath);
-            Image.fromarray((img[j,:,:]*255).astype(np.uint8)).save(opath+'/%s.png'%(data[4][j]));
-            write_ply(opath+'/%s.ply'%(data[4][j]),points=pd.DataFrame(yout[j,:,:]),faces=pd.DataFrame(face));
-            write_pts2sphere(opath+'/%s_gt.ply'%(data[4][j]),ygt[j,:,:]);
-
-        for j in 
+            for j in range(opt['batch_size']):
+                Image.fromarray((imgi[j,...]*255).astype(np.uint8)).save(opath+'/%s.png'%(datai[4][j]));
+                write_pts2sphere(opath+'/%s_gt.ply'%(datai[4][j]),ygti[j,:,:]);
+                Image.fromarray((imgj[j,...]*255).astype(np.uint8)).save(opath+'/%s.png'%(dataj[4][j]));
+                write_pts2sphere(opath+'/%s_gt.ply'%(dataj[4][j]),ygtj[j,:,:]);
+            #
+            net.eval();
+            for w in ws:
+                with torch.no_grad():
+                    data2cuda(data);
+                    out = net.interp(datai[0][0:opt['batch_size'],...],dataj[0][0:opt['batch_size'],...],w,grid);
+                yout = out['y'].data.cpu().numpy();
+                for j in range(opt['batch_size']):
+                    write_ply(opath+'/%s_%s_%f.ply'%(datai[4][j],dataj[4][j],w),points=pd.DataFrame(yout[j,:,:]),faces=pd.DataFrame(face));
+            
+            
+        
+        
+        
